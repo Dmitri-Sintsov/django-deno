@@ -75,12 +75,5 @@ setup(
         'Programming Language :: Python :: 3',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
-    scripts=[
-        'django-deno/scripts/deno_bundle.sh',
-        'django-deno/scripts/rollup_debug.sh',
-        'django-deno/scripts/rollup_production.sh',
-        'django-deno/scripts/server.sh',
-        'django-deno/scripts/rollup.terser.config.js',
-    ],
     setup_requires=['wheel'],
 )
