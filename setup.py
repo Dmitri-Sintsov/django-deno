@@ -76,11 +76,11 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     scripts=[
-        'scripts/deno_bundle.sh',
-        'scripts/rollup_debug.sh',
-        'scripts/rollup_production.sh',
-        'scripts/server.sh',
-        'scripts/rollup.terser.config.js',
+        'django-deno/scripts/deno_bundle.sh',
+        'django-deno/scripts/rollup_debug.sh',
+        'django-deno/scripts/rollup_production.sh',
+        'django-deno/scripts/server.sh',
+        'django-deno/scripts/rollup.terser.config.js',
     ],
     setup_requires=['wheel'],
 )
