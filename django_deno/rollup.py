@@ -6,6 +6,8 @@ from django.http import (
     HttpResponse, StreamingHttpResponse
 )
 
+from .conf import settings
+
 
 rollup_hints = [b'"use rollup"', b"'use rollup'"]
 proxy_chunk_size = 256 * 1024
@@ -20,7 +22,7 @@ def should_rollup(fullpath):
 def get_rollup_response(fullpath, content_type):
     try:
         rollup_response = requests.post(
-            'http://127.0.0.1:8000/rollup/',
+            f'{settings.DENO_URL}/rollup/',
             data={'filename': str(fullpath)},
             stream=True
         )
