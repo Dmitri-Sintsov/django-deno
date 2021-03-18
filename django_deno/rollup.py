@@ -9,14 +9,10 @@ from django.http import (
 from .conf import settings
 
 
-rollup_hints = [b'"use rollup"', b"'use rollup'"]
-proxy_chunk_size = 256 * 1024
-
-
 def should_rollup(fullpath):
     with fullpath.open('rb') as f:
-        hint = f.read(len(rollup_hints[0]))
-        return hint in rollup_hints
+        hint = f.read(len(settings.DENO_ROLLUP_HINTS[0]))
+        return hint in settings.DENO_ROLLUP_HINTS
 
 
 def get_rollup_response(fullpath, content_type):
@@ -28,7 +24,7 @@ def get_rollup_response(fullpath, content_type):
         )
         if rollup_response.status_code == 200:
             return StreamingHttpResponse(
-                rollup_response.iter_content(chunk_size=proxy_chunk_size), content_type=content_type
+                rollup_response.iter_content(chunk_size=settings.DENO_PROXY_CHUNK_SIZE), content_type=content_type
             )
         else:
             response = HttpResponse('throw Error({});'.format(json.dumps(rollup_response.text)))
