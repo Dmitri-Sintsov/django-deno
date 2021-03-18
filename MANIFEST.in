@@ -1,2 +1,2 @@
-recursive-include django_deno *.rst *.htm *.html *.js *.css *.py *.po *.mo *.gif *.eot *.svg *.ttf *.woff *.woff2 *.ts
-
+graft django_deno
+graft rollup
