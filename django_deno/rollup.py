@@ -11,8 +11,11 @@ from .conf import settings
 
 def should_rollup(fullpath):
     with fullpath.open('rb') as f:
-        hint = f.read(len(settings.DENO_ROLLUP_HINTS[0]))
-        return hint in settings.DENO_ROLLUP_HINTS
+        file_begin = f.read(settings.DENO_ROLLUP_HINTS_MAXLEN)
+        for hint in settings.DENO_ROLLUP_HINTS:
+            if file_begin.startswith(hint):
+                return True
+    return False
 
 
 def get_rollup_response(fullpath, content_type):

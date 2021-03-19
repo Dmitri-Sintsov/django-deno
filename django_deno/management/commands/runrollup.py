@@ -2,11 +2,13 @@ from django.conf import settings
 from django.contrib.staticfiles.management.commands import runserver
 
 from ...handlers import RollupFilesHandler
+from ...run import deno_server
 
 
 class Command(runserver.Command):
 
     def get_handler(self, *args, **options):
+        deno_server()
         """
         Return the static files serving handler wrapping the default handler,
         if static files should be served. Otherwise return the default handler.

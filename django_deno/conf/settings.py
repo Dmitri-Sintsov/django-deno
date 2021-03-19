@@ -1,4 +1,12 @@
+import os
+
 from django.conf import settings
+
+DENO_INSTALL = getattr(settings, 'DENO_INSTALL', os.getenv('DENO_INSTALL'))
+if DENO_INSTALL is None:
+    raise ValueError('Please set DENO_INSTALL environment variable or project settings.DENO_INSTALL path')
+
+DENO_PATH = os.path.join(DENO_INSTALL, 'bin', 'deno')
 
 DENO_SERVER = {
     'protocol': 'http',
@@ -12,3 +20,4 @@ DENO_URL = f'{DENO_SERVER["protocol"]}://{DENO_SERVER["host"]}:{DENO_SERVER["por
 DENO_PROXY_CHUNK_SIZE = getattr(settings, 'DENO_PROXY_CHUNK_SIZE', 256 * 1024)
 
 DENO_ROLLUP_HINTS = getattr(settings, 'DENO_ROLLUP_HINTS', [b'"use rollup"', b"'use rollup'"])
+DENO_ROLLUP_HINTS_MAXLEN = max([len(hint) for hint in DENO_ROLLUP_HINTS])
