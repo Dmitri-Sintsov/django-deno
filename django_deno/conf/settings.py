@@ -8,6 +8,11 @@ if DENO_INSTALL is None:
 
 DENO_PATH = os.path.join(DENO_INSTALL, 'bin', 'deno')
 
+if getattr(settings, 'DENO_DEBUG', False):
+    DENO_RUN_FLAGS = ["-A", "--inspect-brk", "--unstable", "--allow-net"]
+else:
+    DENO_RUN_FLAGS = ["-A", "--unstable", "--allow-net", "--watch"]
+
 DENO_SERVER = {
     'protocol': 'http',
     'host': '127.0.0.1',
