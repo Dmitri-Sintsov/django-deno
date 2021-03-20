@@ -12,7 +12,7 @@ class Command(runserver.Command):
 
     def get_handler(self, *args, **options):
         self.deno_process = deno_server()
-        self.set_sigint_handler()
+        # self.set_sigint_handler()
         """
         Return the static files serving handler wrapping the default handler,
         if static files should be served. Otherwise return the default handler.
