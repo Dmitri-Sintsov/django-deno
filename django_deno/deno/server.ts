@@ -18,15 +18,17 @@ router
 })
 .post("/rollup/", async (context) => {
     let filenameParam: string | null | undefined;
+    let basedirParam: string | null | undefined;
 
-    if ('filename' in context.params) {
-        // HTTP GET
-        filenameParam = context.params.filename;
-    } else {
-        // HTTP POST
-        const body = context.request.body({ type: 'form' });
-        const value = await body.value;
-        filenameParam = value.get('filename');
+    // HTTP POST
+    const body = context.request.body({ type: 'form' });
+    const value = await body.value;
+    filenameParam = value.get('filename');
+    basedirParam = value.get('basedir');
+
+    let cwd = Deno.cwd();
+    if (basedirParam) {
+        Deno.chdir(basedirParam);
     }
 
     let filename: string;
@@ -38,6 +40,7 @@ router
         let responseFields = await inlineRollup(filename);
         responseFields.toOakContext(context);
     }
+    Deno.chdir(cwd);
 });
 
 const app = new Application();
