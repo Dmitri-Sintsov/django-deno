@@ -1,5 +1,5 @@
-import { parse } from "https://deno.land/std/flags/mod.ts";
 // import { serve } from 'https://deno.land/std/http/server.ts'
+import { parse } from "https://deno.land/std/flags/mod.ts";
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 
 import inlineRollup from "./rollup.ts";
@@ -31,11 +31,13 @@ router
 
     let filename: string;
     if (filenameParam === undefined || filenameParam === null) {
-        filename = '';
+        context.response.body = 'No filename arg specified';
+        context.response.status = 500;
     } else {
         filename = filenameParam;
+        let responseFields = await inlineRollup(filename);
+        responseFields.toOakContext(context);
     }
-    return inlineRollup(filename, context);
 });
 
 const app = new Application();
