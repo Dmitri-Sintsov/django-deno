@@ -18,13 +18,13 @@ def should_rollup(fullpath):
     return False
 
 
-def get_rollup_response(filename, basedir, content_type):
+def get_rollup_response(fullpath, content_type):
     try:
         rollup_response = requests.post(
             f'{settings.DENO_URL}/rollup/',
             data={
-                'filename': filename,
-                'basedir': basedir,
+                'filename': str(fullpath.name),
+                'basedir': str(fullpath.parent),
             },
             stream=True
         )

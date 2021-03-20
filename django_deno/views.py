@@ -18,7 +18,7 @@ from .rollup import should_rollup, get_rollup_response
 
 
 # from django.views.static import serve
-def serve_rollup(request, path, document_root=None, show_indexes=False, normalized_path=None, static_path=None):
+def serve_rollup(request, path, document_root=None, show_indexes=False):
     """
     Serve static files below a given point in the directory structure.
 
@@ -46,9 +46,7 @@ def serve_rollup(request, path, document_root=None, show_indexes=False, normaliz
     content_type, encoding = mimetypes.guess_type(str(fullpath))
     content_type = content_type or 'application/octet-stream'
     if content_type == "application/javascript" and should_rollup(fullpath):
-        if static_path is None:
-            raise Http404(_('“%(path)s” does not exist') % {'path': fullpath})
-        response = get_rollup_response(normalized_path, static_path, content_type)
+        response = get_rollup_response(fullpath, content_type)
         if not isinstance(response, StreamingHttpResponse):
             # report error
             return response
@@ -89,10 +87,4 @@ def serve(request, path, insecure=False, **kwargs):
             raise Http404("Directory indexes are not allowed here.")
         raise Http404("'%s' could not be found" % path)
     document_root, path = os.path.split(absolute_path)
-    static_path = absolute_path[:-len(normalized_path)] if absolute_path.endswith(normalized_path) else None
-    return serve_rollup(
-        request, path, document_root=document_root,
-        normalized_path=normalized_path,
-        static_path=static_path,
-        **kwargs
-    )
+    return serve_rollup(request, path, document_root=document_root, **kwargs)
