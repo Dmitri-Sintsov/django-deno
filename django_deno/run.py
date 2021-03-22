@@ -14,6 +14,7 @@ def deno_server():
             os.path.join(DENO_SCRIPT_PATH, "server.ts"),
             f"--host={DENO_SERVER['host']}", f"--port={DENO_SERVER['port']}"
         ],
+        shell=False
     )
     return deno_process
 

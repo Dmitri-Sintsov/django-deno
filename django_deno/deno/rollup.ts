@@ -1,4 +1,4 @@
-// drollup@2.41.0+0.16.1
+// Developed with drollup@2.41.0+0.16.1
 import { Context } from "https://deno.land/x/oak/mod.ts";
 import { rollup, RollupOutput } from "https://deno.land/x/drollup/mod.ts";
 import type { OutputOptions } from "https://deno.land/x/drollup/mod.ts";
