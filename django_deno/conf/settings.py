@@ -2,6 +2,8 @@ import os
 
 from django.conf import settings
 
+DENO_ENABLE = getattr(settings, 'DENO_ENABLE', True)
+
 DENO_INSTALL = getattr(settings, 'DENO_INSTALL', os.getenv('DENO_INSTALL'))
 if DENO_INSTALL is None:
     raise ValueError('Please set DENO_INSTALL environment variable or project settings.DENO_INSTALL path')
