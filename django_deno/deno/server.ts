@@ -1,6 +1,7 @@
 // import { serve } from 'https://deno.land/std/http/server.ts'
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import type { ImportMapObject } from "https://deno.land/x/drollup/plugins/importmap/mod.ts";
 
 import inlineRollup from "./rollup.ts";
 
@@ -26,21 +27,21 @@ router
     filenameParam = value.get('filename');
     basedirParam = value.get('basedir');
 
-    let cwd = Deno.cwd();
-    if (basedirParam) {
-        Deno.chdir(basedirParam);
-    }
-
     let filename: string;
     if (filenameParam === undefined || filenameParam === null) {
         context.response.body = 'No filename arg specified';
         context.response.status = 500;
     } else {
         filename = filenameParam;
-        let responseFields = await inlineRollup(filename);
+        // https://github.com/lucacasonato/dext.ts/issues/65
+        let importmap = {
+            imports: {
+                "../django-deno/settings.js": "/home/user/work/drf-gallery/lib/python3.8/site-packages/django_deno/static/django-deno/settings.js"
+            }
+        };
+        let responseFields = await inlineRollup(basedirParam, filename, importmap);
         responseFields.toOakContext(context);
     }
-    Deno.chdir(cwd);
 });
 
 const app = new Application();

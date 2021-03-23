@@ -3,6 +3,8 @@ import { Context } from "https://deno.land/x/oak/mod.ts";
 import { rollup, RollupOutput } from "https://deno.land/x/drollup/mod.ts";
 import type { OutputOptions } from "https://deno.land/x/drollup/mod.ts";
 import { SOURCEMAPPING_URL } from "https://deno.land/x/drollup/src/rollup/write.ts";
+import { rollupImportMapPlugin } from "https://deno.land/x/drollup/plugins/importmap/mod.ts";
+import type { ImportMapObject } from "https://deno.land/x/drollup/plugins/importmap/mod.ts";
 
 class ResponseFields {
     status: any;
@@ -22,7 +24,7 @@ class ResponseFields {
     }
 };
 
-async function inlineRollup(filename: string) {
+async function inlineRollup(basedir: string | null, filename: string, importmap: ImportMapObject) {
     // https://unpkg.com/rollup@2.41.0/dist/rollup.d.ts
     // https://gist.github.com/vsajip/94fb524746b151b5160924418e6882e5
     // https://deno.land/x/drollup@2.41.0+0.16.1#javascript-api
@@ -35,9 +37,15 @@ async function inlineRollup(filename: string) {
     const options = {
         input: filename,
         output: outputOptions,
+        plugins: [rollupImportMapPlugin({ maps: importmap })],
     };
 
     let rollupOutput: RollupOutput;
+
+    let cwd = Deno.cwd();
+    if (basedir) {
+        Deno.chdir(basedir);
+    }
 
     try {
         const bundle = await rollup(options);
@@ -45,6 +53,8 @@ async function inlineRollup(filename: string) {
     } catch(e) {
         response.body = e.toString();
         return response;
+    } finally {
+        Deno.chdir(cwd);
     };
 
     for (const file of rollupOutput.output) {
