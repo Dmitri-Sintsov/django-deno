@@ -1,6 +1,5 @@
 import json
 import requests
-import traceback
 
 from requests.exceptions import RequestException
 from urllib3.exceptions import HTTPError
@@ -10,6 +9,7 @@ from django.http import (
 )
 
 from ..conf import settings
+from ..utils import ex_to_str
 
 
 def should_rollup(fullpath):
@@ -44,9 +44,7 @@ def post_rollup(fullpath, content_type):
             response.status_code = 200
             return response
     except (HTTPError, RequestException) as ex:
-        ex_string = json.dumps('\n'.join(
-            list(traceback.TracebackException.from_exception(ex).format())
-        ))
+        ex_string = json.dumps(ex_to_str(ex))
         response = HttpResponse(
             f'throw Error({ex_string});',
             content_type=content_type

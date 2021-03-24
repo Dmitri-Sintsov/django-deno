@@ -11,7 +11,7 @@ const httpPort = args['port'];
 
 const router = new Router();
 router
-.get("/", (context) => {
+.get("/status/", (context) => {
     context.response.body = {
         "server": "Django deno server",
         "version": "0.0.1",
