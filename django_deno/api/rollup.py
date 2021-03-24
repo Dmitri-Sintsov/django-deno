@@ -2,11 +2,14 @@ import json
 import requests
 import traceback
 
+from requests.exceptions import RequestException
+from urllib3.exceptions import HTTPError
+
 from django.http import (
     HttpResponse, StreamingHttpResponse
 )
 
-from .conf import settings
+from ..conf import settings
 
 
 def should_rollup(fullpath):
@@ -19,7 +22,7 @@ def should_rollup(fullpath):
     return False
 
 
-def get_rollup_response(fullpath, content_type):
+def post_rollup(fullpath, content_type):
     try:
         rollup_response = requests.post(
             f'{settings.DENO_URL}/rollup/',
@@ -40,7 +43,7 @@ def get_rollup_response(fullpath, content_type):
             )
             response.status_code = 200
             return response
-    except ConnectionError as ex:
+    except (HTTPError, RequestException) as ex:
         ex_string = json.dumps('\n'.join(
             list(traceback.TracebackException.from_exception(ex).format())
         ))

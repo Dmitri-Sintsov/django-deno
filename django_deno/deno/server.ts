@@ -15,6 +15,7 @@ router
     context.response.body = {
         "server": "Django deno server",
         "version": "0.0.1",
+        "pid": Deno.pid,
     };
 })
 .post("/rollup/", async (context) => {

@@ -1,5 +1,0 @@
-{
-  "imports": {
-    "../django-deno/settings.js": "/home/user/work/drf-gallery/lib/python3.8/site-packages/django_deno/static/django-deno/settings.js"
-  }
-}

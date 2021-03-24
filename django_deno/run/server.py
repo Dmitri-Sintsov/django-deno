@@ -2,7 +2,7 @@ import inspect
 import os
 import subprocess
 
-from .conf.settings import DENO_PATH, DENO_RUN_FLAGS, DENO_SERVER
+from ..conf.settings import DENO_PATH, DENO_RUN_FLAGS, DENO_SERVER
 
 def deno_server():
     deno_process = subprocess.Popen(
@@ -19,6 +19,6 @@ def deno_server():
     return deno_process
 
 DENO_SCRIPT_PATH = os.path.join(
-    os.path.dirname(inspect.getfile(deno_server)),
+    os.path.dirname(os.path.dirname(inspect.getfile(deno_server))),
     'deno'
 )

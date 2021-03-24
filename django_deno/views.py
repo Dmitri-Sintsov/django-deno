@@ -14,7 +14,7 @@ from django.http import (
     FileResponse, Http404, HttpResponseNotModified, StreamingHttpResponse
 )
 
-from .rollup import should_rollup, get_rollup_response
+from .api.rollup import should_rollup, post_rollup
 
 
 # from django.views.static import serve
@@ -46,7 +46,7 @@ def serve_rollup(request, path, document_root=None, show_indexes=False):
     content_type, encoding = mimetypes.guess_type(str(fullpath))
     content_type = content_type or 'application/octet-stream'
     if content_type == "application/javascript" and should_rollup(fullpath):
-        response = get_rollup_response(fullpath, content_type)
+        response = post_rollup(fullpath, content_type)
         if not isinstance(response, StreamingHttpResponse):
             # report error
             return response
