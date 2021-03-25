@@ -5,7 +5,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.staticfiles.finders import get_finders
 from django.contrib.staticfiles.storage import staticfiles_storage
-from django.contrib.staticfiles.management.commands.collectstatic import Command as CollectStaticCommand
+from django.utils.functional import cached_property
 
 
 # Todo check with Django 2.2 / Django 3.2.
@@ -27,7 +27,6 @@ class ImportMapGenerator:
     def __init__(self):
         self.module_basedir = None
         self.storage = staticfiles_storage
-        self.local = CollectStaticCommand.local
         if not self.local:
             raise ValueError('Only local storage is supported')
         self.ignore_patterns = apps.get_app_config('staticfiles').ignore_patterns
@@ -35,6 +34,15 @@ class ImportMapGenerator:
         self.base_map = {}
         self.import_map = {}
         self.collect_import_map()
+
+    # django.contrib.staticfiles.management.commands.collectstatic.Command.local
+    @cached_property
+    def local(self):
+        try:
+            self.storage.path('')
+        except NotImplementedError:
+            return False
+        return True
 
     def collect_import_map(self):
         found_files = {}
@@ -106,3 +114,13 @@ class ImportMapGenerator:
             if self.has_common_path(source_path)
         }
         return relative_import_map
+
+    def to_cache(self):
+        return {
+            'base_map': self.base_map,
+            'import_map': self.import_map,
+        }
+
+    def from_cache(self, cache_entry):
+        self.base_map = cache_entry['base_map']
+        self.import_map = cache_entry['import_map']

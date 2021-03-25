@@ -37,7 +37,7 @@ class Command(runserver.Command):
             if deno_process.poll() is None:
                 self.stdout.write(f"Starting deno server pid={deno_process.pid}")
             else:
-                self.terminate(f"Error while starting deno server")
+                self.terminate("Error while starting deno server")
         elif isinstance(deno_api_status, Exception):
             self.stderr.write("The service running is not deno server or deno server is not running properly")
             self.terminate(ex_to_str(deno_api_status))
