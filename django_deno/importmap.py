@@ -1,6 +1,8 @@
 import mimetypes
 import os
 
+from pathlib import Path
+
 from django.apps import apps
 from django.conf import settings
 from django.contrib.staticfiles.finders import get_finders
@@ -18,6 +20,55 @@ import_map_generator.get_import_map(os.path.join(settings.BASE_DIR, 'drf_gallery
 """
 
 
+class CommonBasePath:
+
+    def __init__(self):
+        self.common_base = None
+
+    def __str__(self):
+        return os.path.join(*self.common_base)
+
+    def __repr__(self):
+        return repr(self.common_base)
+
+    def get_parents(self, path_obj):
+        return list(os.path.basename(parent) for parent in reversed(path_obj.parents))
+
+    def apply_path(self, path):
+        path_obj = Path(path)
+        if self.common_base is None:
+            self.common_base = self.get_parents(path_obj)
+        else:
+            path_parents = self.get_parents(path_obj)
+            for idx, common_parent in enumerate(self.common_base):
+                if path_parents[idx] != common_parent:
+                    self.common_base = self.common_base[:idx]
+                    break
+
+
+class PathMap:
+
+    def __init__(self):
+        self.map = {}
+        self.base_k = CommonBasePath()
+        self.base_v = CommonBasePath()
+
+    def add(self, k, v):
+        self.map[k] = v
+        self.base_k.apply_path(k)
+        self.base_v.apply_path(v)
+
+    def serialize(self):
+        return {
+            'map': self.map,
+            'base_k': str(self.base_k),
+            'base_v': str(self.base_v),
+        }
+
+    def __str__(self):
+        return str(self.serialize())
+
+
 class ImportMapGenerator:
 
     map_mime_types = [
@@ -31,8 +82,8 @@ class ImportMapGenerator:
             raise ValueError('Only local storage is supported')
         self.ignore_patterns = apps.get_app_config('staticfiles').ignore_patterns
         self.mapped_files = set()
-        self.base_map = {}
-        self.import_map = {}
+        self.base_map = PathMap()
+        self.import_map = PathMap()
         self.collect_import_map()
 
     # django.contrib.staticfiles.management.commands.collectstatic.Command.local
@@ -65,7 +116,6 @@ class ImportMapGenerator:
                         "every static file has a unique path." % prefixed_path,
                         level=1,
                     )
-        return self.import_map
 
     def add_to_import_map(self, path, prefixed_path, source_storage):
         if prefixed_path not in self.mapped_files:
@@ -89,9 +139,9 @@ class ImportMapGenerator:
             content_type, encoding = mimetypes.guess_type(source_path)
             if content_type in self.map_mime_types:
                 if source_path.startswith(settings.BASE_DIR):
-                    self.base_map[source_path] = target_path
+                    self.base_map.add(source_path, target_path)
                 else:
-                    self.import_map[target_path] = source_path
+                    self.import_map.add(target_path, source_path)
 
     def has_common_path(self, path):
         try:
@@ -106,11 +156,11 @@ class ImportMapGenerator:
 
     # es_module_path - a full path to valid existing es module
     def get_import_map(self, es_module_path):
-        self.module_basedir = os.path.dirname(self.base_map[es_module_path])
+        self.module_basedir = os.path.dirname(self.base_map.map[es_module_path])
         relative_import_map = {
             self.to_relative_path(target_path): source_path
             for target_path, source_path
-            in self.import_map.items()
+            in self.import_map.map.items()
             if self.has_common_path(source_path)
         }
         return relative_import_map
