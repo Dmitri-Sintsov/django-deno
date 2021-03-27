@@ -1,3 +1,4 @@
+from collections import MutableMapping
 import mimetypes
 import os
 
@@ -16,54 +17,107 @@ import os
 from django.conf import settings
 from django_deno.importmap import ImportMapGenerator
 import_map_generator = ImportMapGenerator()
-import_map_generator.get_import_map(os.path.join(settings.BASE_DIR, 'drf_gallery', 'static', 'components', 'main.js'))
+import_map = import_map_generator.get_import_map(os.path.join(settings.BASE_DIR, 'drf_gallery', 'static', 'components', 'main.js'))
+serialized_map_generator = import_map_generator.serialize()
+import_map_generator = ImportMapGenerator(cache_entry=serialized_map_generator)
+serialized_map_generator == import_map_generator.serialize()
+import_map == import_map_generator.get_import_map(os.path.join(settings.BASE_DIR, 'drf_gallery', 'static', 'components', 'main.js'))
 """
 
 
 class CommonBasePath:
 
-    def __init__(self):
-        self.common_base = None
+    def __init__(self, cache_entry=None):
+        if cache_entry is None:
+            self.create()
+        else:
+            self.deserialize(cache_entry)
 
     def __str__(self):
         return os.path.join(*self.common_base)
 
-    def __repr__(self):
-        return repr(self.common_base)
+    def create(self):
+        # dict with path parts
+        self.common_base = None
 
-    def get_parents(self, path_obj):
-        return list(os.path.basename(parent) for parent in reversed(path_obj.parents))
+    def serialize(self):
+        return str(self)
+
+    def deserialize(self, cache_entry: str):
+        path_obj = Path(cache_entry)
+        self.common_base = self.split_path(
+            list(reversed(path_obj.parents)) + [path_obj.name]
+        )
+
+    def __repr__(self):
+        return f"{type(self).__name__}({self.common_base})"
+
+    def split_path(self, path_obj_iterator):
+        return list(
+            os.sep if parent == '' else parent
+            for parent in
+            list(os.path.basename(parent) for parent in path_obj_iterator)
+        )
+
+    def split_parents(self, path_obj):
+        return self.split_path(reversed(path_obj.parents))
 
     def apply_path(self, path):
         path_obj = Path(path)
         if self.common_base is None:
-            self.common_base = self.get_parents(path_obj)
+            self.common_base = self.split_parents(path_obj)
         else:
-            path_parents = self.get_parents(path_obj)
+            path_parents = self.split_parents(path_obj)
             for idx, common_parent in enumerate(self.common_base):
                 if path_parents[idx] != common_parent:
                     self.common_base = self.common_base[:idx]
                     break
 
 
-class PathMap:
+class PathMap(MutableMapping):
 
-    def __init__(self):
+    def __init__(self, cache_entry=None):
+        if cache_entry is None:
+            self.create()
+        else:
+            self.deserialize(cache_entry)
+
+    def create(self):
         self.map = {}
-        self.base_k = CommonBasePath()
-        self.base_v = CommonBasePath()
+        self.base_key = CommonBasePath()
+        self.base_val = CommonBasePath()
 
-    def add(self, k, v):
+    def __getitem__(self, k):
+        return self.map[k]
+
+    def __setitem__(self, k, v):
         self.map[k] = v
-        self.base_k.apply_path(k)
-        self.base_v.apply_path(v)
+        self.base_key.apply_path(k)
+        self.base_val.apply_path(v)
+
+    def __delitem__(self, k):
+        raise NotImplementedError('Operation is not supported')
+
+    def __iter__(self):
+        return iter(self.map)
+
+    def __len__(self):
+        return len(self.map)
+
+    def __repr__(self):
+        return f"{type(self).__name__}({self.map})"
 
     def serialize(self):
         return {
             'map': self.map,
-            'base_k': str(self.base_k),
-            'base_v': str(self.base_v),
+            'base_key': self.base_key.serialize(),
+            'base_val': self.base_val.serialize(),
         }
+
+    def deserialize(self, cache_entry):
+        self.map = cache_entry['map']
+        self.base_key = CommonBasePath(cache_entry=cache_entry['base_key'])
+        self.base_val = CommonBasePath(cache_entry=cache_entry['base_val'])
 
     def __str__(self):
         return str(self.serialize())
@@ -75,7 +129,13 @@ class ImportMapGenerator:
         "application/javascript"
     ]
 
-    def __init__(self):
+    def __init__(self, cache_entry=None):
+        if cache_entry is None:
+            self.create()
+        else:
+            self.deserialize(cache_entry)
+
+    def create(self):
         self.module_basedir = None
         self.storage = staticfiles_storage
         if not self.local:
@@ -139,9 +199,9 @@ class ImportMapGenerator:
             content_type, encoding = mimetypes.guess_type(source_path)
             if content_type in self.map_mime_types:
                 if source_path.startswith(settings.BASE_DIR):
-                    self.base_map.add(source_path, target_path)
+                    self.base_map[source_path] = target_path
                 else:
-                    self.import_map.add(target_path, source_path)
+                    self.import_map[target_path] = source_path
 
     def has_common_path(self, path):
         try:
@@ -155,22 +215,24 @@ class ImportMapGenerator:
         return relative_path
 
     # es_module_path - a full path to valid existing es module
+    # warning: called after .deserialize(), thus only .base_map / .import_map instance attributes are
+    # assumed to be properly initialized.
     def get_import_map(self, es_module_path):
-        self.module_basedir = os.path.dirname(self.base_map.map[es_module_path])
+        self.module_basedir = os.path.dirname(self.base_map[es_module_path])
         relative_import_map = {
             self.to_relative_path(target_path): source_path
             for target_path, source_path
-            in self.import_map.map.items()
+            in self.import_map.items()
             if self.has_common_path(source_path)
         }
         return relative_import_map
 
-    def to_cache(self):
+    def serialize(self):
         return {
-            'base_map': self.base_map,
-            'import_map': self.import_map,
+            'base_map': self.base_map.serialize(),
+            'import_map': self.import_map.serialize(),
         }
 
-    def from_cache(self, cache_entry):
-        self.base_map = cache_entry['base_map']
-        self.import_map = cache_entry['import_map']
+    def deserialize(self, cache_entry):
+        self.base_map = PathMap(cache_entry=cache_entry['base_map'])
+        self.import_map = PathMap(cache_entry=cache_entry['import_map'])
