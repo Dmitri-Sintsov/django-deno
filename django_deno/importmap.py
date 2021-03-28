@@ -34,19 +34,34 @@ class CommonBasePath:
             self.deserialize(cache_entry)
 
     def __str__(self):
-        return os.path.join(*self.common_base)
+        return os.path.join(*(self.common_base + ['']))
+
+    @property
+    def common_base(self):
+        return self._common_base
+
+    @common_base.setter
+    def common_base(self, path_parts):
+        self._common_base = path_parts
+        self.common_base_str = str(self)
 
     def create(self):
         # dict with path parts
-        self.common_base = None
+        self.common_base = []
+        # path str
+        self.common_base_str = ''
 
     def serialize(self):
         return str(self)
 
+    def yield_path_parts(self, path_obj):
+        yield from reversed(path_obj.parents)
+        yield path_obj.name
+
     def deserialize(self, cache_entry: str):
         path_obj = Path(cache_entry)
         self.common_base = self.split_path(
-            list(reversed(path_obj.parents)) + [path_obj.name]
+            self.yield_path_parts(path_obj)
         )
 
     def __repr__(self):
@@ -64,7 +79,7 @@ class CommonBasePath:
 
     def apply_path(self, path):
         path_obj = Path(path)
-        if self.common_base is None:
+        if len(self.common_base) == 0:
             self.common_base = self.split_parents(path_obj)
         else:
             path_parents = self.split_parents(path_obj)
@@ -72,6 +87,18 @@ class CommonBasePath:
                 if path_parents[idx] != common_parent:
                     self.common_base = self.common_base[:idx]
                     break
+
+    def pack(self, path_str):
+        if path_str.startswith(self.common_base_str):
+            return path_str[len(self.common_base_str):]
+        else:
+            return path_str
+
+    def unpack(self, path_str):
+        if path_str.startswith(self.common_base_str):
+            return path_str
+        else:
+            return f"{self.common_base_str}{path_str}"
 
 
 class PathMap(MutableMapping):
@@ -90,6 +117,7 @@ class PathMap(MutableMapping):
     def __getitem__(self, k):
         return self.map[k]
 
+    # warning: automatically unpacks k:v. Do not use after .pack(), or call .pack() after
     def __setitem__(self, k, v):
         self.map[k] = v
         self.base_key.apply_path(k)
@@ -106,6 +134,30 @@ class PathMap(MutableMapping):
 
     def __repr__(self):
         return f"{type(self).__name__}({self.map})"
+
+    def get_unpacked(self, k):
+        if k in self.map:
+            # map is currently unpacked
+            return self.map[k]
+        else:
+            # map is currently packed
+            packed_k = self.base_key.pack(k)
+            v = self.map[packed_k]
+            return self.base_val.unpack(packed_k if v == '' else v)
+
+    def unpacked_items(self):
+        return {self.base_key.unpack(k): self.base_val.unpack(v) for k, v in self.map.items()}.items()
+
+    def pack(self):
+        map = {}
+        for k, v in self.map.items():
+            packed_k = self.base_key.pack(k)
+            packed_v = self.base_val.pack(v)
+            if packed_k == packed_v:
+                map[packed_k] = ''
+            else:
+                map[packed_k] = packed_v
+        self.map = map
 
     def serialize(self):
         return {
@@ -145,6 +197,8 @@ class ImportMapGenerator:
         self.base_map = PathMap()
         self.import_map = PathMap()
         self.collect_import_map()
+        self.base_map.pack()
+        self.import_map.pack()
 
     # django.contrib.staticfiles.management.commands.collectstatic.Command.local
     @cached_property
@@ -177,6 +231,10 @@ class ImportMapGenerator:
                         level=1,
                     )
 
+    def has_to_import(self, source_path):
+        content_type, encoding = mimetypes.guess_type(source_path)
+        return content_type in self.map_mime_types
+
     def add_to_import_map(self, path, prefixed_path, source_storage):
         if prefixed_path not in self.mapped_files:
             self.mapped_files.add(prefixed_path)
@@ -196,8 +254,7 @@ class ImportMapGenerator:
             source_path = source_storage.path(path)
             # The full path of the target file
             target_path = self.storage.path(prefixed_path)
-            content_type, encoding = mimetypes.guess_type(source_path)
-            if content_type in self.map_mime_types:
+            if self.has_to_import(source_path):
                 if source_path.startswith(settings.BASE_DIR):
                     self.base_map[source_path] = target_path
                 else:
@@ -218,11 +275,13 @@ class ImportMapGenerator:
     # warning: called after .deserialize(), thus only .base_map / .import_map instance attributes are
     # assumed to be properly initialized.
     def get_import_map(self, es_module_path):
-        self.module_basedir = os.path.dirname(self.base_map[es_module_path])
+        self.module_basedir = os.path.dirname(
+            self.base_map.get_unpacked(es_module_path)
+        )
         relative_import_map = {
             self.to_relative_path(target_path): source_path
             for target_path, source_path
-            in self.import_map.items()
+            in self.import_map.unpacked_items()
             if self.has_common_path(source_path)
         }
         return relative_import_map
