@@ -24,22 +24,6 @@ serialized_map_generator == import_map_generator.serialize()
 import_map == import_map_generator.get_import_map(os.path.join(settings.BASE_DIR, 'drf_gallery', 'static', 'components', 'main.js'))
 """
 
-def lookahead(iterable):
-    """Pass through all values from the given iterable, augmented by the
-    information if there are more values to come after the current one
-    (True), or if it is the last value (False).
-    """
-    # Get an iterator and pull the first value.
-    it = iter(iterable)
-    last = next(it)
-    # Run the iterator to exhaustion (starting from the second value).
-    for val in it:
-        # Report the *previous* value (more to come).
-        yield last, True
-        last = val
-    # Report the last value.
-    yield last, False
-
 
 class CommonBasePath:
 
@@ -73,28 +57,15 @@ class CommonBasePath:
     def serialize(self):
         return str(self)
 
-    def yield_path_parts(self, path_obj):
-        yield from reversed(path_obj.parents)
-        yield path_obj.name
-
     def deserialize(self, cache_entry: str):
         path_obj = Path(cache_entry)
-        self.common_base = self.split_path(
-            self.yield_path_parts(path_obj)
-        )
+        self.common_base = list(path_obj.parts)
 
     def __repr__(self):
         return f"{type(self).__name__}({self.common_base})"
 
-    def split_path(self, path_obj_iterator):
-        return list(
-            os.sep if parent == '' else parent
-            for parent in
-            list(os.path.basename(parent) for parent in path_obj_iterator)
-        )
-
     def split_parents(self, path_obj):
-        return self.split_path(reversed(path_obj.parents))
+        return list(path_obj.parts)[:-1]
 
     def apply_path(self, path):
         path_obj = Path(path)
