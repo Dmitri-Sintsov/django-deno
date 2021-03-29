@@ -33,6 +33,9 @@ class CommonBasePath:
         else:
             self.deserialize(cache_entry)
 
+    def __eq__(self, other):
+        return self._common_base == other._common_base and self.common_base_str == other.common_base_str
+
     def __str__(self):
         return os.path.join(*(self.common_base + ['']))
 
@@ -109,6 +112,9 @@ class PathMap(MutableMapping):
         else:
             self.deserialize(cache_entry)
 
+    def __eq__(self, other):
+        return self.map == other.map and self.base_key == other.base_key and self.base_val == other.base_val
+
     def create(self):
         self.map = {}
         self.base_key = CommonBasePath()
@@ -150,7 +156,7 @@ class PathMap(MutableMapping):
         packed_k, packed_v = self.unpack_relation(rel_k, self.map[rel_k])
         return self.base_val.unpack(packed_v)
 
-    def unpacked_items(self):
+    def unpack_items(self):
         for rel_k, rel_v in self.map.items():
             packed_k, packed_v = self.unpack_relation(rel_k, rel_v)
             yield self.base_key.unpack(packed_k), self.base_val.unpack(packed_v)
@@ -283,12 +289,12 @@ class ImportMapGenerator:
         self.module_basedir = os.path.dirname(
             self.base_map.get_unpacked(es_module_path)
         )
-        relative_import_map = {
-            self.to_relative_path(target_path): source_path
-            for target_path, source_path
-            in self.import_map.unpacked_items()
-            if self.has_common_path(source_path)
-        }
+        relative_import_map = PathMap()
+        for target_path, source_path in self.import_map.unpack_items():
+            if self.has_common_path(source_path):
+                relative_target_path = self.to_relative_path(target_path)
+                relative_import_map[relative_target_path] = source_path
+        relative_import_map.pack()
         return relative_import_map
 
     def serialize(self):
