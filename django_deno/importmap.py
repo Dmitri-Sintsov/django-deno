@@ -143,12 +143,24 @@ class PathMap(MutableMapping):
         return f"{type(self).__name__}({self.map})"
 
     def unpack_relation(self, rel_k, rel_v):
-        packed_v = rel_k if rel_v == '' else rel_v
+        if rel_v == '':
+            packed_v = rel_k
+        elif rel_v.endswith('.'):
+            packed_k_no_rel = rel_k.lstrip('.' + os.sep)
+            packed_v = f"{rel_v[:-1]}{packed_k_no_rel}"
+        else:
+            packed_v = rel_v
         return rel_k, packed_v
 
-    def pack_relation(self, k, v):
-        rel_v = '' if k == v else v
-        return k, rel_v
+    def pack_relation(self, packed_k, packed_v):
+        packed_k_no_rel = packed_k.lstrip('.' + os.sep)
+        if packed_k == packed_v:
+            rel_v = ''
+        elif packed_v.endswith(packed_k_no_rel):
+            rel_v = packed_v[:-len(packed_k_no_rel)] + '.'
+        else:
+            rel_v = packed_v
+        return packed_k, rel_v
 
     def get_unpacked(self, k):
         # Assuming that map is currently packed
