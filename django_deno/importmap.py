@@ -117,7 +117,8 @@ class PathMap(MutableMapping):
     def __getitem__(self, k):
         return self.map[k]
 
-    # warning: automatically unpacks k:v. Do not use after .pack(), or call .pack() after
+    # Warning: Assumes k:v are unpacked. Automatically begins to unpack k:v.
+    # Do not call after .pack(), otherwise one have to perform .unpack() / .pack() later.
     def __setitem__(self, k, v):
         self.map[k] = v
         self.base_key.apply_path(k)
@@ -135,28 +136,32 @@ class PathMap(MutableMapping):
     def __repr__(self):
         return f"{type(self).__name__}({self.map})"
 
+    def unpack_relation(self, rel_k, rel_v):
+        packed_v = rel_k if rel_v == '' else rel_v
+        return rel_k, packed_v
+
+    def pack_relation(self, k, v):
+        rel_v = '' if k == v else v
+        return k, rel_v
+
     def get_unpacked(self, k):
-        if k in self.map:
-            # map is currently unpacked
-            return self.map[k]
-        else:
-            # map is currently packed
-            packed_k = self.base_key.pack(k)
-            v = self.map[packed_k]
-            return self.base_val.unpack(packed_k if v == '' else v)
+        # Assuming that map is currently packed
+        rel_k = self.base_key.pack(k)
+        packed_k, packed_v = self.unpack_relation(rel_k, self.map[rel_k])
+        return self.base_val.unpack(packed_v)
 
     def unpacked_items(self):
-        return {self.base_key.unpack(k): self.base_val.unpack(v) for k, v in self.map.items()}.items()
+        for rel_k, rel_v in self.map.items():
+            packed_k, packed_v = self.unpack_relation(rel_k, rel_v)
+            yield self.base_key.unpack(packed_k), self.base_val.unpack(packed_v)
 
     def pack(self):
         map = {}
         for k, v in self.map.items():
             packed_k = self.base_key.pack(k)
             packed_v = self.base_val.pack(v)
-            if packed_k == packed_v:
-                map[packed_k] = ''
-            else:
-                map[packed_k] = packed_v
+            rel_k, rel_v = self.pack_relation(packed_k, packed_v)
+            map[rel_k] = rel_v
         self.map = map
 
     def serialize(self):
