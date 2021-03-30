@@ -1,4 +1,5 @@
 Django
+# bson is used by but not required by dict-schema-validator
 bson
 dict-schema-validator
 requests
