@@ -1,12 +1,10 @@
 import json
-import requests
-
-from requests.exceptions import RequestException
-from urllib3.exceptions import HTTPError
 
 from django.http import (
     HttpResponse, StreamingHttpResponse
 )
+
+from .base import JsonApi
 
 from ..conf import settings
 from ..utils import ex_to_str
@@ -22,32 +20,35 @@ def should_rollup(fullpath):
     return False
 
 
-def post_rollup(fullpath, content_type):
-    try:
-        rollup_response = requests.post(
-            f'{settings.DENO_URL}/rollup/',
-            json={
-                'filename': str(fullpath.name),
-                'basedir': str(fullpath.parent),
-            },
-            stream=True
-        )
-        if rollup_response.status_code == 200:
+class DenoRollup(JsonApi):
+
+    location = '/rollup/'
+    extra_post_kwargs = {'stream': True}
+
+    def __init__(self, content_type):
+        self.content_type = content_type
+
+    def parse_post_response(self, response):
+        if response.status_code == 200:
             return StreamingHttpResponse(
-                rollup_response.iter_content(chunk_size=settings.DENO_PROXY_CHUNK_SIZE), content_type=content_type
+                response.iter_content(chunk_size=settings.DENO_PROXY_CHUNK_SIZE), content_type=self.content_type
             )
         else:
             response = HttpResponse(
-                'throw Error({});'.format(json.dumps(rollup_response.text)),
-                content_type=content_type
+                'throw Error({});'.format(json.dumps(response.text)),
+                content_type=self.content_type
             )
             response.status_code = 200
             return response
-    except (HTTPError, RequestException) as ex:
+
+    def parse_not_responding_error(self, ex):
         ex_string = json.dumps(ex_to_str(ex))
         response = HttpResponse(
             f'throw Error({ex_string});',
-            content_type=content_type
+            content_type=self.content_type
         )
         response.status_code = 200
         return response
+
+    def parse_http_error(self, ex):
+        return self.parse_not_responding_error()

@@ -14,7 +14,7 @@ from django.http import (
     FileResponse, Http404, HttpResponseNotModified, StreamingHttpResponse
 )
 
-from .api.rollup import should_rollup, post_rollup
+from .api.rollup import should_rollup, DenoRollup
 
 
 # from django.views.static import serve
@@ -46,7 +46,10 @@ def serve_rollup(request, path, document_root=None, show_indexes=False):
     content_type, encoding = mimetypes.guess_type(str(fullpath))
     content_type = content_type or 'application/octet-stream'
     if content_type == "application/javascript" and should_rollup(fullpath):
-        response = post_rollup(fullpath, content_type)
+        response = DenoRollup(content_type=content_type).post({
+            'filename': str(fullpath.name),
+            'basedir': str(fullpath.parent),
+        })
         if not isinstance(response, StreamingHttpResponse):
             # report error
             return response

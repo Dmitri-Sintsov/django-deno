@@ -2,53 +2,63 @@ import requests
 import socket
 import time
 
-from dict_schema_validator import validator
+from jsonschema import validate
 from requests.exceptions import ConnectionError
 from urllib3.exceptions import HTTPError
 
 from ..conf import settings
 
 
-class Api:
+class JsonApi:
 
     server = settings.DENO_SERVER
     url = settings.DENO_URL
-    schema = None
+    source_schema = None
+    target_schema = None
     location = '/'
+    extra_post_kwargs = {}
 
-    def post_response(self, response):
+    def parse_post_response(self, response):
         r = response.json()
-        if self.schema is not None:
-            errors = validator.validate(self.schema, r)
-            for err in errors:
-                raise TypeError(err['msg'])
+        if self.target_schema is not None:
+            validate(instance=r, schema=self.target_schema)
         return r
 
-    def post(self, json_data, timeout=None):
-        if timeout is None:
-            timeout = settings.DENO_TIMEOUT
+    def get_post_kwargs(self, json_data):
+        post_kwargs = {
+            'url': f'{self.url}{self.location}',
+            'json': json_data,
+        }
+        post_kwargs.update(self.extra_post_kwargs)
+        return post_kwargs
+
+    def parse_not_responding_error(self, ex):
+        # none indicates server is not responding (or not running)
+        return None
+
+    def parse_http_error(self, ex):
+        return ex
+
+    def post(self, json_data, timeout=settings.DENO_TIMEOUT):
+        if self.source_schema is not None:
+            validate(instance=json_data, schema=self.source_schema)
         try:
-            self.wait_for_port(self.server['port'], self.server['host'], timeout)
-            response = requests.post(
-                f'{self.url}{self.location}',
-                json=json_data,
-            )
+            self.wait_socket(timeout)
+            post_kwargs = self.get_post_kwargs(json_data)
+            response = requests.post(**post_kwargs)
             try:
-                return self.post_response(response)
+                return self.parse_post_response(response)
             except Exception as ex:
                 return ex
         except (ConnectionError, TimeoutError) as ex:
-            # none indicates server is not responding (or not running)
-            return None
+            return self.parse_not_responding_error(ex)
         except HTTPError as ex:
-            return ex
+            return self.parse_http_error(ex)
 
     # https://gist.github.com/butla/2d9a4c0f35ea47b7452156c96a4e7b12
-    def wait_for_port(self, port, host='localhost', timeout=5.0):
+    def wait_socket(self, timeout=None):
         """Wait until a port starts accepting TCP connections.
         Args:
-            port (int): Port number.
-            host (str): Host address on which the port should exist.
             timeout (float): In seconds. How long to wait before raising errors.
         Raises:
             TimeoutError: The port isn't accepting connection after time specified in `timeout`.
@@ -57,10 +67,12 @@ class Api:
             start_time = time.perf_counter()
             while True:
                 try:
-                    with socket.create_connection((host, port), timeout=timeout):
+                    with socket.create_connection((self.server['host'], self.server['port']), timeout=timeout):
                         break
                 except OSError as ex:
                     time.sleep(0.01)
                     if time.perf_counter() - start_time >= timeout:
-                        raise TimeoutError('Waited too long for the port {} on host {} to start accepting '
-                                           'connections.'.format(port, host)) from ex
+                        raise TimeoutError(
+                            f"Waited too long for the port {self.server['port']} on host {self.server['host']} "
+                            "to start accepting connections."
+                        ) from ex

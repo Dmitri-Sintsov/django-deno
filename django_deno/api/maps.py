@@ -1,11 +1,14 @@
-from .base import Api
+from .base import JsonApi
 
 
-class DenoMaps(Api):
+class DenoMaps(JsonApi):
 
     location = '/maps/'
-    schema = {
-        'server': ['string'],
-        'pid': ['int'],
-        'version': ['string'],
+    target_schema = {
+        'type': 'object',
+        'properties': {
+            'server': {'type': 'string'},
+            'pid': {'type': 'integer'},
+            'version': {'type': 'string'},
+        }
     }

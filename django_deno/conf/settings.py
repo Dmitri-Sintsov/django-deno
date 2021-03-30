@@ -21,7 +21,7 @@ else:
 DENO_SERVER = {
     'protocol': 'http',
     'host': '127.0.0.1',
-    'port': 8000,
+    'port': 8099,
 }
 DENO_SERVER.update(getattr(settings, 'DENO_SERVER', {}))
 
