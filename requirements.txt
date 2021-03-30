@@ -1,3 +1,5 @@
 Django
+bson
+dict-schema-validator
 requests
 psutil

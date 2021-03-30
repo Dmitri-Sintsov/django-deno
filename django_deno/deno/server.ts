@@ -9,38 +9,46 @@ let args = parse(Deno.args);
 const httpHost = args['host'];
 const httpPort = args['port'];
 
+const apiStatus = {
+    "server": "Django deno server",
+    "version": "0.0.1",
+    "pid": Deno.pid,
+};
+
+let baseMap = {};
+let importMap = {};
+
 const router = new Router();
 router
 .get("/status/", (context) => {
-    context.response.body = {
-        "server": "Django deno server",
-        "version": "0.0.1",
-        "pid": Deno.pid,
-    };
+    context.response.body = apiStatus;
+})
+.post("/maps/", async (context) => {
+    const body = context.request.body({ type: 'json' });
+    const value = await body.value;
+    baseMap = value['base_map'];
+    importMap = value['import_map'];
+    context.response.body = apiStatus;
+    context.response.status = 200;
 })
 .post("/rollup/", async (context) => {
-    let filenameParam: string | null | undefined;
-    let basedirParam: string | null | undefined;
-
     // HTTP POST
-    const body = context.request.body({ type: 'form' });
+    const body = context.request.body({ type: 'json' });
     const value = await body.value;
-    filenameParam = value.get('filename');
-    basedirParam = value.get('basedir');
 
     let filename: string;
-    if (filenameParam === undefined || filenameParam === null) {
+    if (typeof value['filename'] === 'undefined') {
         context.response.body = 'No filename arg specified';
         context.response.status = 500;
     } else {
-        filename = filenameParam;
+        filename = value['filename'];
         // https://github.com/lucacasonato/dext.ts/issues/65
         let importmap = {
             imports: {
                 "../django-deno/settings.js": "/home/user/work/drf-gallery/lib/python3.8/site-packages/django_deno/static/django-deno/settings.js"
             }
         };
-        let responseFields = await inlineRollup(basedirParam, filename, importmap);
+        let responseFields = await inlineRollup(value['basedir'], filename, importmap);
         responseFields.toOakContext(context);
     }
 });

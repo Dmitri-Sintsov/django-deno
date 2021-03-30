@@ -13,8 +13,10 @@ DENO_PATH = os.path.join(DENO_INSTALL, 'bin', 'deno')
 if getattr(settings, 'DENO_DEBUG', False):
     # chrome://inspect
     DENO_RUN_FLAGS = ["-A", "--inspect-brk", "--unstable", "--allow-net"]
+    DENO_TIMEOUT = 60
 else:
     DENO_RUN_FLAGS = ["-A", "--unstable", "--allow-net"]
+    DENO_TIMEOUT = 10
 
 DENO_SERVER = {
     'protocol': 'http',

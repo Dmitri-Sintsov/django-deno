@@ -26,7 +26,7 @@ def post_rollup(fullpath, content_type):
     try:
         rollup_response = requests.post(
             f'{settings.DENO_URL}/rollup/',
-            data={
+            json={
                 'filename': str(fullpath.name),
                 'basedir': str(fullpath.parent),
             },

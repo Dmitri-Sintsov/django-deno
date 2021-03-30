@@ -10,9 +10,9 @@ from django.contrib.staticfiles.management.commands import runserver
 from django_deno import __version__
 from ...handlers import RollupFilesHandler
 from ...utils import ex_to_str
-from ...api.status import get_api_status
+from ...api.maps import DenoMaps
 from ...run.server import deno_server
-
+from ...importmap import ImportMapGenerator
 
 lock = threading.Lock()
 
@@ -31,7 +31,9 @@ class Command(runserver.Command):
     def get_handler(self, *args, **options):
         global deno_process
         self.orig_sigint = None
-        deno_api_status = get_api_status()
+        import_map_generator = ImportMapGenerator()
+        serialized_map_generator = import_map_generator.serialize()
+        deno_api_status = DenoMaps().post(serialized_map_generator, timeout=0.1)
         if deno_api_status is None:
             deno_process = deno_server()
             if deno_process.poll() is None:
@@ -43,16 +45,23 @@ class Command(runserver.Command):
             self.terminate(ex_to_str(deno_api_status))
         else:
             deno_process = psutil.Process(deno_api_status['pid'])
-            if deno_api_status['api_version'] != __version__:
-                self.terminate(
-                    f"Version of deno server api does not match, "
-                    f"found: {deno_api_status['api_version']}, required: {__version__}"
-                )
+            self.stdout.write(
+                f"Already running deno server pid={deno_process.pid}, api version={deno_api_status['version']}"
+            )
+        if not isinstance(deno_api_status, dict):
+            deno_api_status = DenoMaps().post(serialized_map_generator)
+        if isinstance(deno_api_status, Exception) or deno_api_status is None:
+            self.stderr.write("The service running is not deno server or deno server is not running properly")
+            if isinstance(deno_api_status, Exception):
+                self.terminate(ex_to_str(deno_api_status))
             else:
-                deno_process = psutil.Process(deno_api_status['pid'])
-                self.stdout.write(
-                    f"Already running deno server pid={deno_process.pid}, api_version={deno_api_status['api_version']}"
-                )
+                self.terminate('')
+        elif deno_api_status['version'] != __version__:
+            self.terminate(
+                f"Version of deno server api does not match, "
+                f"found: {deno_api_status['version']}, required: {__version__}"
+            )
+        self.stdout.write(f"Sent import maps to deno server pid={deno_process.pid}")
         """
         Return the static files serving handler wrapping the default handler,
         if static files should be served. Otherwise return the default handler.
