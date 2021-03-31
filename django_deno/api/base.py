@@ -1,3 +1,4 @@
+import json
 import requests
 import socket
 import time
@@ -48,6 +49,8 @@ class JsonApi:
             response = requests.post(**post_kwargs)
             try:
                 return self.parse_post_response(response)
+            except json.decoder.JSONDecodeError as ex:
+                return HTTPError(f"JSONDecodeError {str(ex)} {response.text}")
             except Exception as ex:
                 return ex
         except (ConnectionError, TimeoutError) as ex:

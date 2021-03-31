@@ -12,7 +12,7 @@ class CommonBasePath {
         if (pathStr.startsWith(this.commonBaseStr)) {
             return pathStr;
         } else {
-            return `{this.commonBaseStr}{pathStr}`;
+            return `${this.commonBaseStr}${pathStr}`;
         }
     }
 }
@@ -39,10 +39,10 @@ class PathMap {
     baseVal: CommonBasePath;
 
     constructor(cacheEntry: PathMapCache) {
-        this.map = this.unpack(cacheEntry.map);
+        // The order is important, .baseKey / .baseVal should be initialized before .map:
         this.baseKey = new CommonBasePath(cacheEntry.base_key);
         this.baseVal = new CommonBasePath(cacheEntry.base_val);
-
+        this.map = this.unpack(cacheEntry.map);
     }
 
     public unpackRelation(relPathItem: PathItem): PathItem {

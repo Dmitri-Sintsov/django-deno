@@ -49,6 +49,7 @@ class Command(runserver.Command):
                 f"Already running deno server pid={deno_process.pid}, api version={deno_api_status['version']}"
             )
         if not isinstance(deno_api_status, dict):
+            self.stdout.write(f"Sending import maps to deno server pid={deno_process.pid}")
             deno_api_status = DenoMaps().post(serialized_map_generator)
         if isinstance(deno_api_status, Exception) or deno_api_status is None:
             self.stderr.write("The service running is not deno server or deno server is not running properly")
