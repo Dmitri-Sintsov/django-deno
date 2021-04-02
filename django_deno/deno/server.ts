@@ -3,7 +3,7 @@ import { parse } from "https://deno.land/std/flags/mod.ts";
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 import type { ImportMapObject } from "https://deno.land/x/drollup/plugins/importmap/mod.ts";
 
-import { PathMap } from "./importmap.ts";
+import { ImportMapGenerator } from "./importmap.ts";
 import inlineRollup from "./rollup.ts";
 
 let args = parse(Deno.args);
@@ -16,8 +16,7 @@ const apiStatus = {
     "pid": Deno.pid,
 };
 
-let baseMap: PathMap;
-let importMap: PathMap;
+let importMapGenerator: ImportMapGenerator;
 
 const router = new Router();
 router
@@ -27,8 +26,10 @@ router
 .post("/maps/", async (context) => {
     const body = context.request.body({ type: 'json' });
     const value = await body.value;
-    baseMap = new PathMap(value['base_map']);
-    importMap = new PathMap(value['import_map']);
+    importMapGenerator = new ImportMapGenerator({
+        baseMap: value['base_map'],
+        importMap: value['import_map'],
+    });
     context.response.body = apiStatus;
     context.response.status = 200;
 })
@@ -45,10 +46,15 @@ router
         filename = value['filename'];
         // https://github.com/lucacasonato/dext.ts/issues/65
         let importmap = {
+            imports: importMapGenerator.getImportMap(value['basedir'], filename)
+        };
+        /*
+        importmap = {
             imports: {
                 "../django-deno/settings.js": "/home/user/work/drf-gallery/lib/python3.8/site-packages/django_deno/static/django-deno/settings.js"
             }
         };
+        */
         let responseFields = await inlineRollup(value['basedir'], filename, importmap);
         responseFields.toOakContext(context);
     }

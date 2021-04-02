@@ -7,8 +7,13 @@ class LocalPath {
         this.path = path;
     }
 
+    static fromPathParts(parts: string[]) {
+        let instance = new this(LocalPath.join(parts));
+        return instance;
+    }
+
     public getSeparator(): string {
-        return this.path.search('/') ? '/' : '\\';
+        return this.path.search('/')  === -1 ? '\\' : '/';
     }
 
     public split(): string[] {
@@ -17,28 +22,56 @@ class LocalPath {
         );
     }
 
-    public join(parts: string[]) {
-        return '/'.join(parts);
+    static join(parts: string[]) {
+        return parts.join('/');
     }
 
-    public getDirParts() string[]: {
+    public getDirParts(): string[] {
         return this.split().slice(0, -1);
     }
 
+    public getBaseName(): string {
+        // Use object deconstructing to get last element from array
+        const {length, [length-1]: baseName} = this.split();
+        return baseName;
+    };
+
     public getDirName(): string {
-        return this.join(this.getDirParts());
+        return LocalPath.join(this.getDirParts());
     }
 
-    public toRelativePath(startDir: string) {
-        if (!this.path.startsWith(startDir)) {
-            throw new Error(`${this.path} does not start with ${start}`);
-        }
+    /**
+    >>> import os
+    >>> path = "/home/User/Desktop/file.txt"
+    >>> start = "/home/User"
+    >>> os.path.relpath(path, start)
+    'Desktop/file.txt'
+    >>> start = "/home/User/Download"
+    >>> os.path.relpath(path, start)
+    '../Desktop/file.txt'
+    */
+    // Assumes that both this.path and startDir are absolute pathes.
+    public toRelativePath(startDir: string): string {
         let startDirParts = new LocalPath(startDir).split();
         let thisDirParts = this.getDirParts();
-        let reverseStartDirParts = startDirParts.slice().reverse();
-        let reverseThisDirParts = thisDirParts.slice().reverse();
-        let relPath: string[] = [];
-        // https://www.geeksforgeeks.org/python-os-path-relpath-method/
+        let idx: string = '0';
+        let i: number = Number(idx);
+        // Find common base path.
+        for (idx in startDirParts) {
+            i = Number(idx);
+            if (i >= thisDirParts.length || startDirParts[i] !== thisDirParts[i]) {
+                break;
+            }
+        }
+        // Walk down to common base path with '..'.
+        let parents = Array(startDirParts.length - i).fill('..');
+        let relParts = parents.concat(thisDirParts.slice(i));
+        if (relParts.length !== 0) {
+            relParts.push(this.getBaseName());
+            return LocalPath.fromPathParts(relParts).path;
+        } else {
+            return this.path;
+        }
     }
 }
 
@@ -92,7 +125,7 @@ class PathMap {
         let packedPathItem: PathItem = {key: relPathItem.key, val: ''};
         if (relPathItem.val == '') {
             packedPathItem.val = relPathItem.key;
-        } else if (packedPathItem.val.endsWith('.')) {
+        } else if (relPathItem.val.endsWith('.')) {
             let packedKeyNoRel = relPathItem.key.replace(/^\.+/gm, '');
             packedPathItem.val = relPathItem.val.slice(0, -1) + packedKeyNoRel;
         } else {
@@ -101,7 +134,7 @@ class PathMap {
         return packedPathItem;
     }
 
-    public entries(): [string, string] {
+    public entries(): [string, string][] {
         return Object.entries(this.map);
     }
 
@@ -131,13 +164,18 @@ class ImportMapGenerator {
 
     constructor(cacheEntry: ImportMapCache) {
         this.moduleBaseDir = '';
-        this.baseMap = new PathMap(ImportMapCache.baseMap);
-        this.importMap = new PathMap(ImportMapCache.importMap);
+        this.baseMap = new PathMap(cacheEntry.baseMap);
+        this.importMap = new PathMap(cacheEntry.importMap);
     }
 
-    public getImportMap(esModulePath): MapItems {
+    public getImportMap(esModulePath: string, esModuleName: string): MapItems {
+        let esModuleLocalPath = LocalPath.fromPathParts(
+            new LocalPath(esModulePath)
+            .split()
+            .concat([esModuleName])
+        );
         this.moduleBaseDir = new LocalPath(
-            this.baseMap.map[esModulePath]
+            this.baseMap.map[esModuleLocalPath.path]
         ).getDirName();
         let relativeImportMap: MapItems = {};
         let targetPath: string;
