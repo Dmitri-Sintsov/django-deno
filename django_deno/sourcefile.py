@@ -16,6 +16,10 @@ class SourceFile:
         b'export ',
         b'import ',
     ]
+    rollup_hints = [
+        b'"use rollup"',
+        b"'use rollup'",
+    ]
 
     def __init__(self, source_path):
         if isinstance(source_path, Path):
@@ -61,7 +65,7 @@ class SourceFile:
         if settings.DENO_ENABLE and self.stat.st_size > 0:
             with self.get_mmap() as mfile:
                 if self.is_rollup_module(mfile):
-                    for hint in settings.DENO_ROLLUP_HINTS:
+                    for hint in self.rollup_hints:
                         if mfile[:len(hint)] == hint:
                             return True
         return False

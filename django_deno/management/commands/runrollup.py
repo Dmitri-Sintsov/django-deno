@@ -11,7 +11,7 @@ from django_deno import __version__
 from ...handlers import RollupFilesHandler
 from ...utils import ex_to_str
 from ...api.maps import DenoMaps
-from ...run.server import deno_server
+from ...run.server import DenoServer
 from ...importmap import ImportMapGenerator
 
 lock = threading.Lock()
@@ -37,7 +37,7 @@ class Command(runserver.Command):
         serialized_map_generator = import_map_generator.serialize()
         deno_api_status = DenoMaps().post(serialized_map_generator, timeout=0.1)
         if deno_api_status is None:
-            deno_process = deno_server()
+            deno_process = DenoServer()()
             if deno_process.poll() is None:
                 self.stdout.write(f"Starting deno server pid={deno_process.pid}")
             else:

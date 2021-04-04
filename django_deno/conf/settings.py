@@ -11,11 +11,8 @@ if DENO_INSTALL is None:
 DENO_PATH = os.path.join(DENO_INSTALL, 'bin', 'deno')
 
 if getattr(settings, 'DENO_DEBUG', False):
-    # chrome://inspect
-    DENO_RUN_FLAGS = ["-A", "--inspect-brk", "--unstable", "--allow-net"]
     DENO_TIMEOUT = 60
 else:
-    DENO_RUN_FLAGS = ["-A", "--unstable", "--allow-net"]
     DENO_TIMEOUT = 10
 
 DENO_SERVER = {
@@ -28,6 +25,3 @@ DENO_SERVER.update(getattr(settings, 'DENO_SERVER', {}))
 DENO_URL = f'{DENO_SERVER["protocol"]}://{DENO_SERVER["host"]}:{DENO_SERVER["port"]}'
 
 DENO_PROXY_CHUNK_SIZE = getattr(settings, 'DENO_PROXY_CHUNK_SIZE', 256 * 1024)
-
-DENO_ROLLUP_HINTS = getattr(settings, 'DENO_ROLLUP_HINTS', [b'"use rollup"', b"'use rollup'"])
-DENO_ROLLUP_HINTS_MAXLEN = max([len(hint) for hint in DENO_ROLLUP_HINTS])
