@@ -44,7 +44,7 @@ def serve_rollup(request, path, document_root=None, show_indexes=False):
         raise Http404(_('“%(path)s” does not exist') % {'path': fullpath})
     statobj = fullpath.stat()
 
-    source_file = SourceFile(str(fullpath))
+    source_file = SourceFile(fullpath)
     if source_file.should_rollup():
         response = DenoRollup(content_type=source_file.content_type).post({
             'filename': str(fullpath.name),
