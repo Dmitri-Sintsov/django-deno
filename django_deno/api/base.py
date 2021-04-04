@@ -14,15 +14,15 @@ class JsonApi:
 
     server = settings.DENO_SERVER
     url = settings.DENO_URL
-    source_schema = None
-    target_schema = None
+    request_schema = None
+    response_schema = None
     location = '/'
     extra_post_kwargs = {}
 
     def parse_post_response(self, response):
         r = response.json()
-        if self.target_schema is not None:
-            validate(instance=r, schema=self.target_schema)
+        if self.response_schema is not None:
+            validate(instance=r, schema=self.response_schema)
         return r
 
     def get_post_kwargs(self, json_data):
@@ -41,8 +41,8 @@ class JsonApi:
         return ex
 
     def post(self, json_data, timeout=settings.DENO_TIMEOUT):
-        if self.source_schema is not None:
-            validate(instance=json_data, schema=self.source_schema)
+        if self.request_schema is not None:
+            validate(instance=json_data, schema=self.request_schema)
         try:
             self.wait_socket(timeout)
             post_kwargs = self.get_post_kwargs(json_data)

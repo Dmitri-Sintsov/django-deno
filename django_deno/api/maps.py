@@ -4,7 +4,7 @@ from .base import JsonApi
 class DenoMaps(JsonApi):
 
     location = '/maps/'
-    target_schema = {
+    response_schema = {
         'type': 'object',
         'properties': {
             'server': {'type': 'string'},
