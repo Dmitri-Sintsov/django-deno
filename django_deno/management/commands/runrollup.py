@@ -22,6 +22,8 @@ deno_process = None
 
 class Command(runserver.Command):
 
+    help = f"{runserver.Command.help} Starts Deno Web server to serve rollup bundles from static files."
+
     def terminate(self, error_message):
         self.stderr.write(error_message)
         # raising CommandError will not shut down test server as it's running in separate thread.

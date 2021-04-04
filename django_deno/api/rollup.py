@@ -10,16 +10,6 @@ from ..conf import settings
 from ..utils import ex_to_str
 
 
-def should_rollup(fullpath):
-    if settings.DENO_ENABLE:
-        with fullpath.open('rb') as f:
-            file_begin = f.read(settings.DENO_ROLLUP_HINTS_MAXLEN)
-            for hint in settings.DENO_ROLLUP_HINTS:
-                if file_begin.startswith(hint):
-                    return True
-    return False
-
-
 class DenoRollup(JsonApi):
 
     location = '/rollup/'

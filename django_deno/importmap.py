@@ -1,5 +1,4 @@
 from collections import MutableMapping
-import mimetypes
 import os
 
 from pathlib import Path
@@ -9,6 +8,8 @@ from django.conf import settings
 from django.contrib.staticfiles.finders import get_finders
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.utils.functional import cached_property
+
+from .sourcefile import SourceFile
 
 
 # Todo check with Django 2.2 / Django 3.2.
@@ -187,10 +188,6 @@ class PathMap(MutableMapping):
 
 class ImportMapGenerator:
 
-    map_mime_types = [
-        "application/javascript"
-    ]
-
     def __init__(self, cache_entry=None):
         if cache_entry is None:
             self.create()
@@ -241,10 +238,6 @@ class ImportMapGenerator:
                         level=1,
                     )
 
-    def has_to_import(self, source_path):
-        content_type, encoding = mimetypes.guess_type(source_path)
-        return content_type in self.map_mime_types
-
     def add_to_import_map(self, path, prefixed_path, source_storage):
         if prefixed_path not in self.mapped_files:
             self.mapped_files.add(prefixed_path)
@@ -264,7 +257,8 @@ class ImportMapGenerator:
             source_path = source_storage.path(path)
             # The full path of the target file
             target_path = self.storage.path(prefixed_path)
-            if self.has_to_import(source_path):
+            source_file = SourceFile(source_path)
+            if source_file.has_to_import():
                 if source_path.startswith(settings.BASE_DIR):
                     self.base_map[source_path] = target_path
                 else:

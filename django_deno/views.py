@@ -1,4 +1,3 @@
-import mimetypes
 import os
 import posixpath
 
@@ -14,7 +13,8 @@ from django.http import (
     FileResponse, Http404, HttpResponseNotModified, StreamingHttpResponse
 )
 
-from .api.rollup import should_rollup, DenoRollup
+from .sourcefile import SourceFile
+from .api.rollup import DenoRollup
 
 
 # from django.views.static import serve
@@ -43,10 +43,10 @@ def serve_rollup(request, path, document_root=None, show_indexes=False):
     if not fullpath.exists():
         raise Http404(_('“%(path)s” does not exist') % {'path': fullpath})
     statobj = fullpath.stat()
-    content_type, encoding = mimetypes.guess_type(str(fullpath))
-    content_type = content_type or 'application/octet-stream'
-    if content_type == "application/javascript" and should_rollup(fullpath):
-        response = DenoRollup(content_type=content_type).post({
+
+    source_file = SourceFile(str(fullpath))
+    if source_file.should_rollup():
+        response = DenoRollup(content_type=source_file.content_type).post({
             'filename': str(fullpath.name),
             'basedir': str(fullpath.parent),
         })
@@ -58,10 +58,10 @@ def serve_rollup(request, path, document_root=None, show_indexes=False):
         if not was_modified_since(request.META.get('HTTP_IF_MODIFIED_SINCE'),
                                   statobj.st_mtime, statobj.st_size):
             return HttpResponseNotModified()
-        response = FileResponse(fullpath.open('rb'), content_type=content_type)
+        response = FileResponse(fullpath.open('rb'), content_type=source_file.content_type)
     response["Last-Modified"] = http_date(statobj.st_mtime)
-    if encoding:
-        response["Content-Encoding"] = encoding
+    if source_file.encoding:
+        response["Content-Encoding"] = source_file.encoding
     return response
 
 
