@@ -1,3 +1,5 @@
+import base64
+import hashlib
 import json
 import requests
 import socket
@@ -7,17 +9,20 @@ from jsonschema import validate
 from requests.exceptions import ConnectionError
 from urllib3.exceptions import HTTPError
 
-from ..conf import settings
+from django.conf import settings
+
+from ..conf.settings import DENO_SERVER, DENO_URL, DENO_TIMEOUT
 
 
 class JsonApi:
 
-    server = settings.DENO_SERVER
-    url = settings.DENO_URL
+    server = DENO_SERVER
+    url = DENO_URL
     request_schema = None
     response_schema = None
     location = '/'
     extra_post_kwargs = {}
+    use_site_id = True
 
     def parse_post_response(self, response):
         r = response.json()
@@ -25,10 +30,16 @@ class JsonApi:
             validate(instance=r, schema=self.response_schema)
         return r
 
+    def get_json_data(self, json_data):
+        if self.use_site_id:
+            site_hash = hashlib.sha256(f"{settings.BASE_DIR}{settings.SESSION_COOKIE_NAME}".encode('utf-8')).digest()
+            json_data['site_id'] = base64.b64encode(site_hash).decode('utf-8')
+        return json_data
+
     def get_post_kwargs(self, json_data):
         post_kwargs = {
             'url': f'{self.url}{self.location}',
-            'json': json_data,
+            'json': self.get_json_data(json_data),
         }
         post_kwargs.update(self.extra_post_kwargs)
         return post_kwargs
@@ -40,7 +51,7 @@ class JsonApi:
     def parse_http_error(self, ex):
         return ex
 
-    def post(self, json_data, timeout=settings.DENO_TIMEOUT):
+    def post(self, json_data, timeout=DENO_TIMEOUT):
         if self.request_schema is not None:
             validate(instance=json_data, schema=self.request_schema)
         try:

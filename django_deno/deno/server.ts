@@ -16,7 +16,15 @@ const apiStatus = {
     "pid": Deno.pid,
 };
 
-let importMapGenerator: ImportMapGenerator;
+interface Site {
+    importMapGenerator: ImportMapGenerator;
+};
+
+interface Sites {
+    [index: string]: Site;
+};
+
+let sites: Sites = {};
 
 const router = new Router();
 router
@@ -26,10 +34,13 @@ router
 .post("/maps/", async (context) => {
     const body = context.request.body({ type: 'json' });
     const value = await body.value;
-    importMapGenerator = new ImportMapGenerator({
-        baseMap: value['base_map'],
-        importMap: value['import_map'],
-    });
+    const siteId = value['site_id'];
+    sites[siteId] = {
+        importMapGenerator: new ImportMapGenerator({
+            baseMap: value['base_map'],
+            importMap: value['import_map'],
+        })
+    };
     context.response.body = apiStatus;
     context.response.status = 200;
 })
@@ -37,6 +48,7 @@ router
     // HTTP POST
     const body = context.request.body({ type: 'json' });
     const value = await body.value;
+    const site = sites[value['site_id']];
 
     let filename: string;
     if (typeof value['filename'] === 'undefined') {
@@ -46,7 +58,7 @@ router
         filename = value['filename'];
         // https://github.com/lucacasonato/dext.ts/issues/65
         let importmap = {
-            imports: importMapGenerator.getImportMap(value['basedir'], filename)
+            imports: site.importMapGenerator.getImportMap(value['basedir'], filename)
         };
         /*
         importmap = {
