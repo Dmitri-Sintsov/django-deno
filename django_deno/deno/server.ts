@@ -67,7 +67,7 @@ router
             }
         };
         */
-        let responseFields = await inlineRollup(value['basedir'], filename, importmap);
+        let responseFields = await inlineRollup(value['basedir'], filename);
         responseFields.toOakContext(context);
     }
 });

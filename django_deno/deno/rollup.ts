@@ -1,10 +1,13 @@
 // Developed with drollup@2.41.0+0.16.1
 import { Context } from "https://deno.land/x/oak/mod.ts";
 import { rollup, RollupOutput } from "https://deno.land/x/drollup/mod.ts";
-import type { OutputOptions } from "https://deno.land/x/drollup/mod.ts";
+import type { PluginContext, OutputOptions } from "https://deno.land/x/drollup/mod.ts";
 import { SOURCEMAPPING_URL } from "https://deno.land/x/drollup/src/rollup/write.ts";
-import { rollupImportMapPlugin } from "https://deno.land/x/drollup/plugins/importmap/mod.ts";
-import type { ImportMapObject } from "https://deno.land/x/drollup/plugins/importmap/mod.ts";
+import { denoResolver, DenoResolverOptions } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/denoResolver.ts";
+import { parse } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/parse.ts";
+import { resolveId } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/resolveId.ts";
+import { handleUnresolvedId } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/handleUnresolvedId.ts";
+import { exists } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/exists.ts";
 
 class ResponseFields {
     status: any;
@@ -24,7 +27,7 @@ class ResponseFields {
     }
 };
 
-async function inlineRollup(basedir: string | null, filename: string, importmap: ImportMapObject) {
+async function inlineRollup(basedir: string | null, filename: string) {
     // https://unpkg.com/rollup@2.41.0/dist/rollup.d.ts
     // https://gist.github.com/vsajip/94fb524746b151b5160924418e6882e5
     // https://deno.land/x/drollup@2.41.0+0.16.1#javascript-api
@@ -34,10 +37,34 @@ async function inlineRollup(basedir: string | null, filename: string, importmap:
         format: 'es' as const,
         sourcemap: 'inline',
     };
+    let resolverOptions: DenoResolverOptions = {};
+    let resolver = denoResolver();
+    resolver.resolveId = async (source: string, importer?: string) => {
+        let id = resolveId(source, importer);
+        let url = parse(id);
+
+        if (!url) {
+            return handleUnresolvedId(id, importer);
+        }
+
+        if (!(await exists(url, resolverOptions.fetchOpts))) {
+            // We assume extensionless imports are from bundling commonjs
+            // as in Deno extensions are compulsory. We assume that the
+            // extensionless commonjs file is JavaScript and not TypeScript.
+            id += ".js";
+            url = new URL(`${url.href}.js`);
+        }
+
+        if (!(await exists(url, resolverOptions.fetchOpts))) {
+            id = id.substr(0, id.length - 3);
+            return handleUnresolvedId(id, importer);
+        }
+        return id;
+    };
     const options = {
         input: filename,
         output: outputOptions,
-        plugins: [rollupImportMapPlugin({ maps: importmap })],
+        plugins: [resolver],
     };
 
     let rollupOutput: RollupOutput;
