@@ -188,11 +188,18 @@ class PathMap(MutableMapping):
 
 class ImportMapGenerator:
 
-    def __init__(self, cache_entry=None):
+    def __init__(self, cache_entry=None, logger=None):
+        self.logger = logger
         if cache_entry is None:
             self.create()
         else:
             self.deserialize(cache_entry)
+
+    def log(self, msg, **kwargs):
+        if self.logger is not None:
+            self.logger.write(msg)
+        else:
+            raise ValueError(msg)
 
     def create(self):
         self.module_basedir = None
@@ -230,7 +237,7 @@ class ImportMapGenerator:
                     found_files[prefixed_path] = (storage, path)
                     self.add_to_import_map(path, prefixed_path, storage)
                 else:
-                    raise ValueError(
+                    self.log(
                         "Found another file with the destination path '%s'. It "
                         "will be ignored since only the first encountered file "
                         "is collected. If this is not what you want, make sure "

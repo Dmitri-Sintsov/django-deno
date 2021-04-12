@@ -33,7 +33,7 @@ class Command(runserver.Command):
     def get_handler(self, *args, **options):
         global deno_process
         self.orig_sigint = None
-        import_map_generator = ImportMapGenerator()
+        import_map_generator = ImportMapGenerator(logger=self.stderr)
         serialized_map_generator = import_map_generator.serialize()
         deno_api_status = DenoMaps().post(serialized_map_generator, timeout=0.1)
         if deno_api_status is None:
