@@ -153,6 +153,18 @@ class PathMap {
         }
         return map;
     };
+
+    public resolveSource(source: string): string | null {
+        let targetPath: string;
+        let sourcePath: string;
+        for ([targetPath, sourcePath] of this.entries()) {
+            if (targetPath.endsWith(source)) {
+                // return absoulte resolved path.
+                return sourcePath;
+            }
+        }
+        return null;
+    }
 }
 
 interface ImportMapCache {
@@ -173,21 +185,21 @@ class ImportMapGenerator {
     }
 
     public resolve(importerDir: string, source: string, importer?: string ): string {
-        let targetPath: string;
-        let sourcePath: string;
         let sourceNoRelDir = LocalPath.removeRelDir(source);
-        for ([targetPath, sourcePath] of this.importMap.entries()) {
-            if (targetPath.endsWith(sourceNoRelDir)) {
-                let sourceLocalPath = new LocalPath(sourcePath);
-                // return absoulte resolved path.
-                // return sourcePath;
-                // Get relative resolved path.
-                let relPath = sourceLocalPath.toRelativePath(importerDir);
-                // Return relative path as it's more compactly displayed in deno console output and in browser tools.
-                return relPath;
-            }
+        let resolvedPath: string | null;
+        resolvedPath = this.importMap.resolveSource(sourceNoRelDir);
+        if (resolvedPath === null) {
+            resolvedPath = this.baseMap.resolveSource(sourceNoRelDir);
         }
-        return source;
+        if (resolvedPath === null) {
+            return source;
+        } else {
+            // Get relative resolved path.
+            let resolvedLocalPath = new LocalPath(resolvedPath);
+            let relPath = resolvedLocalPath.toRelativePath(importerDir);
+            // Return relative path as it's more compactly displayed in deno console output and in browser tools.
+            return relPath;
+        }
     }
 
     public getImportMap(esModulePath: string, esModuleName: string): MapItems {
