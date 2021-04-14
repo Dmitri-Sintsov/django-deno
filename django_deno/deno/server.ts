@@ -1,7 +1,6 @@
 // import { serve } from 'https://deno.land/std/http/server.ts'
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
-import type { ImportMapObject } from "https://deno.land/x/drollup/plugins/importmap/mod.ts";
 
 import { ImportMapGenerator } from "./importmap.ts";
 import inlineRollup from "./rollup.ts";
@@ -57,9 +56,6 @@ router
     } else {
         filename = value['filename'];
         // https://github.com/lucacasonato/dext.ts/issues/65
-        let importmap = {
-            imports: site.importMapGenerator.getImportMap(value['basedir'], filename)
-        };
         /*
         importmap = {
             imports: {
@@ -67,7 +63,7 @@ router
             }
         };
         */
-        let responseFields = await inlineRollup(value['basedir'], filename);
+        let responseFields = await inlineRollup(value['basedir'], filename, site.importMapGenerator);
         responseFields.toOakContext(context);
     }
 });
