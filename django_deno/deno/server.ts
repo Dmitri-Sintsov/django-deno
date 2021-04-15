@@ -3,7 +3,7 @@ import { parse } from "https://deno.land/std/flags/mod.ts";
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 
 import { ImportMapGenerator } from "./importmap.ts";
-import inlineRollup from "./rollup.ts";
+import InlineRollup from "./rollup.ts";
 
 let args = parse(Deno.args);
 const httpHost = args['host'];
@@ -64,7 +64,8 @@ router
             }
         };
         */
-        let responseFields = await inlineRollup(value['basedir'], filename, site.importMapGenerator);
+        let inlineRollup = new InlineRollup(site.importMapGenerator, {terser: false});
+        let responseFields = await inlineRollup.perform(value['basedir'], filename);
         responseFields.toOakContext(context);
     }
 });
