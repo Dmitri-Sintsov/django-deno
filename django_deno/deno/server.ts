@@ -26,6 +26,7 @@ interface Sites {
 let sites: Sites = {};
 
 const router = new Router();
+
 router
 .get("/status/", (context) => {
     context.response.body = apiStatus;

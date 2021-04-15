@@ -44,6 +44,24 @@ class LocalPath {
         return LocalPath.join(this.getDirParts());
     }
 
+    public traverse(relPath: LocalPath): LocalPath {
+        var thisParts = this.split();
+        var relDirParts = relPath.getDirParts().reverse();
+        for (let part of relDirParts) {
+            if (part == '..') {
+                thisParts.pop();
+            } else {
+                break;
+            }
+        }
+        thisParts.push(relPath.getBaseName());
+        return LocalPath.fromPathParts(thisParts);
+    }
+
+    public traverseStr(relPathStr: string): LocalPath {
+        return this.traverse(new LocalPath(relPathStr));
+    }
+
     /**
     >>> import os
     >>> path = "/home/User/Desktop/file.txt"
@@ -75,6 +93,12 @@ class LocalPath {
             return LocalPath.fromPathParts(relParts).path;
         } else {
             return this.path;
+        }
+    }
+
+    public cutAbsolutePath(absPath: string) {
+        if (this.path.startsWith(absPath)) {
+            this.path = this.path.substr(absPath.length);
         }
     }
 }
@@ -154,13 +178,27 @@ class PathMap {
         return map;
     };
 
-    public resolveSource(source: string): string | null {
+    findSource(source: string): string | null {
         let targetPath: string;
         let sourcePath: string;
         for ([targetPath, sourcePath] of this.entries()) {
             if (targetPath.endsWith(source)) {
                 // return absoulte resolved path.
                 return sourcePath;
+            }
+        }
+        return null;
+    }
+
+    public resolveSource(source: LocalPath): string | null {
+        source.cutAbsolutePath(this.baseVal.commonBaseStr);
+        let sourceParts = source.split();
+        while (sourceParts.length > 0) {
+            sourceParts.shift();
+            let sourceStr = LocalPath.join(sourceParts);
+            let resolvedSource = this.findSource(sourceStr);
+            if (resolvedSource !== null) {
+                return resolvedSource;
             }
         }
         return null;
@@ -185,11 +223,12 @@ class ImportMapGenerator {
     }
 
     public resolve(importerDir: string, source: string, importer?: string ): string {
-        let sourceNoRelDir = LocalPath.removeRelDir(source);
         let resolvedPath: string | null;
-        resolvedPath = this.importMap.resolveSource(sourceNoRelDir);
+        let importerDirLocalPath = new LocalPath(importerDir);
+        let expectedSourceLocalPath = importerDirLocalPath.traverseStr(source);
+        resolvedPath = this.importMap.resolveSource(expectedSourceLocalPath);
         if (resolvedPath === null) {
-            resolvedPath = this.baseMap.resolveSource(sourceNoRelDir);
+            resolvedPath = this.baseMap.resolveSource(expectedSourceLocalPath);
         }
         if (resolvedPath === null) {
             return source;
