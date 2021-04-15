@@ -46,16 +46,21 @@ class LocalPath {
 
     public traverse(relPath: LocalPath): LocalPath {
         var thisParts = this.split();
-        var relDirParts = relPath.getDirParts().reverse();
+        var relDirParts = relPath.getDirParts();
+        var joinDirParts = relDirParts.slice();
         for (let part of relDirParts) {
-            if (part == '..') {
+            if (part == '.') {
+                continue;
+            } else if (part == '..') {
                 thisParts.pop();
+                joinDirParts.shift();
             } else {
                 break;
             }
         }
-        thisParts.push(relPath.getBaseName());
-        return LocalPath.fromPathParts(thisParts);
+        let relParts = thisParts.concat(joinDirParts);
+        relParts.push(relPath.getBaseName());
+        return LocalPath.fromPathParts(relParts);
     }
 
     public traverseStr(relPathStr: string): LocalPath {
@@ -239,25 +244,6 @@ class ImportMapGenerator {
             // Return relative path as it's more compactly displayed in deno console output and in browser tools.
             return relPath;
         }
-    }
-
-    public getImportMap(esModulePath: string, esModuleName: string): MapItems {
-        let esModuleLocalPath = LocalPath.fromPathParts(
-            new LocalPath(esModulePath)
-            .split()
-            .concat([esModuleName])
-        );
-        this.moduleBaseDir = new LocalPath(
-            this.baseMap.map[esModuleLocalPath.path]
-        ).getDirName();
-        let relativeImportMap: MapItems = {};
-        let targetPath: string;
-        let sourcePath: string;
-        for ([targetPath, sourcePath] of this.importMap.entries()) {
-            let relativeTargetPath = new LocalPath(targetPath);
-            relativeImportMap[relativeTargetPath.toRelativePath(this.moduleBaseDir)] = sourcePath;
-        }
-        return relativeImportMap;
     }
 };
 
