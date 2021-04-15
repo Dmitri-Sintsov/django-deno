@@ -27,16 +27,22 @@ class RunDeno:
     def get_script_args(self):
         return self.script_args
 
-    def get_popen_args(self):
+    def get_shell_args(self):
         return [
             DENO_PATH, "run"
         ] + self.get_run_flags() + [
             os.path.join(DENO_SCRIPT_PATH, self.get_script_name()),
         ] + self.get_script_args()
 
+    def get_popen_kwargs(self):
+        return {
+            'shell': False,
+        }
+
     def __call__(self, *args, **kwargs):
-        popen_args = self.get_popen_args()
-        deno_process = subprocess.Popen(popen_args, shell=False)
+        shell_args = self.get_shell_args()
+        popen_kwargs = self.get_popen_kwargs()
+        deno_process = subprocess.Popen(shell_args, **popen_kwargs)
         return deno_process
 
 
