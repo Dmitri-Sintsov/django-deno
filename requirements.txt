@@ -1,4 +1,5 @@
 Django
 jsonschema
+ijson
 requests
 psutil

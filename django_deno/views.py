@@ -49,6 +49,9 @@ def serve_rollup(request, path, document_root=None, show_indexes=False):
         response = DenoRollup(content_type=source_file.content_type).post({
             'filename': str(fullpath.name),
             'basedir': str(fullpath.parent),
+            'options': {
+                'inlineFileMap': True,
+            },
         })
         if not isinstance(response, StreamingHttpResponse):
             # report error

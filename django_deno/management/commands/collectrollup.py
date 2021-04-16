@@ -1,8 +1,12 @@
+import io
+import ijson
 import json
 import signal
 
+
 from django.contrib.staticfiles.management.commands import collectstatic
 
+from ...itero import IterO
 from ...commands import DenoProcess
 from ...importmap import ImportMapGenerator
 from ...sourcefile import SourceFile
@@ -27,8 +31,18 @@ class Command(collectstatic.Command, DenoProcess):
             response = DenoRollup(content_type=source_file.content_type).post({
                 'filename': str(source_file.source_path.name),
                 'basedir': str(source_file.source_path.parent),
+                'options': {
+                    'terser': True,
+                }
             })
-            print(response.status_code)
+            if response.status_code == 200:
+                response_io = IterO(response.streaming_content)
+                s = response_io.read()
+                objects = ijson.items(response_io, prefix='rollupFile')
+                for obj in objects:
+                    print(obj)
+            else:
+                self.terminate(f"Error while rollup file {path} {prefixed_path}")
         else:
             super().copy_file(path, prefixed_path, source_storage)
 

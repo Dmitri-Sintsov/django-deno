@@ -3,7 +3,8 @@ import { parse } from "https://deno.land/std/flags/mod.ts";
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 
 import { ImportMapGenerator } from "./importmap.ts";
-import InlineRollup from "./rollup.ts";
+import type { InlineRollupOptions } from './rollup.ts';
+import { InlineRollup } from "./rollup.ts";
 
 let args = parse(Deno.args);
 const httpHost = args['host'];
@@ -51,23 +52,20 @@ router
     const site = sites[value['site_id']];
 
     let filename: string;
-    if (typeof value['filename'] === 'undefined') {
-        context.response.body = 'No filename arg specified';
-        context.response.status = 500;
-    } else {
-        filename = value['filename'];
-        // https://github.com/lucacasonato/dext.ts/issues/65
-        /*
-        importmap = {
-            imports: {
-                "../django-deno/settings.js": "/home/user/work/drf-gallery/lib/python3.8/site-packages/django_deno/static/django-deno/settings.js"
-            }
-        };
-        */
-        let inlineRollup = new InlineRollup(site.importMapGenerator, {terser: false});
-        let responseFields = await inlineRollup.perform(value['basedir'], filename);
-        responseFields.toOakContext(context);
+    let inlineRollupOptions: InlineRollupOptions;
+    for (let valArg of ['filename', 'basedir', 'options']) {
+        if (typeof value[valArg] === 'undefined') {
+            context.response.body = `No {valArg} arg specified`;
+            context.response.status = 500;
+            return;
+        }
     }
+    filename = value['filename'];
+    inlineRollupOptions = value['options'];
+    // https://github.com/lucacasonato/dext.ts/issues/65
+    let inlineRollup = new InlineRollup(site.importMapGenerator, inlineRollupOptions);
+    let responseFields = await inlineRollup.perform(value['basedir'], filename);
+    responseFields.toOakContext(context);
 });
 
 const app = new Application();

@@ -42,3 +42,11 @@ rollupOutput entries:
 //   referencedFiles: string[]      // files referenced via import.meta.ROLLUP_FILE_URL_<id>
 //   type: 'chunk',                 // signifies that this is a chunk
 // }
+
+    /*
+    importmap = {
+        imports: {
+            "../django-deno/settings.js": "/home/user/work/drf-gallery/lib/python3.8/site-packages/django_deno/static/django-deno/settings.js"
+        }
+    };
+    */

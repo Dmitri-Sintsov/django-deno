@@ -122,7 +122,17 @@ class InlineRollup {
                 // console.log('Chunk', file.modules);
                 // https://github.com/cmorten/deno-rollup/blob/bb159fc3a8c3c9fdd0b57142cc7bf84ae93dd2f4/src/cli/build.ts
                 // https://deno.land/x/drollup@2.41.0+0.16.1/src/rollup/write.ts
-                response.body = file.code + `\n//# ${SOURCEMAPPING_URL}=${file.map!.toUrl()}\n`;
+                if (this.options.inlineFileMap) {
+                    response.body = file.code + `\n//# ${SOURCEMAPPING_URL}=${file.map!.toUrl()}\n`;
+                } else {
+                    response.body = {
+                        'rollupFile': {
+                            code: file.code,
+                            filename: file.fileName,
+                            map: file.map!.toString(),
+                        }
+                    }
+                }
                 response.status = 200;
                 break;
             }
@@ -132,4 +142,5 @@ class InlineRollup {
 
 }
 
-export default InlineRollup;
+export type { InlineRollupOptions };
+export { InlineRollup };
