@@ -37,7 +37,8 @@ class Command(runserver.Command, DenoProcess):
         with lock:
             if deno_process is not None:
                 self.stdout.write(f"Terminating deno server pid={deno_process.pid}")
-                deno_process.terminate()
+                if self.is_spawned_deno(deno_process=deno_process):
+                    deno_process.terminate()
                 deno_process = None
         if callable(self.orig_sigint):
             self.orig_sigint(signum, frame)

@@ -1,4 +1,5 @@
 import psutil
+import subprocess
 import sys
 import _thread
 
@@ -17,6 +18,12 @@ class DenoProcess:
         # raising CommandError will not shut down test server as it's running in separate thread.
         _thread.interrupt_main()
         sys.exit()
+
+    def is_spawned_deno(self, deno_process):
+        return isinstance(deno_process, subprocess.Popen)
+
+    def is_separate_deno(self, deno_process):
+        return isinstance(deno_process, psutil.Process)
 
     def run_deno_process(self):
         import_map_generator = ImportMapGenerator(logger=self.stderr)

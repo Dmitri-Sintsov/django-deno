@@ -1,4 +1,5 @@
 import io
+import os
 import ijson
 import json
 import signal
@@ -28,6 +29,8 @@ class Command(collectstatic.Command, DenoProcess):
         source_path = source_storage.path(path)
         source_file = SourceFile(source_path)
         if source_file.should_rollup():
+            if not self.is_local_storage():
+                self.terminate("Only local storage is supported for rollup files")
             response = DenoRollup(content_type=source_file.content_type).post({
                 'filename': str(source_file.source_path.name),
                 'basedir': str(source_file.source_path.parent),
@@ -37,10 +40,20 @@ class Command(collectstatic.Command, DenoProcess):
             })
             if response.status_code == 200:
                 response_io = IterO(response.streaming_content)
-                s = response_io.read()
+                # s = response_io.read()
                 objects = ijson.items(response_io, prefix='rollupFile')
                 for obj in objects:
-                    print(obj)
+                    if prefixed_path.endswith(obj['filename']):
+                        dest_js_filename = self.storage.path(prefixed_path)
+                        os.makedirs(os.path.dirname(dest_js_filename), exist_ok=True)
+                        dest_map_filename = f"{dest_js_filename}.map"
+                        with open(dest_js_filename, "w") as f:
+                            f.write(obj['code'])
+                            f.write(f"//# sourceMappingURL={obj['filename']}.map)")
+                        with open(dest_map_filename, "w") as f:
+                            f.write(obj['map'])
+                    else:
+                        self.terminate(f"prefixed path {prefixed_path} and generated rollup filename '{obj['filename']}' do not match.")
             else:
                 self.terminate(f"Error while rollup file {path} {prefixed_path}")
         else:
@@ -56,4 +69,5 @@ class Command(collectstatic.Command, DenoProcess):
         self.orig_sigint = signal.getsignal(signal.SIGINT)
         signal.signal(signal.SIGINT, self.sigint_handler)
         super().handle(**options)
-        self.deno_process.terminate()
+        if self.is_spawned_deno(deno_process=self.deno_process):
+            self.deno_process.terminate()
