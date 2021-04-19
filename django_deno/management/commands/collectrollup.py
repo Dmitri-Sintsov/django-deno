@@ -35,6 +35,8 @@ class Command(collectstatic.Command, DenoProcess):
                 'filename': str(source_file.source_path.name),
                 'basedir': str(source_file.source_path.parent),
                 'options': {
+                    'relativePaths': True,
+                    'staticFilesResolver': True,
                     'terser': True,
                 }
             })

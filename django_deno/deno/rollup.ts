@@ -33,6 +33,8 @@ class ResponseFields {
 
 interface InlineRollupOptions {
     inlineFileMap?: boolean;
+    relativePaths?: boolean;
+    staticFilesResolver?: boolean;
     terser?: boolean;
 }
 
@@ -67,7 +69,9 @@ class InlineRollup {
             if (!(await exists(url, resolverOptions.fetchOpts))) {
                 // id = id.substr(0, id.length - 3);
                 // return handleUnresolvedId(id, importer);
-                return this.importMapGenerator.resolve(Deno.cwd(), source, importer);
+                return this.importMapGenerator.resolve(
+                    Deno.cwd(), source, importer, this.options.relativePaths
+                );
             }
             return id;
         };
@@ -84,19 +88,23 @@ class InlineRollup {
             sourcemap: 'inline',
         };
 
-        let resolver = denoResolver();
+        let rollupPlugins : any[] = [];
 
-        resolver.resolveId = this.getStaticFilesResolver();
+        if (this.options.staticFilesResolver) {
+            let resolver = denoResolver();
+            resolver.resolveId = this.getStaticFilesResolver();
+            rollupPlugins.push(resolver);
+        }
+
+        if (this.options.terser) {
+            rollupPlugins.push(terser());
+        }
 
         const options = {
             input: filename,
             output: outputOptions,
-            plugins: [resolver],
+            plugins: rollupPlugins,
         };
-
-        if (this.options.terser) {
-            options.plugins.push(terser());
-        }
 
         let rollupOutput: RollupOutput;
 

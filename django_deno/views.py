@@ -51,6 +51,8 @@ def serve_rollup(request, path, document_root=None, show_indexes=False):
             'basedir': str(fullpath.parent),
             'options': {
                 'inlineFileMap': True,
+                'relativePaths': True,
+                'staticFilesResolver': True,
             },
         })
         if not isinstance(response, StreamingHttpResponse):

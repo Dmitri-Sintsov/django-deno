@@ -1,4 +1,9 @@
-// import {Path, WINDOWS_SEPS} from "https://deno.land/x/path/mod.ts";
+/**
+ * https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/
+ * When specifying a path, always use forward slashes, even on Windows.
+ */
+
+// import {WINDOWS_SEPS} from "https://deno.land/x/path/mod.ts";
 
 class LocalPath {
     path: string;
@@ -227,7 +232,7 @@ class ImportMapGenerator {
         this.importMap = new PathMap(cacheEntry.importMap);
     }
 
-    public resolve(importerDir: string, source: string, importer?: string ): string {
+    public resolve(importerDir: string, source: string, importer?: string, relativePaths?: boolean ): string {
         let resolvedPath: string | null;
         let importerDirLocalPath = new LocalPath(importerDir);
         let expectedSourceLocalPath = importerDirLocalPath.traverseStr(source);
@@ -238,11 +243,15 @@ class ImportMapGenerator {
         if (resolvedPath === null) {
             return source;
         } else {
-            // Get relative resolved path.
-            let resolvedLocalPath = new LocalPath(resolvedPath);
-            let relPath = resolvedLocalPath.toRelativePath(importerDir);
-            // Return relative path as it's more compactly displayed in deno console output and in browser tools.
-            return relPath;
+            if (relativePaths) {
+                // Get relative resolved path.
+                let resolvedLocalPath = new LocalPath(resolvedPath);
+                let relPath = resolvedLocalPath.toRelativePath(importerDir);
+                // Return relative path as it's more compactly displayed in deno console output and in browser tools.
+                return relPath;
+            } else {
+                return resolvedPath;
+            }
         }
     }
 };
