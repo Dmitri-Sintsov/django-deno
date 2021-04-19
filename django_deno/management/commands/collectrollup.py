@@ -25,45 +25,48 @@ class Command(collectstatic.Command, DenoProcess):
         self.deno_process = self.run_deno_process()
         self.rollup_files = []
 
+    def write_response(self, response, prefixed_path):
+        response_io = IterO(response.streaming_content)
+        # s = response_io.read()
+        objects = ijson.items(response_io, prefix='rollupFile')
+        for obj in objects:
+            if prefixed_path.endswith(obj['filename']):
+                dest_js_filename = self.storage.path(prefixed_path)
+                os.makedirs(os.path.dirname(dest_js_filename), exist_ok=True)
+                dest_map_filename = f"{dest_js_filename}.map"
+                with open(dest_js_filename, "w") as f:
+                    f.write(obj['code'])
+                    f.write(f"//# sourceMappingURL={obj['filename']}.map)")
+                with open(dest_map_filename, "w") as f:
+                    f.write(obj['map'])
+            else:
+                self.terminate(
+                    f"prefixed path {prefixed_path} and generated rollup filename '{obj['filename']}' do not match.")
+
     def rollup_file(self, path, prefixed_path, source_file):
+        if not self.is_local_storage():
+            self.terminate("Only local storage is supported for rollup files")
         response = DenoRollup(content_type=source_file.content_type).post({
             'filename': str(source_file.source_path.name),
             'basedir': str(source_file.source_path.parent),
             'options': {
-                'relativePaths': True,
-                'staticFilesResolver': True,
+                # 'relativePaths': True,
+                # 'staticFilesResolver': True,
                 'terser': True,
             }
         })
-        if response.status_code == 200:
-            response_io = IterO(response.streaming_content)
-            # s = response_io.read()
-            objects = ijson.items(response_io, prefix='rollupFile')
-            for obj in objects:
-                if prefixed_path.endswith(obj['filename']):
-                    dest_js_filename = self.storage.path(prefixed_path)
-                    os.makedirs(os.path.dirname(dest_js_filename), exist_ok=True)
-                    dest_map_filename = f"{dest_js_filename}.map"
-                    with open(dest_js_filename, "w") as f:
-                        f.write(obj['code'])
-                        f.write(f"//# sourceMappingURL={obj['filename']}.map)")
-                    with open(dest_map_filename, "w") as f:
-                        f.write(obj['map'])
-                else:
-                    self.terminate(
-                        f"prefixed path {prefixed_path} and generated rollup filename '{obj['filename']}' do not match.")
+        if response.status_code == 200 and hasattr(response, 'streaming_content'):
+            self.write_response(response, prefixed_path)
         else:
-            self.terminate(f"Error while rollup file {path} {prefixed_path}")
+            self.terminate(f"Error: status={response.status_code} content={response.content}")
 
     def copy_file(self, path, prefixed_path, source_storage):
         source_path = source_storage.path(path)
         source_file = SourceFile(source_path)
         if source_file.should_rollup():
-            if not self.is_local_storage():
-                self.terminate("Only local storage is supported for rollup files")
-            self.rollup_file(path, prefixed_path, source_file)
-        else:
-            super().copy_file(path, prefixed_path, source_storage)
+            destination_path = self.storage.path(path)
+            self.rollup_files.append([path, prefixed_path, destination_path])
+        super().copy_file(path, prefixed_path, source_storage)
 
     def sigint_handler(self, signum, frame):
         self.stdout.write(f"Terminating deno server pid={self.deno_process.pid}")
@@ -75,5 +78,8 @@ class Command(collectstatic.Command, DenoProcess):
         self.orig_sigint = signal.getsignal(signal.SIGINT)
         signal.signal(signal.SIGINT, self.sigint_handler)
         super().handle(**options)
+        for path, prefixed_path, destination_path in self.rollup_files:
+            destination_file = SourceFile(destination_path)
+            self.rollup_file(path, prefixed_path, destination_file)
         if self.is_spawned_deno(deno_process=self.deno_process):
             self.deno_process.terminate()
