@@ -14,7 +14,7 @@ DENO_PATH = os.path.join(DENO_INSTALL, 'bin', 'deno')
 if getattr(settings, 'DENO_DEBUG', False):
     DENO_TIMEOUT = 60
 else:
-    DENO_TIMEOUT = 10
+    DENO_TIMEOUT = 20
 
 DENO_SERVER = {
     'protocol': 'http',

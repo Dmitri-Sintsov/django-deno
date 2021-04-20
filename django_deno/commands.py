@@ -1,6 +1,6 @@
+import os
 import psutil
 import subprocess
-import sys
 import _thread
 
 from django_deno import __version__
@@ -17,7 +17,8 @@ class DenoProcess:
         self.stderr.write(error_message)
         # raising CommandError will not shut down test server as it's running in separate thread.
         _thread.interrupt_main()
-        sys.exit()
+        # Need to use an OS exit because sys.exit doesn't work in a thread
+        os._exit(1)
 
     def is_spawned_deno(self, deno_process):
         return isinstance(deno_process, subprocess.Popen)

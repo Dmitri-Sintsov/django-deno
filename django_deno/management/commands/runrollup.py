@@ -32,14 +32,16 @@ class Command(runserver.Command, DenoProcess):
             return RollupFilesHandler(handler)
         return handler
 
-    def sigint_handler(self, signum, frame):
+    def terminate_deno(self):
         global deno_process
         with lock:
             if deno_process is not None:
                 self.stdout.write(f"Terminating deno server pid={deno_process.pid}")
-                if self.is_spawned_deno(deno_process=deno_process):
-                    deno_process.terminate()
+                deno_process.terminate()
                 deno_process = None
+
+    def sigint_handler(self, signum, frame):
+        self.terminate_deno()
         if callable(self.orig_sigint):
             self.orig_sigint(signum, frame)
 
