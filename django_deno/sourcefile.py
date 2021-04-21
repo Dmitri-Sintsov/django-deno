@@ -1,6 +1,8 @@
 import mimetypes
 import mmap
 import os
+import platform
+
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -53,7 +55,8 @@ class SourceFile:
             fd = None
             mfile = None
             fd = os.open(f"{self.source_path_str}", os.O_RDONLY)
-            mfile = mmap.mmap(fd, 0, prot=mmap.PROT_READ)
+            prot_read = mmap.ACCESS_READ if platform.system() == 'Windows' else mmap.PROT_READ
+            mfile = mmap.mmap(fd, 0, prot=prot_read)
             yield mfile
         finally:
             if mfile is not None:
