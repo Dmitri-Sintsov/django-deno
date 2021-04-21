@@ -55,8 +55,10 @@ class SourceFile:
             fd = None
             mfile = None
             fd = os.open(f"{self.source_path_str}", os.O_RDONLY)
-            prot_read = mmap.ACCESS_READ if platform.system() == 'Windows' else mmap.PROT_READ
-            mfile = mmap.mmap(fd, 0, prot=prot_read)
+            if platform.system() == 'Windows':
+                mfile = mmap.mmap(fd, 0, access=mmap.ACCESS_READ)
+            else:
+                mfile = mmap.mmap(fd, 0, prot=mmap.PROT_READ)
             yield mfile
         finally:
             if mfile is not None:
