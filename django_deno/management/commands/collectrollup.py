@@ -34,10 +34,10 @@ class Command(collectstatic.Command, DenoProcess):
                 dest_js_filename = self.storage.path(prefixed_path)
                 os.makedirs(os.path.dirname(dest_js_filename), exist_ok=True)
                 dest_map_filename = f"{dest_js_filename}.map"
-                with open(dest_js_filename, "w") as f:
+                with open(dest_js_filename, "w", encoding='utf-8') as f:
                     f.write(obj['code'])
-                    f.write(f"//# sourceMappingURL={obj['filename']}.map)")
-                with open(dest_map_filename, "w") as f:
+                    f.write(f"//# sourceMappingURL={obj['filename']}.map")
+                with open(dest_map_filename, "w", encoding='utf-8') as f:
                     f.write(obj['map'])
             else:
                 self.terminate(
