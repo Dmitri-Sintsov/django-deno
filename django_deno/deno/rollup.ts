@@ -85,7 +85,7 @@ class InlineRollup {
 
         const outputOptions: OutputOptions = {
             format: 'es' as const,
-            sourcemap: 'inline',
+            sourcemap: this.options.inlineFileMap ? 'inline' : true,
         };
 
         let rollupPlugins : any[] = [];
