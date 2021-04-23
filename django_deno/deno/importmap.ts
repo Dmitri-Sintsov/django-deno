@@ -10,6 +10,14 @@ class LocalPath {
 
     constructor(path: string) {
         this.path = path;
+        // Normalize path separators ('\\' for Windows, '/' for Linux),
+        // otherwise .startsWith() / .endsWith() may fail.
+        let pathParts = this.split();
+        this.path = LocalPath.join(pathParts);
+    }
+
+    static getSystemSeparator(): string {
+        return (Deno.build.os == 'windows') ? '\\': '/';
     }
 
     static fromPathParts(parts: string[]) {
@@ -17,7 +25,7 @@ class LocalPath {
         return instance;
     }
 
-    public static removeRelDir(path: string) {
+    static removeRelDir(path: string) {
         return path.replace(/^\.+/gm, '');
     }
 
@@ -32,7 +40,7 @@ class LocalPath {
     }
 
     static join(parts: string[]) {
-        return parts.join('/');
+        return parts.join(LocalPath.getSystemSeparator());
     }
 
     public getDirParts(): string[] {
