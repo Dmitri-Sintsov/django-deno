@@ -63,6 +63,7 @@ class LocalPath {
         var joinDirParts = relDirParts.slice();
         for (let part of relDirParts) {
             if (part == '.') {
+                joinDirParts.shift();
                 continue;
             } else if (part == '..') {
                 thisParts.pop();
