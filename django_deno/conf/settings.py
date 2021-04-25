@@ -26,3 +26,18 @@ DENO_SERVER.update(getattr(settings, 'DENO_SERVER', {}))
 DENO_URL = f'{DENO_SERVER["protocol"]}://{DENO_SERVER["host"]}:{DENO_SERVER["port"]}'
 
 DENO_PROXY_CHUNK_SIZE = getattr(settings, 'DENO_PROXY_CHUNK_SIZE', 256 * 1024)
+
+DENO_ROLLUP_SERVE_OPTIONS = {
+    'inlineFileMap': True,
+    'relativePaths': True,
+    'staticFilesResolver': True,
+    'withCache': True,
+}
+DENO_ROLLUP_SERVE_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_SERVE_OPTIONS', {}))
+
+DENO_ROLLUP_COLLECT_OPTIONS = {
+    # 'relativePaths': True,
+    # 'staticFilesResolver': True,
+    'terser': True,
+}
+DENO_ROLLUP_COLLECT_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_COLLECT_OPTIONS', {}))

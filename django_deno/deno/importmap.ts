@@ -265,4 +265,4 @@ class ImportMapGenerator {
     }
 };
 
-export {ImportMapGenerator};
+export {LocalPath, ImportMapGenerator};

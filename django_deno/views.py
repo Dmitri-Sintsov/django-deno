@@ -14,6 +14,7 @@ from django.http import (
 )
 
 from .sourcefile import SourceFile
+from .conf import settings as deno_settings
 from .api.rollup import DenoRollup
 
 
@@ -49,11 +50,7 @@ def serve_rollup(request, path, document_root=None, show_indexes=False):
         response = DenoRollup(content_type=source_file.content_type).post({
             'filename': str(fullpath.name),
             'basedir': str(fullpath.parent),
-            'options': {
-                'inlineFileMap': True,
-                'relativePaths': True,
-                'staticFilesResolver': True,
-            },
+            'options': deno_settings.DENO_ROLLUP_SERVE_OPTIONS,
         })
         if not isinstance(response, StreamingHttpResponse):
             # report error

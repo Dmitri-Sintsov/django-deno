@@ -11,6 +11,7 @@ from ...commands import DenoProcess
 from ...importmap import ImportMapGenerator
 from ...sourcefile import SourceFile
 
+from ...conf import settings as deno_settings
 from ...api.rollup import DenoRollup
 
 
@@ -49,11 +50,7 @@ class Command(collectstatic.Command, DenoProcess):
         response = DenoRollup(content_type=source_file.content_type).post({
             'filename': str(source_file.source_path.name),
             'basedir': str(source_file.source_path.parent),
-            'options': {
-                # 'relativePaths': True,
-                # 'staticFilesResolver': True,
-                'terser': True,
-            }
+            'options': deno_settings.DENO_ROLLUP_COLLECT_OPTIONS,
         })
         if response.status_code == 200 and hasattr(response, 'streaming_content'):
             self.write_response(response, prefixed_path)

@@ -1,5 +1,7 @@
 // Developed with drollup@2.41.0+0.16.1
 import { Context } from "https://deno.land/x/oak/mod.ts";
+
+import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
 import { rollup, RollupOutput } from "https://deno.land/x/drollup/mod.ts";
 import type { OutputOptions } from "https://deno.land/x/drollup/mod.ts";
 import { SOURCEMAPPING_URL } from "https://deno.land/x/drollup/src/rollup/write.ts";
@@ -32,10 +34,12 @@ class ResponseFields {
 
 
 interface InlineRollupOptions {
+    cache?: RollupCache;
     inlineFileMap?: boolean;
     relativePaths?: boolean;
     staticFilesResolver?: boolean;
     terser?: boolean;
+    withCache?: boolean;
 }
 
 class InlineRollup {
@@ -104,6 +108,7 @@ class InlineRollup {
             input: filename,
             output: outputOptions,
             plugins: rollupPlugins,
+            cache: this.options.cache,
         };
 
         let rollupOutput: RollupOutput;
@@ -115,6 +120,10 @@ class InlineRollup {
 
         try {
             const bundle = await rollup(options);
+            if (this.options.withCache) {
+                // Update cache.
+                this.options.cache = bundle.cache;
+            }
             rollupOutput = await bundle.generate(options.output);
         } catch(e) {
             response.body = e.toString();

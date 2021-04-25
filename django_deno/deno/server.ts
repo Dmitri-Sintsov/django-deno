@@ -1,8 +1,10 @@
 // import { serve } from 'https://deno.land/std/http/server.ts'
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+// @2.42.3%2B0.17.1
+import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
 
-import { ImportMapGenerator } from "./importmap.ts";
+import { LocalPath, ImportMapGenerator } from "./importmap.ts";
 import type { InlineRollupOptions } from './rollup.ts';
 import { InlineRollup } from "./rollup.ts";
 
@@ -16,8 +18,11 @@ const apiStatus = {
     "pid": Deno.pid,
 };
 
+type SiteCache = Record<string, RollupCache>;
+
 interface Site {
-    importMapGenerator: ImportMapGenerator;
+    importMapGenerator: ImportMapGenerator,
+    siteCache: SiteCache,
 };
 
 interface Sites {
@@ -40,7 +45,8 @@ router
         importMapGenerator: new ImportMapGenerator({
             baseMap: value['base_map'],
             importMap: value['import_map'],
-        })
+        }),
+        siteCache: {},
     };
     context.response.body = apiStatus;
     context.response.status = 200;
@@ -51,6 +57,7 @@ router
     const value = await body.value;
     const site = sites[value['site_id']];
 
+    let basedir: string;
     let filename: string;
     let inlineRollupOptions: InlineRollupOptions;
     for (let valArg of ['filename', 'basedir', 'options']) {
@@ -60,11 +67,25 @@ router
             return;
         }
     }
+    basedir = value['basedir'];
     filename = value['filename'];
+
+    let cacheParts = new LocalPath(basedir).split();
+    cacheParts.push(filename);
+    let cachePath: string = LocalPath.fromPathParts(cacheParts).path;
+
     inlineRollupOptions = value['options'];
     // https://github.com/lucacasonato/dext.ts/issues/65
+    if (inlineRollupOptions.withCache && typeof site.siteCache[cachePath] !== 'undefined') {
+        inlineRollupOptions.cache = site.siteCache[cachePath];
+    } else {
+        inlineRollupOptions.cache = undefined;
+    }
     let inlineRollup = new InlineRollup(site.importMapGenerator, inlineRollupOptions);
-    let responseFields = await inlineRollup.perform(value['basedir'], filename);
+    let responseFields = await inlineRollup.perform(basedir, filename);
+    if (inlineRollupOptions.withCache && inlineRollupOptions.cache) {
+        site.siteCache[cachePath] = inlineRollupOptions.cache;
+    }
     responseFields.toOakContext(context);
 });
 
