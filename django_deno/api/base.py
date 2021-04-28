@@ -30,16 +30,16 @@ class JsonApi:
             validate(instance=r, schema=self.response_schema)
         return r
 
-    def get_json_data(self, json_data):
+    def get_json_data(self):
         if self.use_site_id:
             site_hash = hashlib.sha256(f"{settings.BASE_DIR}{settings.SESSION_COOKIE_NAME}".encode('utf-8')).digest()
-            json_data['site_id'] = base64.b64encode(site_hash).decode('utf-8')
-        return json_data
+            self.json_data['site_id'] = base64.b64encode(site_hash).decode('utf-8')
+        return self.json_data
 
-    def get_post_kwargs(self, json_data):
+    def get_post_kwargs(self):
         post_kwargs = {
             'url': f'{self.url}{self.location}',
-            'json': self.get_json_data(json_data),
+            'json': self.get_json_data(),
         }
         post_kwargs.update(self.extra_post_kwargs)
         return post_kwargs
@@ -52,11 +52,12 @@ class JsonApi:
         return ex
 
     def post(self, json_data, timeout=DENO_TIMEOUT):
+        self.json_data = json_data
         if self.request_schema is not None:
-            validate(instance=json_data, schema=self.request_schema)
+            validate(instance=self.json_data, schema=self.request_schema)
         try:
             self.wait_socket(timeout)
-            post_kwargs = self.get_post_kwargs(json_data)
+            post_kwargs = self.get_post_kwargs()
             response = requests.post(**post_kwargs)
             try:
                 return self.parse_post_response(response)

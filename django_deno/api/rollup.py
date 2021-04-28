@@ -20,16 +20,18 @@ class DenoRollup(JsonApi):
 
     def parse_post_response(self, response):
         if response.status_code == 200:
-            return StreamingHttpResponse(
+            response = StreamingHttpResponse(
                 response.iter_content(chunk_size=settings.DENO_PROXY_CHUNK_SIZE), content_type=self.content_type
             )
+            if self.json_data['options'].get('gzip'):
+                response.headers['Content-Encoding'] = 'gzip'
         else:
             response = HttpResponse(
                 'throw Error({});'.format(json.dumps(response.text)),
                 content_type=self.content_type
             )
             response.status_code = 200
-            return response
+        return response
 
     def parse_not_responding_error(self, ex):
         ex_string = json.dumps(ex_to_str(ex))
