@@ -1,11 +1,6 @@
 // Developed with drollup@2.41.0+0.16.1
 import { Context } from "https://deno.land/x/oak/mod.ts";
 
-import {
-  gzipDecode,
-  gzipEncode,
-} from "https://github.com/manyuanrong/wasm_gzip/raw/master/mod.ts";
-
 import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
 import { rollup, RollupOutput } from "https://deno.land/x/drollup/mod.ts";
 import type { OutputOptions } from "https://deno.land/x/drollup/mod.ts";
@@ -23,22 +18,11 @@ class ResponseFields {
     status: any;
     type: any;
     body: any;
-    encoding: any;
 
     toOakContext(context: Context): void {
         context.response.status = this.status;
         context.response.type = this.type;
-        if (this.encoding == 'gzip') {
-            context.response.body = gzipEncode(new TextEncoder().encode(this.body));
-            /**
-             * Do not set gzip encoding header, otherwise Python requests will automatically decompress it,
-             * ruining the optimization.
-             * See django_deno.api.rollup.DenoRollup.parse_post_response()
-             */
-            // context.response.headers.set('Content-Encoding', this.encoding);
-        } else {
-            context.response.body = this.body;
-        }
+        context.response.body = this.body;
     }
 
     constructor() {
@@ -51,7 +35,6 @@ class ResponseFields {
 
 interface InlineRollupOptions {
     cache?: RollupCache;
-    gzip?: boolean;
     inlineFileMap?: boolean;
     relativePaths?: boolean;
     staticFilesResolver?: boolean;
@@ -166,9 +149,6 @@ class InlineRollup {
                             map: file.map!.toString(),
                         }
                     }
-                }
-                if (this.options.gzip) {
-                    response.encoding = 'gzip';
                 }
                 response.status = 200;
                 break;

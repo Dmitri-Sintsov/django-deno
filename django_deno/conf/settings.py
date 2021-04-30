@@ -28,7 +28,6 @@ DENO_URL = f'{DENO_SERVER["protocol"]}://{DENO_SERVER["host"]}:{DENO_SERVER["por
 DENO_PROXY_CHUNK_SIZE = getattr(settings, 'DENO_PROXY_CHUNK_SIZE', 256 * 1024)
 
 DENO_ROLLUP_SERVE_OPTIONS = {
-    # 'gzip': True,
     'inlineFileMap': True,
     'relativePaths': True,
     'staticFilesResolver': True,

@@ -1,6 +1,8 @@
 // import { serve } from 'https://deno.land/std/http/server.ts'
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+
+
 // @2.42.3%2B0.17.1
 import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
 
@@ -18,11 +20,53 @@ const apiStatus = {
     "pid": Deno.pid,
 };
 
-type SiteCache = Record<string, RollupCache>;
+class EntryCache {
+    cache: RollupCache;
+    previousInlineString?: string;
 
-interface Site {
-    importMapGenerator: ImportMapGenerator,
-    siteCache: SiteCache,
+    constructor(cache: RollupCache) {
+        this.cache = cache;
+    }
+
+    public notModified(body: string) {
+        return this.previousInlineString === body;
+    }
+
+    public updateBody(body: string) {
+        let notModified = this.notModified(body);
+        this.previousInlineString = body;
+        return notModified;
+    }
+};
+
+type ScriptEntries = Record<string, EntryCache>;
+
+class Site {
+    importMapGenerator: ImportMapGenerator;
+    entries: ScriptEntries;
+
+    constructor(importMapGenerator: ImportMapGenerator) {
+        this.importMapGenerator = importMapGenerator;
+        this.entries = {};
+    }
+
+    public hasEntry(cachePath: string) {
+        return typeof this.entries[cachePath] !== 'undefined';
+    }
+
+    public updateEntry(cachePath: string, cache: RollupCache) {
+        if (this.hasEntry(cachePath)) {
+            this.entries[cachePath].cache = cache;
+        } else {
+            this.entries[cachePath] = new EntryCache(cache);
+        }
+        return this.entries[cachePath];
+    }
+
+    public hasCache(cachePath: string) {
+        return this.hasEntry(cachePath) && this.entries[cachePath].cache;
+    }
+
 };
 
 interface Sites {
@@ -41,13 +85,12 @@ router
     const body = context.request.body({ type: 'json' });
     const value = await body.value;
     const siteId = value['site_id'];
-    sites[siteId] = {
-        importMapGenerator: new ImportMapGenerator({
+    sites[siteId] = new Site(
+        new ImportMapGenerator({
             baseMap: value['base_map'],
             importMap: value['import_map'],
-        }),
-        siteCache: {},
-    };
+        })
+    );
     context.response.body = apiStatus;
     context.response.status = 200;
 })
@@ -76,15 +119,22 @@ router
 
     inlineRollupOptions = value['options'];
     // https://github.com/lucacasonato/dext.ts/issues/65
-    if (inlineRollupOptions.withCache && typeof site.siteCache[cachePath] !== 'undefined') {
-        inlineRollupOptions.cache = site.siteCache[cachePath];
+    if (inlineRollupOptions.withCache && site.hasCache(cachePath)) {
+        inlineRollupOptions.cache = site.entries[cachePath].cache;
     } else {
         inlineRollupOptions.cache = undefined;
     }
     let inlineRollup = new InlineRollup(site.importMapGenerator, inlineRollupOptions);
     let responseFields = await inlineRollup.perform(basedir, filename);
     if (inlineRollupOptions.withCache && inlineRollupOptions.cache) {
-        site.siteCache[cachePath] = inlineRollupOptions.cache;
+        let entry = site.updateEntry(cachePath, inlineRollupOptions.cache);
+        /**
+         * let notModified = entry.updateBody(responseFields.body);
+         * if (notModified) {
+         *    context.response.status = 304;
+         *    return;
+         * }
+         */
     }
     responseFields.toOakContext(context);
 });
