@@ -1,4 +1,6 @@
 // import { serve } from 'https://deno.land/std/http/server.ts'
+import { existsSync } from "https://deno.land/std/fs/mod.ts";
+
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 
@@ -123,6 +125,39 @@ router
         inlineRollupOptions.cache = site.entries[cachePath].cache;
     } else {
         inlineRollupOptions.cache = undefined;
+    }
+    let entryPoints = [
+        // 'document.js',
+        'dash.js',
+        'dialog.js',
+        'modelform.js',
+        'tabpane.js',
+        'actions.js',
+        'grid.js',
+        'ioc.js',
+        'ui.js',
+        'row.js',
+        'ioc.js',
+    ];
+    if (!inlineRollupOptions.inlineFileMap) {
+        inlineRollupOptions.chunkFileNames = "[name].js";
+        inlineRollupOptions.manualChunks = (id: string, { getModuleInfo }) => {
+            let fullLocalPath = new LocalPath(Deno.cwd());
+            fullLocalPath = fullLocalPath.traverseStr(id);
+            if (!existsSync(fullLocalPath.path)) {
+                throw new Error(`Error in manualChunks, id "${id}" path does not exists: "${fullLocalPath.path}"`);
+            }
+            if (fullLocalPath.split().indexOf('djk') !== -1) {
+                let moduleInfo = getModuleInfo(id);
+                if (moduleInfo) {
+                    // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
+                    // if (fullLocalPath.getBaseName() !== 'document.js') {
+                        moduleInfo.isEntry = filename === 'app.js';
+                    // }
+                }
+                return 'djk';
+            }
+        }
     }
     let inlineRollup = new InlineRollup(site.importMapGenerator, inlineRollupOptions);
     let responseFields = await inlineRollup.perform(basedir, filename);

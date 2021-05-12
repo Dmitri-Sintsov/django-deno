@@ -29,20 +29,21 @@ class Command(collectstatic.Command, DenoProcess):
     def write_response(self, response, prefixed_path):
         response_io = IterO(response.streaming_content)
         # s = response_io.read()
-        objects = ijson.items(response_io, prefix='rollupFile')
-        for obj in objects:
-            if prefixed_path.endswith(obj['filename']):
+        objects = ijson.items(response_io, prefix='rollupFiles')
+        for chunks in objects:
+            for obj in chunks:
+                is_main_chunk = prefixed_path.endswith(obj['filename'])
                 dest_js_filename = self.storage.path(prefixed_path)
-                os.makedirs(os.path.dirname(dest_js_filename), exist_ok=True)
+                dest_dir = os.path.dirname(dest_js_filename)
+                if not is_main_chunk:
+                    dest_js_filename = dest_dir + os.sep + obj['filename']
+                os.makedirs(dest_dir, exist_ok=True)
                 dest_map_filename = f"{dest_js_filename}.map"
                 with open(dest_js_filename, "w", encoding='utf-8') as f:
                     f.write(obj['code'])
                     f.write(f"//# sourceMappingURL={obj['filename']}.map")
                 with open(dest_map_filename, "w", encoding='utf-8') as f:
                     f.write(obj['map'])
-            else:
-                self.terminate(
-                    f"prefixed path {prefixed_path} and generated rollup filename '{obj['filename']}' do not match.")
 
     def rollup_file(self, path, prefixed_path, source_file):
         if not self.is_local_storage():

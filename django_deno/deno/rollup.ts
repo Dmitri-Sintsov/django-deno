@@ -1,9 +1,9 @@
 // Developed with drollup@2.41.0+0.16.1
 import { Context } from "https://deno.land/x/oak/mod.ts";
 
-import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
+import type { ManualChunksOption, ModuleFormat, OutputBundle, OutputPlugin, PreserveEntrySignaturesOption, RollupCache } from "https://deno.land/x/drollup/deps.ts";
 import { rollup, RollupOutput } from "https://deno.land/x/drollup/mod.ts";
-import type { OutputOptions } from "https://deno.land/x/drollup/mod.ts";
+import type { NormalizedOutputOptions, OutputOptions } from "https://deno.land/x/drollup/mod.ts";
 import { SOURCEMAPPING_URL } from "https://deno.land/x/drollup/src/rollup/write.ts";
 import { denoResolver, DenoResolverOptions } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/denoResolver.ts";
 import { terser } from "https://deno.land/x/drollup/plugins/terser/mod.ts";
@@ -35,12 +35,35 @@ class ResponseFields {
 
 interface InlineRollupOptions {
     cache?: RollupCache;
+    chunkFileNames?: string;
     inlineFileMap?: boolean;
+    moduleFormat?: ModuleFormat;
+    manualChunks?: ManualChunksOption,
     relativePaths?: boolean;
     staticFilesResolver?: boolean;
     terser?: boolean;
     withCache?: boolean;
 }
+
+let allExportsOutputPlugin: OutputPlugin = {
+    name: 'allExportsOutputPlugin',
+    generateBundle: function(options, bundle, isWrite: boolean) {
+        if (typeof bundle['djk.js'] !== 'undefined') {
+            let chunk: any = bundle['djk.js'];
+            if (typeof chunk.exports !== 'undefined') {
+                chunk.exports = ['ActionTemplateDialog', 'Actions', 'Dialog', 'Grid', 'GridActions', 'GridRow', 'globalIoc', 'inherit', 'startApp', 'ui', 'TabPane'];
+            }
+        }
+    },
+    writeBundle: function(options: NormalizedOutputOptions, bundle: OutputBundle) {
+        if (typeof bundle['djk.js'] !== 'undefined') {
+            let chunk: any = bundle['djk.js'];
+            if (typeof chunk.exports !== 'undefined') {
+                chunk.exports = ['ActionTemplateDialog', 'Actions', 'Dialog', 'Grid', 'GridActions', 'GridRow', 'globalIoc', 'inherit', 'startApp', 'ui', 'TabPane'];
+            }
+        }
+    }
+};
 
 class InlineRollup {
 
@@ -88,9 +111,21 @@ class InlineRollup {
         let response = new ResponseFields();
 
         const outputOptions: OutputOptions = {
-            format: 'es' as const,
+            // exports: 'named',
+            format: this.options.moduleFormat ? this.options.moduleFormat: 'es',
+            minifyInternalExports: false,
+            plugins: [allExportsOutputPlugin],
+            // preserveModules: true,
             sourcemap: this.options.inlineFileMap ? 'inline' : true,
         };
+
+        if (this.options.chunkFileNames) {
+            outputOptions.chunkFileNames = this.options.chunkFileNames;
+        }
+
+        if (this.options.manualChunks) {
+            outputOptions.manualChunks = this.options.manualChunks;
+        }
 
         let rollupPlugins : any[] = [];
 
@@ -99,17 +134,41 @@ class InlineRollup {
             resolver.resolveId = this.getStaticFilesResolver();
             rollupPlugins.push(resolver);
         }
-
-        if (this.options.terser) {
-            rollupPlugins.push(terser());
+/*
+        if (!this.options.inlineFileMap) {
+            rollupPlugins.push({
+				transform(code: string, id: string) {
+					if (id.endsWith('document.js')) {
+						return {
+						    code, syntheticNamedExports: 'ActionTemplateDialog, Actions, Dialog, Grid, GridActions, GridRow, globalIoc, inherit, ui, TabPane'
+                        };
+					}
+				},
+            })
         }
+*/
+/*
+        if (this.options.terser) {
+            rollupPlugins.push(terser({
+                mangle: false,
+                output: {
+                    comments: false,
+                }
+            }));
+        }
+*/
+
+        let inputOptions = filename;
 
         const options = {
-            input: filename,
+            input: inputOptions,
             output: outputOptions,
             plugins: rollupPlugins,
+            // preserveEntrySignatures: 'exports-only' as PreserveEntrySignaturesOption,
+            treeshake: false,
             cache: this.options.cache,
         };
+
 
         let rollupOutput: RollupOutput;
 
@@ -120,41 +179,55 @@ class InlineRollup {
 
         try {
             const bundle = await rollup(options);
+            if (!this.options.inlineFileMap && bundle.cache) {
+                // Add synthetic exports, when needed
+                for (let mdl of bundle.cache.modules) {
+                    if (mdl.id.endsWith('document.js')) {
+                        // mdl.syntheticNamedExports = 'ActionTemplateDialog, Actions, Dialog, Grid, GridActions, GridRow, globalIoc, inherit, ui, TabPane';
+                    }
+                }
+            }
             if (this.options.withCache) {
                 // Update cache.
                 this.options.cache = bundle.cache;
             }
             rollupOutput = await bundle.generate(options.output);
+
+            response.status = 200;
+            let chunks = [];
+            for (const file of rollupOutput.output) {
+                if (file.type === 'asset') {
+                    console.log('Todo: support assets', file);
+                } else {
+                    // console.log('Chunk', file.modules);
+                    // https://github.com/cmorten/deno-rollup/blob/bb159fc3a8c3c9fdd0b57142cc7bf84ae93dd2f4/src/cli/build.ts
+                    // https://deno.land/x/drollup@2.41.0+0.16.1/src/rollup/write.ts
+                    if (this.options.inlineFileMap) {
+                        response.body = file.code + `\n//# ${SOURCEMAPPING_URL}=${file.map!.toUrl()}\n`;
+                        return response;
+                    } else {
+                        chunks.push({
+                            code: file.code,
+                            filename: file.fileName,
+                            map: file.map!.toString(),
+                        })
+                    }
+                }
+            }
+            response.body = {'rollupFiles': chunks};
+            return response;
         } catch(e) {
-            response.body = e.toString();
+            let msg = e.toString();
+            if (msg === 'Error') {
+                if (e.code && e.stack) {
+                    msg = `${e.code}\n${e.stack}`;
+                }
+            }
+            response.body = msg;
             return response;
         } finally {
             Deno.chdir(cwd);
         };
-
-        for (const file of rollupOutput.output) {
-            if (file.type === 'asset') {
-                // console.log('Asset', file);
-            } else {
-                // console.log('Chunk', file.modules);
-                // https://github.com/cmorten/deno-rollup/blob/bb159fc3a8c3c9fdd0b57142cc7bf84ae93dd2f4/src/cli/build.ts
-                // https://deno.land/x/drollup@2.41.0+0.16.1/src/rollup/write.ts
-                if (this.options.inlineFileMap) {
-                    response.body = file.code + `\n//# ${SOURCEMAPPING_URL}=${file.map!.toUrl()}\n`;
-                } else {
-                    response.body = {
-                        'rollupFile': {
-                            code: file.code,
-                            filename: file.fileName,
-                            map: file.map!.toString(),
-                        }
-                    }
-                }
-                response.status = 200;
-                break;
-            }
-        }
-        return response;
     }
 
 }
