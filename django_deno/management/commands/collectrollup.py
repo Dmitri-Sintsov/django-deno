@@ -39,11 +39,14 @@ class Command(collectstatic.Command, DenoProcess):
                     dest_js_filename = dest_dir + os.sep + obj['filename']
                 os.makedirs(dest_dir, exist_ok=True)
                 dest_map_filename = f"{dest_js_filename}.map"
-                with open(dest_js_filename, "w", encoding='utf-8') as f:
-                    f.write(obj['code'])
-                    f.write(f"//# sourceMappingURL={obj['filename']}.map")
-                with open(dest_map_filename, "w", encoding='utf-8') as f:
-                    f.write(obj['map'])
+                if is_main_chunk or prefixed_path.endswith('app.js'):
+                    with open(dest_js_filename, "w", encoding='utf-8') as f:
+                        f.write(obj['code'])
+                        f.write(f"//# sourceMappingURL={obj['filename']}.map")
+                    self.stdout.write(f"Writing '{dest_js_filename}'")
+                    with open(dest_map_filename, "w", encoding='utf-8') as f:
+                        f.write(obj['map'])
+                    self.stdout.write(f"Writing '{dest_map_filename}'")
 
     def rollup_file(self, path, prefixed_path, source_file):
         if not self.is_local_storage():

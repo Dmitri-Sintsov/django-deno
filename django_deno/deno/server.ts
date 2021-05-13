@@ -141,7 +141,7 @@ router
     ];
     if (!inlineRollupOptions.inlineFileMap) {
         inlineRollupOptions.chunkFileNames = "[name].js";
-        inlineRollupOptions.manualChunks = (id: string, { getModuleInfo }) => {
+        inlineRollupOptions.manualChunks = (id: string, { getModuleInfo }): string | null | undefined => {
             let fullLocalPath = new LocalPath(Deno.cwd());
             fullLocalPath = fullLocalPath.traverseStr(id);
             if (!existsSync(fullLocalPath.path)) {
