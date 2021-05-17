@@ -57,6 +57,20 @@ class LocalPath {
         return LocalPath.join(this.getDirParts());
     }
 
+    public matches(matchPath: LocalPath): boolean {
+        var thisParts = this.split().reverse();
+        var matchParts = matchPath.split().reverse();
+        if (thisParts.length < matchParts.length) {
+            return false;
+        }
+        for (let [idx, matchPart] of Object.entries(matchParts) as any) {
+            if (matchPart !== '*' && matchPart !== thisParts[idx]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public traverse(relPath: LocalPath): LocalPath {
         var thisParts = this.split();
         var relDirParts = relPath.getDirParts();

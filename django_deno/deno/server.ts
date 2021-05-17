@@ -10,7 +10,7 @@ import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
 
 import { LocalPath } from './localpath.ts';
 import { ImportMapGenerator } from "./importmap.ts";
-import type { InlineRollupOptions } from './rollup.ts';
+import type { InlineRollupOptions, RollupBundleItem } from './rollup.ts';
 import { InlineRollup } from "./rollup.ts";
 
 let args = parse(Deno.args);
@@ -148,7 +148,38 @@ router
             if (!existsSync(fullLocalPath.path)) {
                 throw new Error(`Error in manualChunks, id "${id}" path does not exists: "${fullLocalPath.path}"`);
             }
-
+            let matchingBundle: RollupBundleItem | false = false;
+            if (inlineRollupOptions.bundles) {
+                let bundleName: string;
+                let rollupBundleItem: RollupBundleItem;
+                for ([bundleName, rollupBundleItem] of Object.entries(inlineRollupOptions.bundles)) {
+                    for (let bundleItemMatch of rollupBundleItem.matches) {
+                        let bundleItemMatchLocalPath = new LocalPath(bundleItemMatch);
+                        if (fullLocalPath.matches(bundleItemMatchLocalPath)) {
+                            console.log(`Matched bundle name: ${bundleName} script ${fullLocalPath.path}`);
+                            matchingBundle = rollupBundleItem;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (inlineRollupOptions.entryPoints && matchingBundle) {
+                let entryPoint: string;
+                let bundleName: string | false;
+                for ([entryPoint, bundleName] of Object.entries(inlineRollupOptions.entryPoints)) {
+                    let entryPointLocalPath = new LocalPath(entryPoint);
+                    if (fullLocalPath.matches(entryPointLocalPath)) {
+                        console.log(`Matched entry point: ${entryPointLocalPath.path} ${fullLocalPath.path}, bundle name: ${bundleName}`);
+                        let moduleInfo = getModuleInfo(id);
+                        if (moduleInfo) {
+                            // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
+                            moduleInfo.isEntry = matchingBundle.virtualEntryPoints? true : false;
+                        }
+                        return 'djk';
+                    }
+                }
+            }
+            /*
             if (fullLocalPath.split().indexOf('djk') !== -1) {
                 let moduleInfo = getModuleInfo(id);
                 if (moduleInfo) {
@@ -159,6 +190,7 @@ router
                 }
                 return 'djk';
             }
+            */
         }
     }
     let inlineRollup = new InlineRollup(site.importMapGenerator, inlineRollupOptions);

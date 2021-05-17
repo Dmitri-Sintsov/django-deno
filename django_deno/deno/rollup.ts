@@ -32,7 +32,9 @@ class ResponseFields {
     }
 };
 
-type EntryPointsBundles = Record<string, string>;
+interface EntryPointsBundles {
+    [key: string]: string | false;
+}
 
 interface RollupBundleItem {
     writeEntryPoint?: string;
@@ -41,7 +43,7 @@ interface RollupBundleItem {
     virtualEntryPoints?: boolean;
 }
 
-type Bundles = Record<string, RollupBundleItem>;
+type Bundles = RollupBundleItem[];
 
 interface InlineRollupOptions {
     bundles?: RollupBundleItem;
@@ -244,5 +246,5 @@ class InlineRollup {
 
 }
 
-export type { InlineRollupOptions };
+export type { InlineRollupOptions, RollupBundleItem };
 export { InlineRollup };
