@@ -39,5 +39,7 @@ DENO_ROLLUP_COLLECT_OPTIONS = {
     # 'relativePaths': True,
     # 'staticFilesResolver': True,
     'terser': True,
+    'entryPoints': getattr(settings, 'DENO_ROLLUP_ENTRY_POINTS', {}),
+    'bundles': getattr(settings, 'DENO_ROLLUP_BUNDLES', {}),
 }
 DENO_ROLLUP_COLLECT_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_COLLECT_OPTIONS', {}))

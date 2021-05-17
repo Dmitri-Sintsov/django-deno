@@ -8,7 +8,8 @@ import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 // @2.42.3%2B0.17.1
 import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
 
-import { LocalPath, ImportMapGenerator } from "./importmap.ts";
+import { LocalPath } from './localpath.ts';
+import { ImportMapGenerator } from "./importmap.ts";
 import type { InlineRollupOptions } from './rollup.ts';
 import { InlineRollup } from "./rollup.ts";
 
@@ -147,6 +148,7 @@ router
             if (!existsSync(fullLocalPath.path)) {
                 throw new Error(`Error in manualChunks, id "${id}" path does not exists: "${fullLocalPath.path}"`);
             }
+
             if (fullLocalPath.split().indexOf('djk') !== -1) {
                 let moduleInfo = getModuleInfo(id);
                 if (moduleInfo) {
@@ -161,6 +163,10 @@ router
     }
     let inlineRollup = new InlineRollup(site.importMapGenerator, inlineRollupOptions);
     let responseFields = await inlineRollup.perform(basedir, filename);
+    /**
+     * Warning: never use rollup cache for different source settings, eg. inline and bundled chunks at the same time.
+     * Otherwise, it would cause cache incoherency and hard to track bugs.
+     */
     if (inlineRollupOptions.withCache && inlineRollupOptions.cache) {
         let entry = site.updateEntry(cachePath, inlineRollupOptions.cache);
         /**

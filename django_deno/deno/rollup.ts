@@ -32,10 +32,22 @@ class ResponseFields {
     }
 };
 
+type EntryPointsBundles = Record<string, string>;
+
+interface RollupBundleItem {
+    writeEntryPoint?: string;
+    excludes?: string[];
+    matches: string[];
+    virtualEntryPoints?: boolean;
+}
+
+type Bundles = Record<string, RollupBundleItem>;
 
 interface InlineRollupOptions {
+    bundles?: RollupBundleItem;
     cache?: RollupCache;
     chunkFileNames?: string;
+    entryPoints?: EntryPointsBundles;
     inlineFileMap?: boolean;
     moduleFormat?: ModuleFormat;
     manualChunks?: ManualChunksOption,
