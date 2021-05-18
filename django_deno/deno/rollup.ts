@@ -32,10 +32,6 @@ class ResponseFields {
     }
 };
 
-interface EntryPointsBundles {
-    [key: string]: string | false;
-}
-
 interface RollupBundleItem {
     writeEntryPoint?: string;
     excludes?: string[];
@@ -49,7 +45,6 @@ interface InlineRollupOptions {
     bundles?: RollupBundleItem;
     cache?: RollupCache;
     chunkFileNames?: string;
-    entryPoints?: EntryPointsBundles;
     inlineFileMap?: boolean;
     moduleFormat?: ModuleFormat;
     manualChunks?: ManualChunksOption,

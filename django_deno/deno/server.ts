@@ -116,9 +116,10 @@ router
     basedir = value['basedir'];
     filename = value['filename'];
 
-    let cacheParts = new LocalPath(basedir).split();
-    cacheParts.push(filename);
-    let cachePath: string = LocalPath.fromPathParts(cacheParts).path;
+    let fullPathParts = new LocalPath(basedir).split();
+    fullPathParts.push(filename);
+    let entryPointLocalPath = LocalPath.fromPathParts(fullPathParts);
+    let cachePath: string = entryPointLocalPath.path;
 
     inlineRollupOptions = value['options'];
     // https://github.com/lucacasonato/dext.ts/issues/65
@@ -127,19 +128,7 @@ router
     } else {
         inlineRollupOptions.cache = undefined;
     }
-    let entryPoints = [
-        // 'document.js',
-        'dash.js',
-        'dialog.js',
-        'modelform.js',
-        'tabpane.js',
-        'actions.js',
-        'grid.js',
-        'ioc.js',
-        'ui.js',
-        'row.js',
-        'ioc.js',
-    ];
+
     if (!inlineRollupOptions.inlineFileMap) {
         inlineRollupOptions.chunkFileNames = "[name].js";
         inlineRollupOptions.manualChunks = (id: string, { getModuleInfo }): string | null | undefined => {
@@ -149,8 +138,8 @@ router
                 throw new Error(`Error in manualChunks, id "${id}" path does not exists: "${fullLocalPath.path}"`);
             }
             let matchingBundle: RollupBundleItem | false = false;
+            let bundleName: string = '';
             if (inlineRollupOptions.bundles) {
-                let bundleName: string;
                 let rollupBundleItem: RollupBundleItem;
                 for ([bundleName, rollupBundleItem] of Object.entries(inlineRollupOptions.bundles)) {
                     for (let bundleItemMatch of rollupBundleItem.matches) {
@@ -163,36 +152,26 @@ router
                     }
                 }
             }
-            if (inlineRollupOptions.entryPoints && matchingBundle) {
-                let entryPoint: string;
-                let bundleName: string | false;
-                for ([entryPoint, bundleName] of Object.entries(inlineRollupOptions.entryPoints)) {
-                    let entryPointLocalPath = new LocalPath(entryPoint);
-                    if (fullLocalPath.matches(entryPointLocalPath)) {
-                        console.log(`Matched entry point: ${entryPointLocalPath.path} ${fullLocalPath.path}, bundle name: ${bundleName}`);
-                        let moduleInfo = getModuleInfo(id);
-                        if (moduleInfo) {
-                            // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
-                            moduleInfo.isEntry = matchingBundle.virtualEntryPoints? true : false;
-                        }
-                        return 'djk';
+            if (matchingBundle) {
+                if (matchingBundle.writeEntryPoint && matchingBundle.virtualEntryPoints) {
+                    let writeEntryPointLocalPath = new LocalPath(matchingBundle.writeEntryPoint);
+                    let useVirtualEntryPoints = entryPointLocalPath.matches(writeEntryPointLocalPath);
+                    if (useVirtualEntryPoints) {
+                        console.log(`Using virtualEntryPoints, bundle ${bundleName}, entry point ${entryPointLocalPath.path}` )
+                    } else {
+                        console.log(`Bundle ${bundleName}, entry point ${entryPointLocalPath.path}` )
+                    }
+                    let moduleInfo = getModuleInfo(id);
+                    if (moduleInfo) {
+                        // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
+                        moduleInfo.isEntry = useVirtualEntryPoints;
                     }
                 }
+                return bundleName;
             }
-            /*
-            if (fullLocalPath.split().indexOf('djk') !== -1) {
-                let moduleInfo = getModuleInfo(id);
-                if (moduleInfo) {
-                    // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
-                    // if (fullLocalPath.getBaseName() !== 'document.js') {
-                        moduleInfo.isEntry = filename === 'app.js';
-                    // }
-                }
-                return 'djk';
-            }
-            */
         }
     }
+
     let inlineRollup = new InlineRollup(site.importMapGenerator, inlineRollupOptions);
     let responseFields = await inlineRollup.perform(basedir, filename);
     /**
