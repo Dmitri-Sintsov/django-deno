@@ -104,7 +104,7 @@ class InlineRollup {
             format: this.options.moduleFormat ? this.options.moduleFormat: 'es',
             minifyInternalExports: false,
             plugins: [],
-            // preserveModules: true,
+            // preserveModules: false,
             sourcemap: this.options.inlineFileMap ? 'inline' : true,
         };
 

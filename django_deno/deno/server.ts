@@ -130,15 +130,15 @@ router
             }
             if (matchingBundle) {
                 if (matchingBundle.writeEntryPoint && matchingBundle.virtualEntryPoints) {
-                    let writeEntryPointLocalPath = new LocalPath(matchingBundle.writeEntryPoint);
-                    let useVirtualEntryPoints = entryPointLocalPath.matches(writeEntryPointLocalPath);
-                    if (useVirtualEntryPoints) {
-                        console.log(`Using virtualEntryPoints, bundle ${bundleName}, entry point ${entryPointLocalPath.path}` )
-                    } else {
-                        console.log(`Bundle ${bundleName}, entry point ${entryPointLocalPath.path}` )
-                    }
                     let moduleInfo = getModuleInfo(id);
                     if (moduleInfo) {
+                        let writeEntryPointLocalPath = new LocalPath(matchingBundle.writeEntryPoint);
+                        let useVirtualEntryPoints = entryPointLocalPath.matches(writeEntryPointLocalPath);
+                        if (useVirtualEntryPoints) {
+                            console.log(`Using virtualEntryPoints, bundle ${bundleName}, entry point ${entryPointLocalPath.path}` )
+                        } else {
+                            console.log(`Bundle ${bundleName}, entry point ${entryPointLocalPath.path}` )
+                        }
                         // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
                         moduleInfo.isEntry = useVirtualEntryPoints;
                     }
