@@ -23,51 +23,27 @@ const apiStatus = {
     "pid": Deno.pid,
 };
 
-class EntryCache {
-    cache: RollupCache;
-    previousInlineString?: string;
-
-    constructor(cache: RollupCache) {
-        this.cache = cache;
-    }
-
-    public notModified(body: string) {
-        return this.previousInlineString === body;
-    }
-
-    public updateBody(body: string) {
-        let notModified = this.notModified(body);
-        this.previousInlineString = body;
-        return notModified;
-    }
-};
-
-type ScriptEntries = Record<string, EntryCache>;
+type CacheEntries = Record<string, RollupCache>;
 
 class Site {
     importMapGenerator: ImportMapGenerator;
-    entries: ScriptEntries;
+    entries: CacheEntries;
 
     constructor(importMapGenerator: ImportMapGenerator) {
         this.importMapGenerator = importMapGenerator;
         this.entries = {};
     }
 
-    public hasEntry(cachePath: string) {
+    public hasCache(cachePath: string) {
         return typeof this.entries[cachePath] !== 'undefined';
     }
 
-    public updateEntry(cachePath: string, cache: RollupCache) {
-        if (this.hasEntry(cachePath)) {
-            this.entries[cachePath].cache = cache;
-        } else {
-            this.entries[cachePath] = new EntryCache(cache);
-        }
+    public getCache(cachePath: string) {
         return this.entries[cachePath];
     }
 
-    public hasCache(cachePath: string) {
-        return this.hasEntry(cachePath) && this.entries[cachePath].cache;
+    public setCache(cachePath: string, cache: RollupCache) {
+        this.entries[cachePath] = cache;
     }
 
 };
@@ -124,7 +100,7 @@ router
     inlineRollupOptions = value['options'];
     // https://github.com/lucacasonato/dext.ts/issues/65
     if (inlineRollupOptions.withCache && site.hasCache(cachePath)) {
-        inlineRollupOptions.cache = site.entries[cachePath].cache;
+        inlineRollupOptions.cache = site.getCache(cachePath);
     } else {
         inlineRollupOptions.cache = undefined;
     }
@@ -179,14 +155,7 @@ router
      * Otherwise, it would cause cache incoherency and hard to track bugs.
      */
     if (inlineRollupOptions.withCache && inlineRollupOptions.cache) {
-        let entry = site.updateEntry(cachePath, inlineRollupOptions.cache);
-        /**
-         * let notModified = entry.updateBody(responseFields.body);
-         * if (notModified) {
-         *    context.response.status = 304;
-         *    return;
-         * }
-         */
+        site.setCache(cachePath, inlineRollupOptions.cache);
     }
     responseFields.toOakContext(context);
 });
