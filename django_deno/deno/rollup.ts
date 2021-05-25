@@ -1,9 +1,9 @@
 // Developed with drollup@2.41.0+0.16.1
 import { Context } from "https://deno.land/x/oak/mod.ts";
 
-import type { ManualChunksOption, ModuleFormat, OutputBundle, OutputPlugin, PreserveEntrySignaturesOption, RollupCache } from "https://deno.land/x/drollup/deps.ts";
+import type { ManualChunksOption, ModuleFormat, PreserveEntrySignaturesOption, RollupCache } from "https://deno.land/x/drollup/deps.ts";
 import { rollup, RollupOutput } from "https://deno.land/x/drollup/mod.ts";
-import type { NormalizedOutputOptions, OutputOptions } from "https://deno.land/x/drollup/mod.ts";
+import type { OutputOptions } from "https://deno.land/x/drollup/mod.ts";
 import { SOURCEMAPPING_URL } from "https://deno.land/x/drollup/src/rollup/write.ts";
 import { denoResolver, DenoResolverOptions } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/denoResolver.ts";
 import { terser } from "https://deno.land/x/drollup/plugins/terser/mod.ts";
@@ -54,26 +54,6 @@ interface InlineRollupOptions {
     withCache?: boolean;
 }
 
-let allExportsOutputPlugin: OutputPlugin = {
-    name: 'allExportsOutputPlugin',
-    generateBundle: function(options, bundle, isWrite: boolean) {
-        if (typeof bundle['djk.js'] !== 'undefined') {
-            let chunk: any = bundle['djk.js'];
-            if (typeof chunk.exports !== 'undefined') {
-                chunk.exports = ['ActionTemplateDialog', 'Actions', 'Dialog', 'Grid', 'GridActions', 'GridRow', 'globalIoc', 'inherit', 'startApp', 'ui', 'TabPane'];
-            }
-        }
-    },
-    writeBundle: function(options: NormalizedOutputOptions, bundle: OutputBundle) {
-        if (typeof bundle['djk.js'] !== 'undefined') {
-            let chunk: any = bundle['djk.js'];
-            if (typeof chunk.exports !== 'undefined') {
-                chunk.exports = ['ActionTemplateDialog', 'Actions', 'Dialog', 'Grid', 'GridActions', 'GridRow', 'globalIoc', 'inherit', 'startApp', 'ui', 'TabPane'];
-            }
-        }
-    }
-};
-
 class InlineRollup {
 
     importMapGenerator: ImportMapGenerator;
@@ -123,7 +103,7 @@ class InlineRollup {
             // exports: 'named',
             format: this.options.moduleFormat ? this.options.moduleFormat: 'es',
             minifyInternalExports: false,
-            plugins: [allExportsOutputPlugin],
+            plugins: [],
             // preserveModules: true,
             sourcemap: this.options.inlineFileMap ? 'inline' : true,
         };
@@ -143,19 +123,7 @@ class InlineRollup {
             resolver.resolveId = this.getStaticFilesResolver();
             rollupPlugins.push(resolver);
         }
-/*
-        if (!this.options.inlineFileMap) {
-            rollupPlugins.push({
-				transform(code: string, id: string) {
-					if (id.endsWith('document.js')) {
-						return {
-						    code, syntheticNamedExports: 'ActionTemplateDialog, Actions, Dialog, Grid, GridActions, GridRow, globalIoc, inherit, ui, TabPane'
-                        };
-					}
-				},
-            })
-        }
-*/
+
 /*
         if (this.options.terser) {
             rollupPlugins.push(terser({
