@@ -1,5 +1,4 @@
 // import { serve } from 'https://deno.land/std/http/server.ts'
-import { existsSync } from "https://deno.land/std/fs/mod.ts";
 
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
@@ -10,8 +9,8 @@ import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
 
 import { LocalPath } from './localpath.ts';
 import { ImportMapGenerator } from "./importmap.ts";
-import type { InlineRollupOptions, RollupBundleItem } from './rollup.ts';
-import { InlineRollup } from "./rollup.ts";
+import type { RollupBundleItem, BundleChunkInfo } from './rollup.ts';
+import { InlineRollupOptions, InlineRollup } from "./rollup.ts";
 
 let args = parse(Deno.args);
 const httpHost = args['host'];
@@ -81,7 +80,6 @@ router
 
     let basedir: string;
     let filename: string;
-    let inlineRollupOptions: InlineRollupOptions;
     for (let valArg of ['filename', 'basedir', 'options']) {
         if (typeof value[valArg] === 'undefined') {
             context.response.body = `No {valArg} arg specified`;
@@ -97,7 +95,8 @@ router
     let entryPointLocalPath = LocalPath.fromPathParts(fullPathParts);
     let cachePath: string = entryPointLocalPath.path;
 
-    inlineRollupOptions = value['options'];
+    let inlineRollupOptions = new InlineRollupOptions(value['options']);
+
     // https://github.com/lucacasonato/dext.ts/issues/65
     if (inlineRollupOptions.withCache && site.hasCache(cachePath)) {
         inlineRollupOptions.cache = site.getCache(cachePath);
@@ -108,41 +107,14 @@ router
     if (!inlineRollupOptions.inlineFileMap) {
         inlineRollupOptions.chunkFileNames = "[name].js";
         inlineRollupOptions.manualChunks = (id: string, { getModuleInfo }): string | null | undefined => {
-            let fullLocalPath = new LocalPath(Deno.cwd());
-            fullLocalPath = fullLocalPath.traverseStr(id);
-            if (!existsSync(fullLocalPath.path)) {
-                throw new Error(`Error in manualChunks, id "${id}" path does not exists: "${fullLocalPath.path}"`);
-            }
-            let matchingBundle: RollupBundleItem | false = false;
-            let bundleName: string = '';
-            if (inlineRollupOptions.bundles) {
-                let rollupBundleItem: RollupBundleItem;
-                for ([bundleName, rollupBundleItem] of Object.entries(inlineRollupOptions.bundles)) {
-                    for (let bundleItemMatch of rollupBundleItem.matches) {
-                        let bundleItemMatchLocalPath = new LocalPath(bundleItemMatch);
-                        if (fullLocalPath.matches(bundleItemMatchLocalPath)) {
-                            console.log(`Matched bundle name: ${bundleName} script ${fullLocalPath.path}`);
-                            matchingBundle = rollupBundleItem;
-                            break;
-                        }
-                    }
-                }
-            }
-            if (matchingBundle) {
-                if (matchingBundle.writeEntryPoint && matchingBundle.virtualEntryPoints) {
-                    let moduleInfo = getModuleInfo(id);
-                    if (moduleInfo) {
-                        let writeEntryPointLocalPath = new LocalPath(matchingBundle.writeEntryPoint);
-                        let useVirtualEntryPoints = entryPointLocalPath.matches(writeEntryPointLocalPath);
-                        if (useVirtualEntryPoints) {
-                            console.log(`Using virtualEntryPoints, bundle ${bundleName}, entry point ${entryPointLocalPath.path}` )
-                        } else {
-                            console.log(`Bundle ${bundleName}, entry point ${entryPointLocalPath.path}` )
-                        }
-                        // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
-                        moduleInfo.isEntry = useVirtualEntryPoints;
-                    }
-                }
+            let fullLocalPath = inlineRollupOptions.getFullLocalPath(id);
+            // https://flaviocopes.com/typescript-object-destructuring/
+            // const { name, age }: { name: string; age: number } = body.value
+            let {bundleName, matchingBundle}: BundleChunkInfo = inlineRollupOptions.getBundleChunk(fullLocalPath);
+            let moduleInfo = getModuleInfo(id);
+            if (moduleInfo && matchingBundle) {
+                inlineRollupOptions.setVirtualEntryPoints(moduleInfo, entryPointLocalPath, matchingBundle);
+                console.log(`Found bundle ${bundleName}`);
                 return bundleName;
             }
         }

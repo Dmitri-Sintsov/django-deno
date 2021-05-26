@@ -12,6 +12,9 @@ import { resolveId } from "https://deno.land/x/drollup/src/rollup-plugin-deno-re
 import { handleUnresolvedId } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/handleUnresolvedId.ts";
 import { exists } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/exists.ts";
 
+import { existsSync } from "https://deno.land/std/fs/mod.ts";
+
+import { LocalPath } from './localpath.ts';
 import { ImportMapGenerator } from "./importmap.ts";
 
 class ResponseFields {
@@ -41,17 +44,67 @@ interface RollupBundleItem {
 
 type Bundles = RollupBundleItem[];
 
-interface InlineRollupOptions {
+interface BundleChunkInfo {
+    bundleName: string;
+    matchingBundle: RollupBundleItem | false;
+}
+
+class InlineRollupOptions {
     bundles?: RollupBundleItem;
     cache?: RollupCache;
     chunkFileNames?: string;
     inlineFileMap?: boolean;
     moduleFormat?: ModuleFormat;
-    manualChunks?: ManualChunksOption,
+    manualChunks?: ManualChunksOption;
     relativePaths?: boolean;
     staticFilesResolver?: boolean;
     terser?: boolean;
     withCache?: boolean;
+
+    constructor(options: Partial<InlineRollupOptions> = {}) {
+        Object.assign(this, options);
+    }
+
+    public getFullLocalPath(id: string) {
+        let fullLocalPath = new LocalPath(Deno.cwd());
+        fullLocalPath = fullLocalPath.traverseStr(id);
+        if (!existsSync(fullLocalPath.path)) {
+            throw new Error(`Error in getFullLocalPath, id "${id}" path does not exists: "${fullLocalPath.path}"`);
+        }
+        return fullLocalPath;
+    }
+
+    public getBundleChunk(fullLocalPath: LocalPath): BundleChunkInfo {
+        if (this.bundles) {
+            let bundleName: string = '';
+            let rollupBundleItem: RollupBundleItem;
+            for ([bundleName, rollupBundleItem] of Object.entries(this.bundles)) {
+                for (let bundleItemMatch of rollupBundleItem.matches) {
+                    let bundleItemMatchLocalPath = new LocalPath(bundleItemMatch);
+                    if (fullLocalPath.matches(bundleItemMatchLocalPath)) {
+                        console.log(`Matched bundle name: ${bundleName} script ${fullLocalPath.path}`);
+                        return {'bundleName': bundleName, matchingBundle: rollupBundleItem};
+                    }
+                }
+            }
+        }
+        return {'bundleName': '', matchingBundle: false};
+    }
+
+    public setVirtualEntryPoints(moduleInfo: any, entryPointLocalPath: LocalPath, matchingBundle: RollupBundleItem) {
+        if (matchingBundle.writeEntryPoint && matchingBundle.virtualEntryPoints) {
+            let writeEntryPointLocalPath = new LocalPath(matchingBundle.writeEntryPoint);
+            let useVirtualEntryPoints = entryPointLocalPath.matches(writeEntryPointLocalPath);
+            if (useVirtualEntryPoints) {
+                console.log(`Using virtualEntryPoints, entry point ${entryPointLocalPath.path}` );
+            } else {
+                console.log(`Entry point ${entryPointLocalPath.path}` );
+            }
+            // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
+            moduleInfo.isEntry = useVirtualEntryPoints;
+        }
+    }
+
 }
 
 class InlineRollup {
@@ -209,5 +262,5 @@ class InlineRollup {
 
 }
 
-export type { InlineRollupOptions, RollupBundleItem };
-export { InlineRollup };
+export type { RollupBundleItem, BundleChunkInfo };
+export { InlineRollupOptions, InlineRollup };
