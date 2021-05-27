@@ -9,7 +9,7 @@ import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
 
 import { LocalPath } from './localpath.ts';
 import { ImportMapGenerator } from "./importmap.ts";
-import type { RollupBundleItem, BundleChunkInfo } from './rollup.ts';
+import type { BundleChunkInfo } from './rollup.ts';
 import { InlineRollupOptions, InlineRollup } from "./rollup.ts";
 
 let args = parse(Deno.args);
@@ -113,8 +113,12 @@ router
             let {bundleName, matchingBundle}: BundleChunkInfo = inlineRollupOptions.getBundleChunk(fullLocalPath);
             let moduleInfo = getModuleInfo(id);
             if (moduleInfo && matchingBundle) {
-                inlineRollupOptions.setVirtualEntryPoints(moduleInfo, entryPointLocalPath, matchingBundle);
-                console.log(`Found bundle ${bundleName}`);
+                let isVirtualEntry: boolean = matchingBundle.setVirtualEntryPoint(moduleInfo, entryPointLocalPath);
+                if (isVirtualEntry) {
+                    console.log(`Found bundle ${bundleName}, setting virtual entry`);
+                } else {
+                    console.log(`Found bundle ${bundleName}`);
+                }
                 return bundleName;
             }
         }

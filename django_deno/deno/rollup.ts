@@ -35,11 +35,47 @@ class ResponseFields {
     }
 };
 
-interface RollupBundleItem {
+class RollupBundleItem {
     writeEntryPoint?: string;
+    writeEntryPointLocalPath?: LocalPath;
     excludes?: string[];
     matches: string[];
     virtualEntryPoints?: boolean;
+
+    constructor(options: Partial<RollupBundleItem> = {}) {
+        this.matches = [];
+        Object.assign(this, options);
+        if (this.writeEntryPoint) {
+            this.writeEntryPointLocalPath = new LocalPath(this.writeEntryPoint);
+        }
+    }
+
+    public setVirtualEntryPoint(moduleInfo: any, entryPointLocalPath: LocalPath): boolean {
+        let isVirtualEntry: boolean = false;
+        if (this.writeEntryPointLocalPath && this.virtualEntryPoints) {
+            let useVirtualEntryPoints = entryPointLocalPath.matches(this.writeEntryPointLocalPath);
+            if (useVirtualEntryPoints) {
+                console.log(`Using virtualEntryPoints, entry point ${entryPointLocalPath.path}` );
+            } else {
+                console.log(`Entry point ${entryPointLocalPath.path}` );
+            }
+            isVirtualEntry = !moduleInfo.isEntry && useVirtualEntryPoints;
+            // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
+            moduleInfo.isEntry = useVirtualEntryPoints;
+        }
+        return isVirtualEntry;
+    }
+
+    public hasLocalPath(fullLocalPath: LocalPath): boolean {
+        for (let bundleItemMatch of this.matches) {
+            let bundleItemMatchLocalPath = new LocalPath(bundleItemMatch);
+            if (fullLocalPath.matches(bundleItemMatchLocalPath)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
 
 type Bundles = RollupBundleItem[];
@@ -77,32 +113,16 @@ class InlineRollupOptions {
     public getBundleChunk(fullLocalPath: LocalPath): BundleChunkInfo {
         if (this.bundles) {
             let bundleName: string = '';
-            let rollupBundleItem: RollupBundleItem;
-            for ([bundleName, rollupBundleItem] of Object.entries(this.bundles)) {
-                for (let bundleItemMatch of rollupBundleItem.matches) {
-                    let bundleItemMatchLocalPath = new LocalPath(bundleItemMatch);
-                    if (fullLocalPath.matches(bundleItemMatchLocalPath)) {
-                        console.log(`Matched bundle name: ${bundleName} script ${fullLocalPath.path}`);
-                        return {'bundleName': bundleName, matchingBundle: rollupBundleItem};
-                    }
+            let rollupBundleItemOptions: Object;
+            for ([bundleName, rollupBundleItemOptions] of Object.entries(this.bundles)) {
+                let rollupBundleItem = new RollupBundleItem(rollupBundleItemOptions);
+                if (rollupBundleItem.hasLocalPath(fullLocalPath)) {
+                    console.log(`Matched bundle name: ${bundleName} script ${fullLocalPath.path}`);
+                    return {'bundleName': bundleName, matchingBundle: rollupBundleItem};
                 }
             }
         }
         return {'bundleName': '', matchingBundle: false};
-    }
-
-    public setVirtualEntryPoints(moduleInfo: any, entryPointLocalPath: LocalPath, matchingBundle: RollupBundleItem) {
-        if (matchingBundle.writeEntryPoint && matchingBundle.virtualEntryPoints) {
-            let writeEntryPointLocalPath = new LocalPath(matchingBundle.writeEntryPoint);
-            let useVirtualEntryPoints = entryPointLocalPath.matches(writeEntryPointLocalPath);
-            if (useVirtualEntryPoints) {
-                console.log(`Using virtualEntryPoints, entry point ${entryPointLocalPath.path}` );
-            } else {
-                console.log(`Entry point ${entryPointLocalPath.path}` );
-            }
-            // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
-            moduleInfo.isEntry = useVirtualEntryPoints;
-        }
     }
 
 }
@@ -262,5 +282,5 @@ class InlineRollup {
 
 }
 
-export type { RollupBundleItem, BundleChunkInfo };
+export type { BundleChunkInfo };
 export { InlineRollupOptions, InlineRollup };
