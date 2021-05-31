@@ -166,11 +166,10 @@ class InlineRollup {
         };
     }
 
-    async perform(basedir: string | null, filename: string) {
+    async generate(basedir: string | null, filename: string): Promise<Error | RollupOutput> {
         // https://unpkg.com/rollup@2.41.0/dist/rollup.d.ts
         // https://gist.github.com/vsajip/94fb524746b151b5160924418e6882e5
         // https://deno.land/x/drollup@2.41.0+0.16.1#javascript-api
-        let response = new ResponseFields();
 
         const outputOptions: OutputOptions = {
             // exports: 'named',
@@ -242,42 +241,52 @@ class InlineRollup {
                 this.options.cache = bundle.cache;
             }
             rollupOutput = await bundle.generate(options.output);
+            return rollupOutput;
 
-            response.status = 200;
-            let chunks = [];
-            for (const file of rollupOutput.output) {
-                if (file.type === 'asset') {
-                    console.log('Todo: support assets', file);
-                } else {
-                    // console.log('Chunk', file.modules);
-                    // https://github.com/cmorten/deno-rollup/blob/bb159fc3a8c3c9fdd0b57142cc7bf84ae93dd2f4/src/cli/build.ts
-                    // https://deno.land/x/drollup@2.41.0+0.16.1/src/rollup/write.ts
-                    if (this.options.inlineFileMap) {
-                        response.body = file.code + `\n//# ${SOURCEMAPPING_URL}=${file.map!.toUrl()}\n`;
-                        return response;
-                    } else {
-                        chunks.push({
-                            code: file.code,
-                            filename: file.fileName,
-                            map: file.map!.toString(),
-                        })
-                    }
-                }
-            }
-            response.body = {'rollupFiles': chunks};
-            return response;
         } catch(e) {
-            let msg = e.toString();
-            if (msg === 'Error') {
-                if (e.code && e.stack) {
-                    msg = `${e.code}\n${e.stack}`;
-                }
-            }
-            response.body = msg;
-            return response;
+            return e;
         } finally {
             Deno.chdir(cwd);
         };
+    }
+
+    error(e: any) {
+        let response = new ResponseFields();
+        let msg = e.toString();
+        if (msg === 'Error') {
+            if (e.code && e.stack) {
+                msg = `${e.code}\n${e.stack}`;
+            }
+        }
+        response.body = msg;
+        return response;
+    }
+
+    respond(rollupOutput: RollupOutput) {
+        let response = new ResponseFields();
+        response.status = 200;
+        let chunks = [];
+        for (const file of rollupOutput.output) {
+            if (file.type === 'asset') {
+                console.log('Todo: support assets', file);
+            } else {
+                // console.log('Chunk', file.modules);
+                // https://github.com/cmorten/deno-rollup/blob/bb159fc3a8c3c9fdd0b57142cc7bf84ae93dd2f4/src/cli/build.ts
+                // https://deno.land/x/drollup@2.41.0+0.16.1/src/rollup/write.ts
+                if (this.options.inlineFileMap) {
+                    response.body = file.code + `\n//# ${SOURCEMAPPING_URL}=${file.map!.toUrl()}\n`;
+                    return response;
+                } else {
+                    chunks.push({
+                        code: file.code,
+                        filename: file.fileName,
+                        map: file.map!.toString(),
+                    })
+                }
+            }
+        }
+        response.body = {'rollupFiles': chunks};
+        return response;
     }
 
 }

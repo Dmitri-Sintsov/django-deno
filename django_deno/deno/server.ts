@@ -125,7 +125,13 @@ router
     }
 
     let inlineRollup = new InlineRollup(site.importMapGenerator, inlineRollupOptions);
-    let responseFields = await inlineRollup.perform(basedir, filename);
+    let rollupOutput = await inlineRollup.generate(basedir, filename);
+    let responseFields;
+    if (rollupOutput instanceof Error) {
+        responseFields = inlineRollup.error(rollupOutput);
+    } else {
+        responseFields = inlineRollup.respond(rollupOutput);
+    }
     /**
      * Warning: never use rollup cache for different source settings, eg. inline and bundled chunks at the same time.
      * Otherwise, it would cause cache incoherency and hard to track bugs.
