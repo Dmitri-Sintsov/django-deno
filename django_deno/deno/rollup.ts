@@ -250,19 +250,20 @@ class InlineRollup {
         };
     }
 
-    error(e: any) {
+    error(ex: Error): ResponseFields {
         let response = new ResponseFields();
-        let msg = e.toString();
+        let msg = ex.toString();
         if (msg === 'Error') {
-            if (e.code && e.stack) {
-                msg = `${e.code}\n${e.stack}`;
+            let er = ex as any;
+            if (er.code && er.stack) {
+                msg = `${er.code}\n${er.stack}`;
             }
         }
         response.body = msg;
         return response;
     }
 
-    respond(rollupOutput: RollupOutput) {
+    respond(rollupOutput: RollupOutput): ResponseFields {
         let response = new ResponseFields();
         response.status = 200;
         let chunks = [];
