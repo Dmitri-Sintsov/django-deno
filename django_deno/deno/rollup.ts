@@ -40,7 +40,7 @@ class RollupBundleItem {
     writeEntryPointLocalPath?: LocalPath;
     excludes?: string[];
     matches: string[];
-    virtualEntryPoints?: boolean;
+    virtualEntryPoints?: 'matches' | string[];
 
     constructor(options: Partial<RollupBundleItem> = {}) {
         this.matches = [];
@@ -50,30 +50,40 @@ class RollupBundleItem {
         }
     }
 
-    public setVirtualEntryPoint(moduleInfo: any, entryPointLocalPath: LocalPath): boolean {
-        let isVirtualEntry: boolean = false;
-        if (this.writeEntryPointLocalPath && this.virtualEntryPoints) {
-            let useVirtualEntryPoints = entryPointLocalPath.matches(this.writeEntryPointLocalPath);
-            if (useVirtualEntryPoints) {
-                console.log(`Using virtualEntryPoints, entry point ${entryPointLocalPath.path}` );
-            } else {
-                console.log(`Entry point ${entryPointLocalPath.path}` );
-            }
-            isVirtualEntry = !moduleInfo.isEntry && useVirtualEntryPoints;
-            // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
-            moduleInfo.isEntry = useVirtualEntryPoints;
+    public isWriteEntryPoint(entryPointLocalPath: LocalPath): boolean {
+        if (this.writeEntryPointLocalPath) {
+            return entryPointLocalPath.matches(this.writeEntryPointLocalPath);
+        } else {
+            return false;
         }
+    }
+
+    public setVirtualEntryPoint(moduleInfo: any): boolean {
+        let isVirtualEntry: boolean = !moduleInfo.isEntry;
+        // Add entry point, so exports from nested smaller modules will be preserved in 'djk' chunk.
+        moduleInfo.isEntry = true;
         return isVirtualEntry;
     }
 
-    public hasLocalPath(fullLocalPath: LocalPath): boolean {
-        for (let bundleItemMatch of this.matches) {
+    public hasLocalPath(fullLocalPath: LocalPath, matches?: string[]): boolean {
+        if (!matches) {
+            matches = this.matches;
+        }
+        for (let bundleItemMatch of matches) {
             let bundleItemMatchLocalPath = new LocalPath(bundleItemMatch);
             if (fullLocalPath.matches(bundleItemMatchLocalPath)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public isVirtualEntry(fullLocalPath: LocalPath): boolean {
+        if (this.virtualEntryPoints === 'matches') {
+            return this.hasLocalPath(fullLocalPath);
+        } else {
+            return this.hasLocalPath(fullLocalPath, this.matches);
+        }
     }
 
 }
@@ -117,7 +127,7 @@ class InlineRollupOptions {
             for ([bundleName, rollupBundleItemOptions] of Object.entries(this.bundles)) {
                 let rollupBundleItem = new RollupBundleItem(rollupBundleItemOptions);
                 if (rollupBundleItem.hasLocalPath(fullLocalPath)) {
-                    console.log(`Matched bundle name: ${bundleName} script ${fullLocalPath.path}`);
+                    // console.log(`Matched bundle name: "${bundleName}" script "${fullLocalPath.path}"`);
                     return {'bundleName': bundleName, matchingBundle: rollupBundleItem};
                 }
             }

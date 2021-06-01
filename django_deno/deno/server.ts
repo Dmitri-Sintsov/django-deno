@@ -95,6 +95,8 @@ router
     let entryPointLocalPath = LocalPath.fromPathParts(fullPathParts);
     let cachePath: string = entryPointLocalPath.path;
 
+    console.log(`=== Entry point "${entryPointLocalPath.path}" ===`);
+
     let inlineRollupOptions = new InlineRollupOptions(value['options']);
 
     // https://github.com/lucacasonato/dext.ts/issues/65
@@ -113,11 +115,15 @@ router
             let {bundleName, matchingBundle}: BundleChunkInfo = inlineRollupOptions.getBundleChunk(fullLocalPath);
             let moduleInfo = getModuleInfo(id);
             if (moduleInfo && matchingBundle) {
-                let isVirtualEntry: boolean = matchingBundle.setVirtualEntryPoint(moduleInfo, entryPointLocalPath);
+                let isVirtualEntry: boolean = false;
+                if (matchingBundle.isWriteEntryPoint(entryPointLocalPath) &&
+                        matchingBundle.isVirtualEntry(fullLocalPath)) {
+                    isVirtualEntry = matchingBundle.setVirtualEntryPoint(moduleInfo);
+                }
                 if (isVirtualEntry) {
-                    console.log(`Found bundle ${bundleName}, setting virtual entry`);
+                    console.log(`Bundle "${bundleName}", virtual entry point "${fullLocalPath.path}"`);
                 } else {
-                    console.log(`Found bundle ${bundleName}`);
+                    console.log(`Bundle "${bundleName}", module "${fullLocalPath.path}"`);
                 }
                 return bundleName;
             }
