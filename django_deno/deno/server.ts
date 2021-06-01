@@ -128,9 +128,9 @@ router
     let rollupOutput = await inlineRollup.generate(basedir, filename);
     let responseFields;
     if (rollupOutput instanceof Error) {
-        responseFields = inlineRollup.error(rollupOutput);
+        responseFields = inlineRollup.getErrorResponse(rollupOutput);
     } else {
-        responseFields = inlineRollup.respond(rollupOutput);
+        responseFields = inlineRollup.getRollupResponse(rollupOutput);
     }
     /**
      * Warning: never use rollup cache for different source settings, eg. inline and bundled chunks at the same time.

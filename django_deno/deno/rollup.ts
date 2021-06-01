@@ -250,7 +250,7 @@ class InlineRollup {
         };
     }
 
-    error(ex: Error): ResponseFields {
+    getErrorResponse(ex: Error): ResponseFields {
         let response = new ResponseFields();
         let msg = ex.toString();
         if (msg === 'Error') {
@@ -263,7 +263,7 @@ class InlineRollup {
         return response;
     }
 
-    respond(rollupOutput: RollupOutput): ResponseFields {
+    getRollupResponse(rollupOutput: RollupOutput): ResponseFields {
         let response = new ResponseFields();
         response.status = 200;
         let chunks = [];
