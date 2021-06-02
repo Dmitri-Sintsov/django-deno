@@ -36,25 +36,32 @@ class ResponseFields {
 };
 
 class RollupBundleItem {
+    name?: string;
     writeEntryPoint?: string;
     writeEntryPointLocalPath?: LocalPath;
     excludes?: string[];
     matches: string[];
     virtualEntryPoints?: 'matches' | string[];
+    skipChunks?: LocalPath[];
 
     constructor(options: Partial<RollupBundleItem> = {}) {
         this.matches = [];
+        this.skipChunks = [];
         Object.assign(this, options);
         if (this.writeEntryPoint) {
             this.writeEntryPointLocalPath = new LocalPath(this.writeEntryPoint);
         }
     }
 
+    public addSkipChunk(chunkPath: LocalPath) {
+        this.skipChunks!.push(chunkPath);
+    }
+
     public isWriteEntryPoint(entryPointLocalPath: LocalPath): boolean {
         if (this.writeEntryPointLocalPath) {
             return entryPointLocalPath.matches(this.writeEntryPointLocalPath);
         } else {
-            return false;
+            return true;
         }
     }
 
@@ -88,15 +95,9 @@ class RollupBundleItem {
 
 }
 
-type Bundles = RollupBundleItem[];
-
-interface BundleChunkInfo {
-    bundleName: string;
-    matchingBundle: RollupBundleItem | false;
-}
 
 class InlineRollupOptions {
-    bundles?: RollupBundleItem;
+    bundles?: RollupBundleItem[];
     cache?: RollupCache;
     chunkFileNames?: string;
     inlineFileMap?: boolean;
@@ -120,19 +121,20 @@ class InlineRollupOptions {
         return fullLocalPath;
     }
 
-    public getBundleChunk(fullLocalPath: LocalPath): BundleChunkInfo {
+    public getBundleChunk(fullLocalPath: LocalPath): RollupBundleItem | false {
         if (this.bundles) {
             let bundleName: string = '';
-            let rollupBundleItemOptions: Object;
+            let rollupBundleItemOptions: RollupBundleItem;
             for ([bundleName, rollupBundleItemOptions] of Object.entries(this.bundles)) {
+                rollupBundleItemOptions.name = bundleName;
                 let rollupBundleItem = new RollupBundleItem(rollupBundleItemOptions);
                 if (rollupBundleItem.hasLocalPath(fullLocalPath)) {
-                    // console.log(`Matched bundle name: "${bundleName}" script "${fullLocalPath.path}"`);
-                    return {'bundleName': bundleName, matchingBundle: rollupBundleItem};
+                    // console.log(`Matched bundle name: "${rollupBundleItem.name}" script "${fullLocalPath.path}"`);
+                    return rollupBundleItem;
                 }
             }
         }
-        return {'bundleName': '', matchingBundle: false};
+        return false;
     }
 
 }
@@ -302,5 +304,4 @@ class InlineRollup {
 
 }
 
-export type { BundleChunkInfo };
-export { InlineRollupOptions, InlineRollup };
+export { RollupBundleItem, InlineRollupOptions, InlineRollup };

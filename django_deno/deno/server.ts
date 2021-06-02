@@ -9,8 +9,7 @@ import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
 
 import { LocalPath } from './localpath.ts';
 import { ImportMapGenerator } from "./importmap.ts";
-import type { BundleChunkInfo } from './rollup.ts';
-import { InlineRollupOptions, InlineRollup } from "./rollup.ts";
+import { RollupBundleItem, InlineRollupOptions, InlineRollup } from "./rollup.ts";
 
 let args = parse(Deno.args);
 const httpHost = args['host'];
@@ -106,26 +105,33 @@ router
         inlineRollupOptions.cache = undefined;
     }
 
+    let foundBundles: { [key: string]: RollupBundleItem } = {};
+
     if (!inlineRollupOptions.inlineFileMap) {
         inlineRollupOptions.chunkFileNames = "[name].js";
         inlineRollupOptions.manualChunks = (id: string, { getModuleInfo }): string | null | undefined => {
             let fullLocalPath = inlineRollupOptions.getFullLocalPath(id);
             // https://flaviocopes.com/typescript-object-destructuring/
             // const { name, age }: { name: string; age: number } = body.value
-            let {bundleName, matchingBundle}: BundleChunkInfo = inlineRollupOptions.getBundleChunk(fullLocalPath);
+            let matchingBundle = inlineRollupOptions.getBundleChunk(fullLocalPath);
             let moduleInfo = getModuleInfo(id);
-            if (moduleInfo && matchingBundle) {
+            if (moduleInfo && matchingBundle && matchingBundle.name) {
+                foundBundles[matchingBundle.name] = matchingBundle;
                 let isVirtualEntry: boolean = false;
-                if (matchingBundle.isWriteEntryPoint(entryPointLocalPath) &&
-                        matchingBundle.isVirtualEntry(fullLocalPath)) {
-                    isVirtualEntry = matchingBundle.setVirtualEntryPoint(moduleInfo);
-                }
-                if (isVirtualEntry) {
-                    console.log(`Bundle "${bundleName}", virtual entry point "${fullLocalPath.path}"`);
+                if (matchingBundle.isWriteEntryPoint(entryPointLocalPath)) {
+                    if (matchingBundle.isVirtualEntry(fullLocalPath)) {
+                        isVirtualEntry = matchingBundle.setVirtualEntryPoint(moduleInfo);
+                    }
+                    if (isVirtualEntry) {
+                        console.log(`Bundle "${matchingBundle.name}", virtual entry point "${fullLocalPath.path}"`);
+                        matchingBundle.addSkipChunk(fullLocalPath);
+                    } else {
+                        console.log(`Bundle "${matchingBundle.name}", module "${fullLocalPath.path}"`);
+                    }
                 } else {
-                    console.log(`Bundle "${bundleName}", module "${fullLocalPath.path}"`);
+                    matchingBundle.addSkipChunk(fullLocalPath);
                 }
-                return bundleName;
+                return matchingBundle.name;
             }
         }
     }
