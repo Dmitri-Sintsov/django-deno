@@ -16,6 +16,10 @@ class LocalPath {
         this.path = LocalPath.join(pathParts);
     }
 
+    public toString() : string {
+        return this.path;
+    }
+
     static getSystemSeparator(): string {
         return (Deno.build.os == 'windows') ? '\\': '/';
     }

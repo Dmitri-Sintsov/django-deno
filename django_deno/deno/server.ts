@@ -9,7 +9,7 @@ import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
 
 import { LocalPath } from './localpath.ts';
 import { ImportMapGenerator } from "./importmap.ts";
-import { RollupBundleItem, InlineRollupOptions, InlineRollup } from "./rollup.ts";
+import { RollupBundleSet, InlineRollupOptions, InlineRollup } from "./rollup.ts";
 
 let args = parse(Deno.args);
 const httpHost = args['host'];
@@ -105,7 +105,7 @@ router
         inlineRollupOptions.cache = undefined;
     }
 
-    let foundBundles: { [key: string]: RollupBundleItem } = {};
+    let foundBundles = new RollupBundleSet();
 
     if (!inlineRollupOptions.inlineFileMap) {
         inlineRollupOptions.chunkFileNames = "[name].js";
@@ -116,7 +116,8 @@ router
             let matchingBundle = inlineRollupOptions.getBundleChunk(fullLocalPath);
             let moduleInfo = getModuleInfo(id);
             if (moduleInfo && matchingBundle && matchingBundle.name) {
-                foundBundles[matchingBundle.name] = matchingBundle;
+                // Keep singleton matchingBundle.
+                matchingBundle = foundBundles.add(matchingBundle);
                 let isVirtualEntry: boolean = false;
                 if (matchingBundle.isWriteEntryPoint(entryPointLocalPath)) {
                     if (matchingBundle.isVirtualEntry(fullLocalPath)) {
@@ -142,7 +143,7 @@ router
     if (rollupOutput instanceof Error) {
         responseFields = inlineRollup.getErrorResponse(rollupOutput);
     } else {
-        responseFields = inlineRollup.getRollupResponse(rollupOutput);
+        responseFields = inlineRollup.getRollupResponse(rollupOutput, foundBundles);
     }
     /**
      * Warning: never use rollup cache for different source settings, eg. inline and bundled chunks at the same time.

@@ -96,6 +96,30 @@ class RollupBundleItem {
 }
 
 
+class RollupBundleSet {
+    bundles: { [key: string]: RollupBundleItem };
+
+    constructor() {
+        this.bundles = {};
+    }
+
+    /**
+     * Do not override existing singleton with new instance created by InlineRollupOptions.getBundleChunk,
+     * otherwise RollupBUndleItem.skipChunks value will be reset.
+     */
+    public add(bundle: RollupBundleItem): RollupBundleItem {
+        if (bundle.name) {
+            if (typeof this.bundles[bundle.name] === 'undefined') {
+                this.bundles[bundle.name] = bundle;
+            }
+            return this.bundles[bundle.name];
+        } else {
+            throw new Error('Bundle name has to be initialized')
+        }
+    }
+}
+
+
 class InlineRollupOptions {
     bundles?: RollupBundleItem[];
     cache?: RollupCache;
@@ -275,7 +299,7 @@ class InlineRollup {
         return response;
     }
 
-    getRollupResponse(rollupOutput: RollupOutput): ResponseFields {
+    getRollupResponse(rollupOutput: RollupOutput, bundles: RollupBundleSet): ResponseFields {
         let response = new ResponseFields();
         response.status = 200;
         let chunks = [];
@@ -290,6 +314,8 @@ class InlineRollup {
                     response.body = file.code + `\n//# ${SOURCEMAPPING_URL}=${file.map!.toUrl()}\n`;
                     return response;
                 } else {
+                    // console.log(`chunk ${file.fileName}`);
+                    // console.log(`isEntry=${file.isEntry} isDynamicEntry=${file.isDynamicEntry} isImplicitEntry=${file.isImplicitEntry}`);
                     chunks.push({
                         code: file.code,
                         filename: file.fileName,
@@ -304,4 +330,4 @@ class InlineRollup {
 
 }
 
-export { RollupBundleItem, InlineRollupOptions, InlineRollup };
+export { RollupBundleSet, InlineRollupOptions, InlineRollup };
