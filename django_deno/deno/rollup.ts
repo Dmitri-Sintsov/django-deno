@@ -37,6 +37,7 @@ class ResponseFields {
 
 class RollupBundleItem {
     name?: string;
+    nameLocalPath?: LocalPath;
     writeEntryPoint?: string;
     writeEntryPointLocalPath?: LocalPath;
     excludes?: string[];
@@ -51,10 +52,27 @@ class RollupBundleItem {
         if (this.writeEntryPoint) {
             this.writeEntryPointLocalPath = new LocalPath(this.writeEntryPoint);
         }
+        if (this.name) {
+            this.nameLocalPath = new LocalPath(`${this.name}.js`);
+        }
+    }
+
+    public isBundleChunk(chunkName: string) : boolean {
+        return this.nameLocalPath!.matchesStr(chunkName);
     }
 
     public addSkipChunk(chunkPath: LocalPath) {
         this.skipChunks!.push(chunkPath);
+    }
+
+    public isSkipChunk(chunkPathStr: string): boolean {
+        let chunkPath = new LocalPath(chunkPathStr);
+        for (let skipChunk of this.skipChunks!) {
+            if (skipChunk.matches(chunkPath)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public isWriteEntryPoint(entryPointLocalPath: LocalPath): boolean {
@@ -117,6 +135,41 @@ class RollupBundleSet {
             throw new Error('Bundle name has to be initialized')
         }
     }
+
+    public getWriteBundle(entryPointLocalPath: LocalPath): RollupBundleItem | false {
+        let bundleName: string;
+        let bundle: RollupBundleItem;
+        for ([bundleName, bundle] of Object.entries(this.bundles)) {
+            if (bundle.isWriteEntryPoint(entryPointLocalPath)) {
+                return bundle;
+            }
+        }
+        return false;
+    }
+
+    public getBundleChunk(chunkPathStr: string): RollupBundleItem | false {
+        let bundleName: string;
+        let bundle: RollupBundleItem;
+        for ([bundleName, bundle] of Object.entries(this.bundles)) {
+            if (bundle.isBundleChunk(chunkPathStr)) {
+                return bundle;
+            }
+        }
+        return false;
+    }
+
+    public isWritableChunk(writeBundle: RollupBundleItem | false, chunkPathStr: string): boolean {
+        if (this.getBundleChunk(chunkPathStr)) {
+            return writeBundle? true : false;
+        } else {
+            if (writeBundle) {
+                return !writeBundle.isSkipChunk(chunkPathStr);
+            } else {
+                return true;
+            }
+        }
+    }
+
 }
 
 
@@ -212,7 +265,8 @@ class InlineRollup {
             format: this.options.moduleFormat ? this.options.moduleFormat: 'es',
             minifyInternalExports: false,
             plugins: [],
-            // preserveModules: false,
+            // preserveModules: true,
+            // preserveModulesRoot: 'src',
             sourcemap: this.options.inlineFileMap ? 'inline' : true,
         };
 
@@ -299,10 +353,11 @@ class InlineRollup {
         return response;
     }
 
-    getRollupResponse(rollupOutput: RollupOutput, bundles: RollupBundleSet): ResponseFields {
+    getRollupResponse(entryPointLocalPath: LocalPath, rollupOutput: RollupOutput, bundles: RollupBundleSet): ResponseFields {
         let response = new ResponseFields();
         response.status = 200;
         let chunks = [];
+        let writeBundle: RollupBundleItem | false = bundles.getWriteBundle(entryPointLocalPath);
         for (const file of rollupOutput.output) {
             if (file.type === 'asset') {
                 console.log('Todo: support assets', file);
@@ -316,11 +371,13 @@ class InlineRollup {
                 } else {
                     // console.log(`chunk ${file.fileName}`);
                     // console.log(`isEntry=${file.isEntry} isDynamicEntry=${file.isDynamicEntry} isImplicitEntry=${file.isImplicitEntry}`);
-                    chunks.push({
-                        code: file.code,
-                        filename: file.fileName,
-                        map: file.map!.toString(),
-                    })
+                    if (bundles.isWritableChunk(writeBundle, file.fileName)) {
+                        chunks.push({
+                            code: file.code,
+                            filename: file.fileName,
+                            map: file.map!.toString(),
+                        })
+                    }
                 }
             }
         }

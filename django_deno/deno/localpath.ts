@@ -75,6 +75,10 @@ class LocalPath {
         return true;
     }
 
+    public matchesStr(matchPathStr: string): boolean {
+        return this.matches(new LocalPath(matchPathStr));
+    }
+
     public traverse(relPath: LocalPath): LocalPath {
         var thisParts = this.split();
         var relDirParts = relPath.getDirParts();

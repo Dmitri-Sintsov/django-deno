@@ -143,7 +143,7 @@ router
     if (rollupOutput instanceof Error) {
         responseFields = inlineRollup.getErrorResponse(rollupOutput);
     } else {
-        responseFields = inlineRollup.getRollupResponse(rollupOutput, foundBundles);
+        responseFields = inlineRollup.getRollupResponse(entryPointLocalPath, rollupOutput, foundBundles);
     }
     /**
      * Warning: never use rollup cache for different source settings, eg. inline and bundled chunks at the same time.
