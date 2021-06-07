@@ -34,6 +34,10 @@ class ResponseFields {
 };
 
 class RollupBundleItem {
+    /**
+     * Warning: make sure bundle name does not match any of bundled module file names,
+     * otherwise namespace clash could occur.
+     */
     name?: string;
     nameLocalPath?: LocalPath;
     writeEntryPoint?: string;
@@ -63,10 +67,9 @@ class RollupBundleItem {
         this.skipChunks!.push(chunkPath);
     }
 
-    public isSkipChunk(chunkPathStr: string): boolean {
-        let chunkPath = new LocalPath(chunkPathStr);
+    public isSkipChunk(facadeModuleLocalPath: LocalPath): boolean {
         for (let skipChunk of this.skipChunks!) {
-            if (skipChunk.matches(chunkPath)) {
+            if (skipChunk.is(facadeModuleLocalPath)) {
                 return true;
             }
         }
@@ -156,13 +159,14 @@ class RollupBundleSet {
         return false;
     }
 
-    public isWritableChunk(writeBundle: RollupBundleItem | false, chunkObj: any): boolean {
-        let chunkPathStr = chunkObj.fileName;
-        if (this.getBundleChunk(chunkPathStr)) {
+    public isWritableChunk(baseDirLocalPath: LocalPath, writeBundle: RollupBundleItem | false, chunkObj: any): boolean {
+        if (this.getBundleChunk(chunkObj.fileName)) {
             return writeBundle? true : false;
         } else {
             if (writeBundle) {
-                return !writeBundle.isSkipChunk(chunkPathStr);
+                let facadeModuleLocalPath = (chunkObj.facadeModuleId) ?
+                        baseDirLocalPath.traverseStr(chunkObj.facadeModuleId) : false;
+                return !facadeModuleLocalPath || !writeBundle.isSkipChunk(facadeModuleLocalPath);
             } else {
                 return true;
             }
@@ -343,7 +347,10 @@ class InlineRollup {
         return response;
     }
 
-    getRollupResponse(entryPointLocalPath: LocalPath, rollupOutput: RollupOutput, bundles: RollupBundleSet): ResponseFields {
+    getRollupResponse(
+            baseDirLocalPath: LocalPath, entryPointLocalPath: LocalPath,
+            rollupOutput: RollupOutput, bundles: RollupBundleSet
+    ): ResponseFields {
         let response = new ResponseFields();
         response.status = 200;
         let chunks = [];
@@ -361,7 +368,7 @@ class InlineRollup {
                 } else {
                     // console.log(`chunk ${file.fileName}`);
                     // console.log(`isEntry=${file.isEntry} isDynamicEntry=${file.isDynamicEntry} isImplicitEntry=${file.isImplicitEntry}`);
-                    if (bundles.isWritableChunk(writeBundle, file)) {
+                    if (bundles.isWritableChunk(baseDirLocalPath, writeBundle, file)) {
                         chunks.push({
                             code: file.code,
                             filename: file.fileName,

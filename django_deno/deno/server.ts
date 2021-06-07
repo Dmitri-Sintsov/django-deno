@@ -89,7 +89,8 @@ router
     basedir = value['basedir'];
     filename = value['filename'];
 
-    let fullPathParts = new LocalPath(basedir).split();
+    let baseDirLocalPath = new LocalPath(basedir);
+    let fullPathParts = baseDirLocalPath.split();
     fullPathParts.push(filename);
     let entryPointLocalPath = LocalPath.fromPathParts(fullPathParts);
     let cachePath: string = entryPointLocalPath.path;
@@ -143,7 +144,7 @@ router
     if (rollupOutput instanceof Error) {
         responseFields = inlineRollup.getErrorResponse(rollupOutput);
     } else {
-        responseFields = inlineRollup.getRollupResponse(entryPointLocalPath, rollupOutput, foundBundles);
+        responseFields = inlineRollup.getRollupResponse(baseDirLocalPath, entryPointLocalPath, rollupOutput, foundBundles);
     }
     /**
      * Warning: never use rollup cache for different source settings, eg. inline and bundled chunks at the same time.

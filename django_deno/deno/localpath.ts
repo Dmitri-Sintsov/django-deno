@@ -77,6 +77,10 @@ class LocalPath {
         return LocalPath.join(this.getDirParts());
     }
 
+    public is(anotherLocalPath: LocalPath): boolean {
+        return this.path == anotherLocalPath.path;
+    }
+
     public matches(matchPath: LocalPath): boolean {
         var thisParts = this.split().reverse();
         var matchParts = matchPath.split().reverse();
