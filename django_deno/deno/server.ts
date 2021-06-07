@@ -110,7 +110,7 @@ router
     if (!inlineRollupOptions.inlineFileMap) {
         inlineRollupOptions.chunkFileNames = "[name].js";
         inlineRollupOptions.manualChunks = (id: string, { getModuleInfo }): string | null | undefined => {
-            let fullLocalPath = inlineRollupOptions.getFullLocalPath(id);
+            let fullLocalPath = LocalPath.getFullLocalPath(id);
             // https://flaviocopes.com/typescript-object-destructuring/
             // const { name, age }: { name: string; age: number } = body.value
             let matchingBundle = inlineRollupOptions.getBundleChunk(fullLocalPath);

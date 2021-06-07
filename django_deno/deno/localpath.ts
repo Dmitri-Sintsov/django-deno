@@ -5,6 +5,9 @@
 
 // import {WINDOWS_SEPS} from "https://deno.land/x/path/mod.ts";
 
+import { existsSync } from "https://deno.land/std/fs/mod.ts";
+
+
 class LocalPath {
     path: string;
 
@@ -16,6 +19,20 @@ class LocalPath {
         this.path = LocalPath.join(pathParts);
     }
 
+    static fromPathParts(parts: string[]): LocalPath {
+        let instance = new this(LocalPath.join(parts));
+        return instance;
+    }
+
+    static getFullLocalPath(relPathStr: string): LocalPath {
+        let instance = new this(Deno.cwd());
+        instance = instance.traverseStr(relPathStr);
+        if (!instance.exists()) {
+            throw new Error(`Error in getFullLocalPath, relPathStr "${relPathStr}" path does not exists: "${instance.path}"`);
+        }
+        return instance;
+    }
+
     public toString() : string {
         return this.path;
     }
@@ -24,13 +41,12 @@ class LocalPath {
         return (Deno.build.os == 'windows') ? '\\': '/';
     }
 
-    static fromPathParts(parts: string[]) {
-        let instance = new this(LocalPath.join(parts));
-        return instance;
-    }
-
     static removeRelDir(path: string) {
         return path.replace(/^\.+/gm, '');
+    }
+
+    public exists(): boolean {
+        return existsSync(this.path);
     }
 
     public getSeparator(): string {
@@ -144,4 +160,4 @@ class LocalPath {
     }
 }
 
-export {LocalPath};
+export { LocalPath };

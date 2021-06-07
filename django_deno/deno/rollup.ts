@@ -12,8 +12,6 @@ import { resolveId } from "https://deno.land/x/drollup/src/rollup-plugin-deno-re
 import { handleUnresolvedId } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/handleUnresolvedId.ts";
 import { exists } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/exists.ts";
 
-import { existsSync } from "https://deno.land/std/fs/mod.ts";
-
 import { LocalPath } from './localpath.ts';
 import { ImportMapGenerator } from "./importmap.ts";
 
@@ -158,7 +156,8 @@ class RollupBundleSet {
         return false;
     }
 
-    public isWritableChunk(writeBundle: RollupBundleItem | false, chunkPathStr: string): boolean {
+    public isWritableChunk(writeBundle: RollupBundleItem | false, chunkObj: any): boolean {
+        let chunkPathStr = chunkObj.fileName;
         if (this.getBundleChunk(chunkPathStr)) {
             return writeBundle? true : false;
         } else {
@@ -187,15 +186,6 @@ class InlineRollupOptions {
 
     constructor(options: Partial<InlineRollupOptions> = {}) {
         Object.assign(this, options);
-    }
-
-    public getFullLocalPath(id: string) {
-        let fullLocalPath = new LocalPath(Deno.cwd());
-        fullLocalPath = fullLocalPath.traverseStr(id);
-        if (!existsSync(fullLocalPath.path)) {
-            throw new Error(`Error in getFullLocalPath, id "${id}" path does not exists: "${fullLocalPath.path}"`);
-        }
-        return fullLocalPath;
     }
 
     public getBundleChunk(fullLocalPath: LocalPath): RollupBundleItem | false {
@@ -371,7 +361,7 @@ class InlineRollup {
                 } else {
                     // console.log(`chunk ${file.fileName}`);
                     // console.log(`isEntry=${file.isEntry} isDynamicEntry=${file.isDynamicEntry} isImplicitEntry=${file.isImplicitEntry}`);
-                    if (bundles.isWritableChunk(writeBundle, file.fileName)) {
+                    if (bundles.isWritableChunk(writeBundle, file)) {
                         chunks.push({
                             code: file.code,
                             filename: file.fileName,
