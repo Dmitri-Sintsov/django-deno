@@ -159,14 +159,25 @@ class RollupBundleSet {
         return false;
     }
 
+    public isSkipChunk(facadeModuleLocalPath: LocalPath): boolean {
+        let bundleName: string;
+        let bundle: RollupBundleItem;
+        for ([bundleName, bundle] of Object.entries(this.bundles)) {
+            if (bundle.isSkipChunk(facadeModuleLocalPath)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public isWritableChunk(baseDirLocalPath: LocalPath, writeBundle: RollupBundleItem | false, chunkObj: any): boolean {
-        if (this.getBundleChunk(chunkObj.fileName)) {
-            return writeBundle? true : false;
+        let facadeModuleLocalPath = (chunkObj.facadeModuleId) ?
+                baseDirLocalPath.traverseStr(chunkObj.facadeModuleId) : false;
+        if (facadeModuleLocalPath) {
+            return !this.isSkipChunk(facadeModuleLocalPath);
         } else {
-            if (writeBundle) {
-                let facadeModuleLocalPath = (chunkObj.facadeModuleId) ?
-                        baseDirLocalPath.traverseStr(chunkObj.facadeModuleId) : false;
-                return !facadeModuleLocalPath || !writeBundle.isSkipChunk(facadeModuleLocalPath);
+            if (this.getBundleChunk(chunkObj.fileName)) {
+                return writeBundle? true : false;
             } else {
                 return true;
             }
