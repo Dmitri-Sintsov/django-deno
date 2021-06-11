@@ -2,8 +2,9 @@
 import { Context } from "https://deno.land/x/oak/mod.ts";
 
 import type { ManualChunksOption, ModuleFormat, PreserveEntrySignaturesOption, RollupCache } from "https://deno.land/x/drollup/deps.ts";
+import type { RollupOptions, OutputOptions } from "https://deno.land/x/drollup/mod.ts";
+
 import { rollup, RollupOutput } from "https://deno.land/x/drollup/mod.ts";
-import type { OutputOptions } from "https://deno.land/x/drollup/mod.ts";
 import { SOURCEMAPPING_URL } from "https://deno.land/x/drollup/src/rollup/write.ts";
 import { denoResolver, DenoResolverOptions } from "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/denoResolver.ts";
 import { terser } from "https://deno.land/x/drollup/plugins/terser/mod.ts";
@@ -339,15 +340,17 @@ class InlineRollup {
 
         let inputOptions = filename;
 
-        const options = {
+        const options: RollupOptions = {
             input: inputOptions,
             output: outputOptions,
             plugins: rollupPlugins,
             // preserveEntrySignatures: 'exports-only' as PreserveEntrySignaturesOption,
             treeshake: false,
-            cache: this.options.cache,
         };
 
+        if (this.options.cache) {
+            options.cache = this.options.cache;
+        }
 
         let rollupOutput: RollupOutput;
 
@@ -370,7 +373,7 @@ class InlineRollup {
                 // Update cache.
                 this.options.cache = bundle.cache;
             }
-            rollupOutput = await bundle.generate(options.output);
+            rollupOutput = await bundle.generate(options.output as OutputOptions);
             return rollupOutput;
 
         } catch(e) {

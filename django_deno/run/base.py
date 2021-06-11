@@ -19,6 +19,8 @@ class RunDeno:
         if getattr(settings, 'DENO_DEBUG', False):
             # chrome://inspect
             run_flags.append("--inspect-brk")
+        if getattr(settings, 'DENO_RELOAD', False):
+            run_flags.append("--reload")
         return run_flags
 
     def get_script_name(self):
