@@ -151,12 +151,18 @@ class RollupBundleSet {
     public getBundleChunk(chunkPathStr: string): RollupBundleItem | false {
         let bundleName: string;
         let bundle: RollupBundleItem;
+        let result: RollupBundleItem | false = false;
         for ([bundleName, bundle] of Object.entries(this.bundles)) {
             if (bundle.isBundleChunk(chunkPathStr)) {
-                return bundle;
+                if (result) {
+                    throw new Error(
+                        `One chunk "${chunkPathStr}" cannot belong to multiple bundles "${result.name}" "${bundleName}"`
+                    )
+                }
+                result = bundle;
             }
         }
-        return false;
+        return result;
     }
 
     public isSkipChunk(facadeModuleLocalPath: LocalPath): boolean {
