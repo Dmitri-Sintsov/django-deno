@@ -45,6 +45,7 @@ class RollupBundleItem {
     excludes?: string[];
     matches: string[];
     virtualEntryPoints?: 'matches' | string[];
+    virtualEntryPointsExcludes?: 'excludes' | string[];
     skipChunks?: LocalPath[];
 
     constructor(options: Partial<RollupBundleItem> = {}) {
@@ -56,6 +57,18 @@ class RollupBundleItem {
         }
         if (this.name) {
             this.nameLocalPath = new LocalPath(`${this.name}.js`);
+        }
+        if (!this.matches) {
+            this.matches = [];
+        }
+        if (!this.excludes) {
+            this.excludes = [];
+        }
+        if (!this.virtualEntryPoints) {
+            this.virtualEntryPoints = [];
+        }
+        if (!this.virtualEntryPointsExcludes) {
+            this.virtualEntryPointsExcludes = [];
         }
     }
 
@@ -91,9 +104,9 @@ class RollupBundleItem {
         return isVirtualEntry;
     }
 
-    public hasLocalPath(fullLocalPath: LocalPath, matches?: string[]): boolean {
+    hasLocalPath(fullLocalPath: LocalPath, matches?: string[]): boolean {
         if (!matches) {
-            matches = this.matches;
+            throw new Error("matches argument is required");
         }
         for (let bundleItemMatch of matches) {
             let bundleItemMatchLocalPath = new LocalPath(bundleItemMatch);
@@ -104,12 +117,28 @@ class RollupBundleItem {
         return false;
     }
 
-    public isVirtualEntry(fullLocalPath: LocalPath): boolean {
-        if (this.virtualEntryPoints === 'matches') {
-            return this.hasLocalPath(fullLocalPath);
-        } else {
-            return this.hasLocalPath(fullLocalPath, this.matches);
+    public hasMatchingPath(fullLocalPath: LocalPath, matches?: string[], excludes?: string[]): boolean {
+        if (!matches) {
+            matches = this.matches;
         }
+        if (!excludes) {
+            excludes = this.excludes;
+        }
+        if (this.hasLocalPath(fullLocalPath, excludes)) {
+            // console.log(`excluding "${fullLocalPath.path}"`);
+            return false;
+        }
+        if (this.hasLocalPath(fullLocalPath, matches)) {
+            // console.log(`matching "${fullLocalPath.path}"`);
+            return true;
+        }
+        return false;
+    }
+
+    public isVirtualEntry(fullLocalPath: LocalPath): boolean {
+        let matches = (this.virtualEntryPoints === 'matches') ? this.matches : this.virtualEntryPoints;
+        let excludes = (this.virtualEntryPointsExcludes === 'excludes') ? this.excludes : this.virtualEntryPointsExcludes;
+        return this.hasMatchingPath(fullLocalPath, matches, excludes);
     }
 
 }
@@ -216,7 +245,7 @@ class InlineRollupOptions {
             for ([bundleName, rollupBundleItemOptions] of Object.entries(this.bundles)) {
                 rollupBundleItemOptions.name = bundleName;
                 let rollupBundleItem = new RollupBundleItem(rollupBundleItemOptions);
-                if (rollupBundleItem.hasLocalPath(fullLocalPath)) {
+                if (rollupBundleItem.hasMatchingPath(fullLocalPath)) {
                     // console.log(`Matched bundle name: "${rollupBundleItem.name}" script "${fullLocalPath.path}"`);
                     return rollupBundleItem;
                 }
