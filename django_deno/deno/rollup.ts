@@ -327,16 +327,15 @@ class InlineRollup {
             rollupPlugins.push(resolver);
         }
 
-/*
         if (this.options.terser) {
             rollupPlugins.push(terser({
-                mangle: false,
+                mangle: true,
+                toplevel: false,
                 output: {
                     comments: false,
                 }
             }));
         }
-*/
 
         let inputOptions = filename;
 
