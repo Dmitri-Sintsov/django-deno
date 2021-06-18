@@ -302,7 +302,6 @@ class InlineRollup {
         // https://deno.land/x/drollup@2.41.0+0.16.1#javascript-api
 
         const outputOptions: OutputOptions = {
-            // exports: 'named',
             format: this.options.moduleFormat ? this.options.moduleFormat: 'es',
             minifyInternalExports: false,
             plugins: [],
@@ -310,6 +309,15 @@ class InlineRollup {
             // preserveModulesRoot: 'src',
             sourcemap: this.options.inlineFileMap ? 'inline' : true,
         };
+
+        if (outputOptions.format !== 'es') {
+            // https://rollupjs.org/guide/en/#outputexports
+            outputOptions.exports = 'named';
+            if (outputOptions.format === 'amd') {
+                // https://rollupjs.org/guide/en/#outputamd
+                outputOptions.amd = {autoId: true};
+            }
+        }
 
         if (this.options.chunkFileNames) {
             outputOptions.chunkFileNames = this.options.chunkFileNames;
