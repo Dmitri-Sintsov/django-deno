@@ -22,13 +22,18 @@ class JsonApi:
     extra_get_kwargs = {}
     extra_post_kwargs = {}
 
+    scheme_ports = {
+        'http': 80,
+        'https': 443,
+    }
+
     def __init__(self, **kwargs):
         if self.server is None:
             parts = urlparse(self.url)
             self.server = {
                 'scheme': parts.scheme,
                 'hostname': parts.hostname,
-                'port': parts.port,
+                'port': self.scheme_ports[parts.scheme] if parts.port is None else parts.port
             }
         elif self.url is None:
             self.url = f'{self.server["scheme"]}://{self.server["hostname"]}:{self.server["port"]}'
