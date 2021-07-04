@@ -29,7 +29,7 @@ class DenoProcess:
     def run_deno_process(self):
         import_map_generator = ImportMapGenerator(logger=self.stderr)
         serialized_map_generator = import_map_generator.serialize()
-        deno_api_status = DenoMaps().post(serialized_map_generator, timeout=0.1)
+        deno_api_status = DenoMaps().set_timeout(0.1).post(serialized_map_generator)
         if deno_api_status is None:
             deno_process = DenoServer()()
             if deno_process.poll() is None:

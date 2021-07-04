@@ -88,32 +88,34 @@ class JsonApi:
     def parse_http_error(self, ex):
         return ex
 
-    def get(self, request_json=None, timeout='default'):
+    def set_timeout(self, timeout):
+        self.timeout = timeout
+        return self
+
+    def get(self, request_json=None):
         context = {
             'requests_method': requests.get,
             'request_schema': self.request_get_schema,
             'build_kwargs': self.build_get_kwargs,
             'parse_response': self.parse_get_response,
         }
-        return self.method(context, request_json, timeout)
+        return self.method(context, request_json)
 
-    def post(self, request_json=None, timeout='default'):
+    def post(self, request_json=None):
         context = {
             'requests_method': requests.post,
             'request_schema': self.request_post_schema,
             'build_kwargs': self.build_post_kwargs,
             'parse_response': self.parse_post_response,
         }
-        return self.method(context, request_json, timeout)
+        return self.method(context, request_json)
 
-    def method(self, context, request_json, timeout='default'):
-        if timeout == 'default':
-            timeout = self.timeout
+    def method(self, context, request_json):
         self.request_json = request_json
         if context['request_schema'] is not None:
             validate(instance=self.request_json, schema=context['request_schema'])
         try:
-            self.wait_socket(timeout)
+            self.wait_socket(self.timeout)
             request_kwargs = context['build_kwargs']()
             response = context['requests_method'](**request_kwargs)
             try:
