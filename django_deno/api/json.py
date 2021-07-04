@@ -54,21 +54,27 @@ class JsonApi:
     def build_post_request_json(self):
         return self.build_request_json()
 
-    def build_get_kwargs(self):
-        get_kwargs = {
+    def build_request_kwargs(self, context):
+        request_kwargs = {
             'url': f'{self.url}{self.location}',
-            'json': self.build_get_request_json(),
         }
-        get_kwargs.update(self.extra_get_kwargs)
-        return get_kwargs
+        request_json = context['build_request_json']()
+        if request_json is not None:
+            request_kwargs['json'] = request_json
+        request_kwargs.update(context['extra_kwargs'])
+        return request_kwargs
+
+    def build_get_kwargs(self):
+        return self.build_request_kwargs({
+            'build_request_json': self.build_get_request_json,
+            'extra_kwargs': self.extra_get_kwargs,
+        })
 
     def build_post_kwargs(self):
-        post_kwargs = {
-            'url': f'{self.url}{self.location}',
-            'json': self.build_post_request_json(),
-        }
-        post_kwargs.update(self.extra_post_kwargs)
-        return post_kwargs
+        return self.build_request_kwargs({
+            'build_request_json': self.build_post_request_json,
+            'extra_kwargs': self.extra_post_kwargs,
+        })
 
     def parse_not_responding_error(self, ex):
         # none indicates server is not responding (or not running)
@@ -77,7 +83,7 @@ class JsonApi:
     def parse_http_error(self, ex):
         return ex
 
-    def get(self, request_json, timeout='default'):
+    def get(self, request_json=None, timeout='default'):
         context = {
             'requests_method': requests.get,
             'request_schema': self.request_get_schema,
@@ -86,7 +92,7 @@ class JsonApi:
         }
         return self.method(context, request_json, timeout)
 
-    def post(self, request_json, timeout='default'):
+    def post(self, request_json=None, timeout='default'):
         context = {
             'requests_method': requests.post,
             'request_schema': self.request_post_schema,
