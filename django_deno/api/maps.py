@@ -1,10 +1,10 @@
-from .base import JsonApi
+from .deno import DenoApi
 
 
-class DenoMaps(JsonApi):
+class DenoMaps(DenoApi):
 
     location = '/maps/'
-    response_schema = {
+    response_post_schema = {
         'type': 'object',
         'properties': {
             'server': {'type': 'string'},

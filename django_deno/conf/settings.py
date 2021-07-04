@@ -17,13 +17,13 @@ else:
     DENO_TIMEOUT = 20
 
 DENO_SERVER = {
-    'protocol': 'http',
-    'host': '127.0.0.1',
+    'scheme': 'http',
+    'hostname': '127.0.0.1',
     'port': 8099,
 }
 DENO_SERVER.update(getattr(settings, 'DENO_SERVER', {}))
 
-DENO_URL = f'{DENO_SERVER["protocol"]}://{DENO_SERVER["host"]}:{DENO_SERVER["port"]}'
+DENO_URL = f'{DENO_SERVER["scheme"]}://{DENO_SERVER["hostname"]}:{DENO_SERVER["port"]}'
 
 DENO_PROXY_CHUNK_SIZE = getattr(settings, 'DENO_PROXY_CHUNK_SIZE', 256 * 1024)
 

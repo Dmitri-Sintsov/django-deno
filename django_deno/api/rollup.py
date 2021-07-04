@@ -4,19 +4,20 @@ from django.http import (
     HttpResponse, StreamingHttpResponse
 )
 
-from .base import JsonApi
+from .deno import DenoApi
 
 from ..conf import settings
 from ..utils import ex_to_str
 
 
-class DenoRollup(JsonApi):
+class DenoRollup(DenoApi):
 
     location = '/rollup/'
     extra_post_kwargs = {'stream': True}
 
-    def __init__(self, content_type):
+    def __init__(self, content_type, **kwargs):
         self.content_type = content_type
+        super().__init__(**kwargs)
 
     def parse_post_response(self, response):
         if response.status_code == 200:
