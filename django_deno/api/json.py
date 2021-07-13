@@ -121,7 +121,7 @@ class JsonApi:
             try:
                 return context['parse_response'](response)
             except json.decoder.JSONDecodeError as ex:
-                return HTTPError(f"JSONDecodeError {str(ex)} {response.text}")
+                return HTTPError(f'JSONDecodeError {str(ex)} received text: "{response.text}"')
             except Exception as ex:
                 return ex
         except (ConnectionError, TimeoutError) as ex:
