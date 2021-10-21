@@ -95,7 +95,7 @@ class JsonApi:
     def get(self, request_json=None):
         context = {
             'requests_method': requests.get,
-            'request_schema': self.request_get_schema,
+            'validate_request': self.validate_get_request,
             'build_kwargs': self.build_get_kwargs,
             'parse_response': self.parse_get_response,
         }
@@ -104,16 +104,23 @@ class JsonApi:
     def post(self, request_json=None):
         context = {
             'requests_method': requests.post,
-            'request_schema': self.request_post_schema,
+            'validate_request': self.validate_post_request,
             'build_kwargs': self.build_post_kwargs,
             'parse_response': self.parse_post_response,
         }
         return self.method(context, request_json)
 
+    def validate_get_request(self):
+        if self.request_get_schema is not None:
+            validate(instance=self.request_json, schema=self.request_get_schema)
+
+    def validate_post_request(self):
+        if self.request_post_schema is not None:
+            validate(instance=self.request_json, schema=self.request_post_schema)
+
     def method(self, context, request_json):
         self.request_json = request_json
-        if context['request_schema'] is not None:
-            validate(instance=self.request_json, schema=context['request_schema'])
+        context['validate_request']()
         try:
             self.wait_socket(self.timeout)
             request_kwargs = context['build_kwargs']()
