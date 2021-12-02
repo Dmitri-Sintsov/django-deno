@@ -27,6 +27,13 @@ DENO_URL = f'{DENO_SERVER["scheme"]}://{DENO_SERVER["hostname"]}:{DENO_SERVER["p
 
 DENO_PROXY_CHUNK_SIZE = getattr(settings, 'DENO_PROXY_CHUNK_SIZE', 256 * 1024)
 
+# Map of rollup.js output module type to html script tag module type:
+DENO_OUTPUT_MODULE_FORMATS = {
+    'module': 'es',
+    'systemjs-module': 'system',
+}
+DENO_OUTPUT_MODULE_FORMATS.update(getattr(settings, 'DENO_OUTPUT_MODULE_FORMATS', {}))
+
 DENO_ROLLUP_SERVE_OPTIONS = {
     'inlineFileMap': True,
     'relativePaths': True,
@@ -35,11 +42,14 @@ DENO_ROLLUP_SERVE_OPTIONS = {
 }
 DENO_ROLLUP_SERVE_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_SERVE_OPTIONS', {}))
 
+DENO_OUTPUT_MODULE_TYPE = getattr(settings, 'DENO_OUTPUT_MODULE_TYPE', 'module')
+
 DENO_ROLLUP_COLLECT_OPTIONS = {
     # 'relativePaths': True,
     # 'staticFilesResolver': True,
     'terser': True,
     'bundles': getattr(settings, 'DENO_ROLLUP_BUNDLES', {}),
+    'moduleFormat': DENO_OUTPUT_MODULE_FORMATS[DENO_OUTPUT_MODULE_TYPE],
 }
 DENO_ROLLUP_COLLECT_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_COLLECT_OPTIONS', {}))
 
