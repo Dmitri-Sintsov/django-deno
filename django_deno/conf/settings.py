@@ -11,6 +11,10 @@ if DENO_INSTALL is None:
 
 DENO_PATH = os.path.join(DENO_INSTALL, 'bin', 'deno')
 
+# https://deno.land/manual/linking_to_external_code/integrity_checking
+# https://deno.land/manual/linking_to_external_code
+DENO_LOCK_FILE = getattr(settings, 'DENO_LOCK_FILE', os.path.join(settings.BASE_DIR, 'lock.json'))
+
 if getattr(settings, 'DENO_DEBUG', False):
     DENO_TIMEOUT = 60
 else:

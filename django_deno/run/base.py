@@ -5,7 +5,7 @@ from copy import copy
 
 from django.conf import settings
 
-from ..conf.settings import DENO_PATH
+from ..conf.settings import DENO_PATH, DENO_LOCK_FILE
 
 
 class RunDeno:
@@ -19,8 +19,12 @@ class RunDeno:
         if getattr(settings, 'DENO_DEBUG', False):
             # chrome://inspect
             run_flags.append("--inspect-brk")
+        # DENO_RELOAD / DENO_CHECK_LOCK_FILE are mutually exclusive options
         if getattr(settings, 'DENO_RELOAD', False):
-            run_flags.append("--reload")
+            run_flags.extend(["--reload", "--lock-write", f"--lock={DENO_LOCK_FILE}"])
+        elif getattr(settings, 'DENO_CHECK_LOCK_FILE', False):
+            run_flags.extend([f"--lock={DENO_LOCK_FILE}"])
+
         return run_flags
 
     def get_script_name(self):
