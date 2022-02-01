@@ -4,6 +4,8 @@ from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 
 DENO_ENABLE = getattr(settings, 'DENO_ENABLE', True)
+DENO_RELOAD = getattr(settings, 'DENO_RELOAD', False)
+DENO_CHECK_LOCK_FILE = getattr(settings, 'DENO_CHECK_LOCK_FILE', False)
 
 DENO_INSTALL = getattr(settings, 'DENO_INSTALL', os.getenv('DENO_INSTALL'))
 if DENO_INSTALL is None:

@@ -1,11 +1,16 @@
+import json
 import inspect
 import os
+import re
 import subprocess
+from urllib.parse import urlsplit, urlunsplit
 from copy import copy
 
 from django.conf import settings
 
-from ..conf.settings import DENO_PATH
+from ..regex import finditer_with_separators
+
+from ..conf.settings import DENO_PATH, DENO_RELOAD, DENO_CHECK_LOCK_FILE
 
 
 class RunDeno:
@@ -16,18 +21,54 @@ class RunDeno:
     # https://deno.land/manual/linking_to_external_code/integrity_checking
     # https://deno.land/manual/linking_to_external_code
     deno_lock_filename = 'lock.json'
+    deno_importmap_filename = 'import_map.json'
+    # https://regexr.com
+    # module_version_split = re.compile(r'\/[a-z_\-]+@v?(?:\d+[\.+])+\d+\/')
+    module_version_split = re.compile(r'\/[^\/]+@.+?\/')
+    # module_version_replace = re.compile(r'@v?(?:\d+[\.+])+\d+\/')
+    module_version_replace = re.compile(r'@.+?\/')
+
+    def generate_importmap(self):
+        deno_import_map = {}
+        with open(self.deno_lock_path, "r") as deno_lock_file:
+            deno_lock = json.load(deno_lock_file)
+            for specific_url in deno_lock.keys():
+                url_parts = urlsplit(specific_url)._asdict()
+                version_parts = finditer_with_separators(self.module_version_split, url_parts['path'])
+                if len(version_parts) >= 3:
+                    version_parts[1] = self.module_version_replace.sub('/', version_parts[1])
+                    url_parts['path'] = ''.join(version_parts)
+                    unspecific_url = urlunsplit(url_parts.values())
+                    deno_import_map[unspecific_url] = specific_url
+            if len(deno_import_map) > 0:
+                with open(self.deno_importmap_path, "w+") as deno_import_map_file:
+                    json.dump({'imports': deno_import_map}, deno_import_map_file, indent=2, ensure_ascii=False)
+
+    def cache_importmap(self):
+        try:
+            deno_importmap_mtime = os.path.getmtime(self.deno_importmap_path)
+        except OSError:
+            deno_importmap_mtime = None
+        try:
+            if deno_importmap_mtime is None or os.path.getmtime(self.deno_lock_path) > deno_importmap_mtime:
+                self.generate_importmap()
+        except OSError:
+            pass
 
     def get_run_flags(self):
         run_flags = copy(self.run_flags)
         if getattr(settings, 'DENO_DEBUG', False):
             # chrome://inspect
             run_flags.append("--inspect-brk")
-        # DENO_RELOAD / DENO_CHECK_LOCK_FILE are mutually exclusive options
-        if getattr(settings, 'DENO_RELOAD', False):
+        if DENO_RELOAD and DENO_CHECK_LOCK_FILE:
+            raise ValueError("DENO_RELOAD / DENO_CHECK_LOCK_FILE are mutually exclusive options")
+        if DENO_RELOAD:
             run_flags.extend(["--reload", "--lock-write", f"--lock={self.deno_lock_path}"])
-        elif getattr(settings, 'DENO_CHECK_LOCK_FILE', False):
-            run_flags.extend([f"--lock={self.deno_lock_path}"])
-
+        if DENO_CHECK_LOCK_FILE:
+            self.cache_importmap()
+            run_flags.append(f"--lock={self.deno_lock_path}")
+            if os.path.isfile(self.deno_importmap_path):
+                run_flags.append(f"--import-map={self.deno_importmap_path}")
         return run_flags
 
     def get_script_name(self):
@@ -48,10 +89,13 @@ class RunDeno:
             'shell': False,
         }
 
-    def __init__(self, deno_lock_filename=None, *args, **kwargs):
+    def __init__(self, deno_lock_filename=None, deno_importmap_filename=None, *args, **kwargs):
         if deno_lock_filename is None:
             deno_lock_filename = self.deno_lock_filename
-        self.deno_lock_path = os.path.join(settings.BASE_DIR, deno_lock_filename)
+        if deno_importmap_filename is None:
+            deno_importmap_filename = self.deno_importmap_filename
+        self.deno_lock_path = os.path.join(DENO_SCRIPT_PATH, deno_lock_filename)
+        self.deno_importmap_path = os.path.join(DENO_SCRIPT_PATH, deno_importmap_filename)
 
     def __call__(self, *args, **kwargs):
         shell_args = self.get_shell_args()
