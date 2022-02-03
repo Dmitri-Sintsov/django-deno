@@ -44,6 +44,7 @@ class RunDeno:
                 with open(self.deno_importmap_path, "w+") as deno_import_map_file:
                     json.dump({'imports': deno_import_map}, deno_import_map_file, indent=2, ensure_ascii=False)
 
+    # return true if importmap exists, false otherwise
     def cache_importmap(self):
         try:
             deno_importmap_mtime = os.path.getmtime(self.deno_importmap_path)
@@ -52,8 +53,11 @@ class RunDeno:
         try:
             if deno_importmap_mtime is None or os.path.getmtime(self.deno_lock_path) > deno_importmap_mtime:
                 self.generate_importmap()
+                return True
+            else:
+                return deno_importmap_mtime is not None
         except OSError:
-            pass
+            return False
 
     def get_run_flags(self):
         run_flags = copy(self.run_flags)
@@ -65,9 +69,13 @@ class RunDeno:
         if DENO_RELOAD:
             run_flags.extend(["--reload", "--lock-write", f"--lock={self.deno_lock_path}"])
         if DENO_CHECK_LOCK_FILE:
-            self.cache_importmap()
+            if not os.path.isfile(self.deno_lock_path):
+                raise ValueError(
+                    f"Lock file is not found: {self.deno_lock_path}\n" 
+                    f"Please use DENO_RELOAD=True option to create the lock file first."
+                )
             run_flags.append(f"--lock={self.deno_lock_path}")
-            if os.path.isfile(self.deno_importmap_path):
+            if self.cache_importmap():
                 run_flags.append(f"--import-map={self.deno_importmap_path}")
         return run_flags
 
