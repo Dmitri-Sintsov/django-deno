@@ -31,9 +31,10 @@ class DenoProcess:
         serialized_map_generator = import_map_generator.serialize()
         deno_api_status = DenoMaps().set_timeout(0.1).post(serialized_map_generator)
         if deno_api_status is None:
-            deno_process = DenoServer()()
+            deno_server = DenoServer()
+            deno_process = deno_server()
             if deno_process.poll() is None:
-                self.stdout.write(f"Starting deno server pid={deno_process.pid}")
+                self.stdout.write(f"Starting deno server {deno_server}\npid={deno_process.pid}")
             else:
                 self.terminate("Error while starting deno server")
         elif isinstance(deno_api_status, Exception):

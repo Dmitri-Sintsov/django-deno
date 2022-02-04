@@ -8,7 +8,7 @@ from copy import copy
 
 from django.conf import settings
 
-from ..regex import finditer_with_separators
+from ..regex import finditer_with_separators, MatchGroup
 
 from ..conf.settings import DENO_PATH, DENO_RELOAD, DENO_CHECK_LOCK_FILE
 
@@ -23,9 +23,7 @@ class RunDeno:
     deno_lock_filename = 'lock.json'
     deno_importmap_filename = 'import_map.json'
     # https://regexr.com
-    # module_version_split = re.compile(r'\/[a-z_\-]+@v?(?:\d+[\.+])+\d+\/')
     module_version_split = re.compile(r'\/[^\/]+@.+?\/')
-    # module_version_replace = re.compile(r'@v?(?:\d+[\.+])+\d+\/')
     module_version_replace = re.compile(r'@.+?\/')
 
     def generate_importmap(self):
@@ -35,11 +33,13 @@ class RunDeno:
             for specific_url in deno_lock.keys():
                 url_parts = urlsplit(specific_url)._asdict()
                 version_parts = finditer_with_separators(self.module_version_split, url_parts['path'])
-                if len(version_parts) >= 3:
-                    version_parts[1] = self.module_version_replace.sub('/', version_parts[1])
-                    url_parts['path'] = ''.join(version_parts)
-                    unspecific_url = urlunsplit(url_parts.values())
-                    deno_import_map[unspecific_url] = specific_url
+                for i, version_part in enumerate(version_parts):
+                    if isinstance(version_part, MatchGroup):
+                        version_parts[i] = self.module_version_replace.sub('/', version_part)
+                        url_parts['path'] = ''.join(version_parts)
+                        unspecific_url = urlunsplit(url_parts.values())
+                        deno_import_map[unspecific_url] = specific_url
+                        break
             if len(deno_import_map) > 0:
                 with open(self.deno_importmap_path, "w+") as deno_import_map_file:
                     json.dump({'imports': deno_import_map}, deno_import_map_file, indent=2, ensure_ascii=False)
@@ -104,11 +104,14 @@ class RunDeno:
             deno_importmap_filename = self.deno_importmap_filename
         self.deno_lock_path = os.path.join(DENO_SCRIPT_PATH, deno_lock_filename)
         self.deno_importmap_path = os.path.join(DENO_SCRIPT_PATH, deno_importmap_filename)
+        self.shell_args = self.get_shell_args()
+
+    def __str__(self):
+        return ' '.join(self.shell_args)
 
     def __call__(self, *args, **kwargs):
-        shell_args = self.get_shell_args()
         popen_kwargs = self.get_popen_kwargs()
-        deno_process = subprocess.Popen(shell_args, **popen_kwargs)
+        deno_process = subprocess.Popen(self.shell_args, **popen_kwargs)
         return deno_process
 
 
