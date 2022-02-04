@@ -39,6 +39,7 @@ DENO_OUTPUT_MODULE_FORMATS.update(getattr(settings, 'DENO_OUTPUT_MODULE_FORMATS'
 DENO_ROLLUP_SERVE_OPTIONS = {
     'inlineFileMap': True,
     'relativePaths': True,
+    'preserveEntrySignatures': False,
     'staticFilesResolver': True,
     'withCache': True,
 }

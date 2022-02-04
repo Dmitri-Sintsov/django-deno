@@ -230,6 +230,7 @@ class InlineRollupOptions {
     inlineFileMap?: boolean;
     moduleFormat?: ModuleFormat;
     manualChunks?: ManualChunksOption;
+    preserveEntrySignatures?: PreserveEntrySignaturesOption;
     relativePaths?: boolean;
     staticFilesResolver?: boolean;
     terser?: boolean;
@@ -357,6 +358,10 @@ class InlineRollup {
 
         if (this.options.cache) {
             options.cache = this.options.cache;
+        }
+
+        if (this.options.preserveEntrySignatures === false) {
+            options.preserveEntrySignatures = this.options.preserveEntrySignatures;
         }
 
         let rollupOutput: RollupOutput;
