@@ -6,6 +6,7 @@
 // import {WINDOWS_SEPS} from "https://deno.land/x/path/mod.ts";
 
 import { existsSync } from "https://deno.land/std/fs/mod.ts";
+import { GlobOptions, globToRegExp } from "https://deno.land/std/path/glob.ts";
 
 
 class LocalPath {
@@ -88,7 +89,11 @@ class LocalPath {
             return false;
         }
         for (let [idx, matchPart] of Object.entries(matchParts) as any) {
-            if (matchPart !== '*' && matchPart !== thisParts[idx]) {
+            let matchRegExp = globToRegExp(matchPart, {
+                extended: true,
+                globstar: true,
+            } as GlobOptions);
+            if (!thisParts[idx].match(matchRegExp)) {
                 return false;
             }
         }
