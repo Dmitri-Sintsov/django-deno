@@ -73,4 +73,9 @@ class SourceFile:
                     for hint in self.rollup_hints:
                         if mfile[:len(hint)] == hint:
                             return True
+                if settings.DENO_ROLLUP_MATCH_PATH:
+                    should_rollup = any([
+                        self.source_path_str.endswith(entry_point) for entry_point in settings.DENO_ROLLUP_ENTRY_POINTS
+                    ])
+                    return should_rollup
         return False
