@@ -17,7 +17,7 @@ const httpPort = args['port'];
 
 const apiStatus = {
     "server": "Django deno server",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "pid": Deno.pid,
 };
 
