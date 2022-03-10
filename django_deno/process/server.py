@@ -1,9 +1,9 @@
-from .base import RunDeno
+from .run import DenoRun
 
 from ..conf.settings import DENO_SERVER
 
 
-class DenoServer(RunDeno):
+class DenoServer(DenoRun):
 
     script_name = "server.ts"
     script_args = [

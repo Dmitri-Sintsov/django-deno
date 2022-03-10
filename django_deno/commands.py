@@ -7,7 +7,7 @@ from django_deno import __version__
 
 from .utils import ex_to_str
 from .api.maps import DenoMaps
-from .run.server import DenoServer
+from .process.server import DenoServer
 from .importmap import ImportMapGenerator
 
 
