@@ -1,0 +1,26 @@
+{
+  "imports": {
+    "https://cdn.esm.sh/": "./cdn.esm.sh/",
+    "https://deno.land/": "./deno.land/",
+    "https://deno.land/std/flags/mod.ts": "./deno.land/std@0.123.0/flags/mod.ts",
+    "https://deno.land/std/fs/mod.ts": "./deno.land/std@0.123.0/fs/mod.ts",
+    "https://deno.land/std/path/glob.ts": "./deno.land/std@0.97.0/path/glob.ts",
+    "https://deno.land/x/drollup/deps.ts": "./deno.land/x/drollup@2.58.0+0.20.0/deps.ts",
+    "https://deno.land/x/drollup/mod.ts": "./deno.land/x/drollup@2.58.0+0.20.0/mod.ts",
+    "https://deno.land/x/drollup/plugins/terser/mod.ts": "./deno.land/x/drollup@2.58.0+0.20.0/plugins/terser/mod.ts",
+    "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/denoResolver.ts": "./deno.land/x/drollup@2.58.0+0.20.0/src/rollup-plugin-deno-resolver/denoResolver.ts",
+    "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/exists.ts": "./deno.land/x/drollup@2.58.0+0.20.0/src/rollup-plugin-deno-resolver/exists.ts",
+    "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/handleUnresolvedId.ts": "./deno.land/x/drollup@2.58.0+0.20.0/src/rollup-plugin-deno-resolver/handleUnresolvedId.ts",
+    "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/parse.ts": "./deno.land/x/drollup@2.58.0+0.20.0/src/rollup-plugin-deno-resolver/parse.ts",
+    "https://deno.land/x/drollup/src/rollup-plugin-deno-resolver/resolveId.ts": "./deno.land/x/drollup@2.58.0+0.20.0/src/rollup-plugin-deno-resolver/resolveId.ts",
+    "https://deno.land/x/drollup/src/rollup/write.ts": "./deno.land/x/drollup@2.58.0+0.20.0/src/rollup/write.ts",
+    "https://deno.land/x/oak/mod.ts": "./deno.land/x/oak@v10.2.0/mod.ts",
+    "https://unpkg.com/": "./unpkg.com/"
+  },
+  "scopes": {
+    "./cdn.esm.sh/": {
+      "/v43/node_process.js": "./cdn.esm.sh/v43/node_process.js",
+      "/v43/path-browserify@1.0.1/deno/path-browserify.js": "./cdn.esm.sh/v43/path-browserify@1.0.1/deno/path-browserify.js"
+    }
+  }
+}
