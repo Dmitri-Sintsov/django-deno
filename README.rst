@@ -6,7 +6,7 @@ django-deno
 .. _Deno: https://deno.land
 .. _deno lock.json: https://deno.land/manual/linking_to_external_code/integrity_checking
 .. _deno import_map.json: https://deno.land/manual/linking_to_external_code/import_maps
-.. _DENO_OUTPUT_MODULE_TYPE: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_OUTPUT_MODULE_TYPE&type=code
+.. _DENO_OUTPUT_MODULE_TYPE: https://github.com/Dmitri-Sintsov/django-deno/search?l=Python&q=DENO_OUTPUT_MODULE_TYPE&type=code
 .. _DENO_ROLLUP_BUNDLES: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_BUNDLES&type=code
 .. _DENO_ROLLUP_ENTRY_POINTS: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_ENTRY_POINTS&type=code
 .. _DENO_ROLLUP_COLLECT_OPTIONS: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_COLLECT_OPTIONS&type=code
@@ -22,6 +22,7 @@ django-deno
 .. _drf-gallery: https://github.com/Dmitri-Sintsov/drf-gallery
 .. _drollup: https://deno.land/x/drollup
 .. _es6 modules: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules
+.. _getStaticFilesResolver: https://github.com/Dmitri-Sintsov/django-deno/search?l=TypeScript&q=getStaticFilesResolver&type=code
 .. _isVirtualEntry: https://github.com/Dmitri-Sintsov/django-deno/search?l=TypeScript&q=isVirtualEntry&type=code
 .. _setVirtualEntryPoint: https://github.com/Dmitri-Sintsov/django-deno/search?l=TypeScript&q=setVirtualEntryPoint&type=code
 .. _rollup.js: https://rollupjs.org/
@@ -84,7 +85,7 @@ It's preferable to run the ``collectrollup`` command this way from the `Django`_
 
     python3 manage.py collectrollup --clear --noinput
 
-As the target output may vary depending on the source scripts.
+``--clear`` option is suggested because the target output may vary depending on the source scripts.
 
 There is `djk-sample`_ script for running ``collectrollup`` in Linux::
 
@@ -98,19 +99,16 @@ in Windows::
     if not defined DENO_INSTALL (
         set DENO_INSTALL=%USERPROFILE%\.deno
     )
-    set DJANGO_DEBUG=False
-    python %VIRTUAL_ENV%/djk-sample/manage.py collectrollup --noinput --clear
+    set "DJANGO_DEBUG=False" & python %VIRTUAL_ENV%/djk-sample/manage.py collectrollup --noinput --clear
 
 * https://github.com/Dmitri-Sintsov/djk-sample/blob/master/cli/collectrollup.cmd
 
-Note that the script also sets the environment variable `DJANGO_DEBUG`_ to ``False`` which is parsed in `djk-sample`_
-settings.py::
+The script also sets the environment variable `DJANGO_DEBUG`_ to ``False`` which is parsed in `djk-sample`_ settings.py::
 
     DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() in TRUE_STR
 
-to set the value of `DENO_OUTPUT_MODULE_TYPE`_ `django_deno settings`_ which determines the type of modules generated,
-either ``module`` for modern browsers that support es6 natively, or `SystemJS`_ modules, which are compatible with
-IE11::
+to set the value of `DENO_OUTPUT_MODULE_TYPE`_ which determines the type of Javascript modules generated, either
+``module`` for modern browsers that support es6 natively, or `SystemJS`_ modules, which are compatible with IE11::
 
     # Do not forget to re-run collectrollup management command after changing rollup.js bundles module type:
     DENO_OUTPUT_MODULE_TYPE = 'module' if DEBUG else 'systemjs-module'
@@ -123,7 +121,7 @@ The additional settings for `drollup`_ running `collectrollup`_ management comma
         'terser': True,
     }
 
-the default is::
+while the default is::
 
     DENO_ROLLUP_COLLECT_OPTIONS = {
         # 'relativePaths': True,
@@ -133,11 +131,14 @@ the default is::
         'moduleFormat': DENO_OUTPUT_MODULE_FORMATS[DENO_OUTPUT_MODULE_TYPE],
     }
 
+
+* For the full default settings: `django_deno settings`_
+
 runrollup
 ~~~~~~~~~
 
-* ``runrollup`` - starts the built-in development server, similar to Django `runserver`_ command, using `drollup`_ to
-  dynamically generate Javascript bundle in RAM, providing real-time `es6 modules`_ compatibility for IE11.
+* ``runrollup`` - starts the built-in http development server, similar to Django `runserver`_ command, using `drollup`_
+  to dynamically generate Javascript bundle in RAM, providing real-time `es6 modules`_ compatibility for IE11.
 
 `DENO_ROLLUP_SERVE_OPTIONS`_ set the options for `drollup`_ for `runrollup`_ command, the default is::
 
@@ -148,6 +149,9 @@ runrollup
         'staticFilesResolver': True,
         'withCache': True,
     }
+
+* When ``staticFilesResolver`` is ``True``, `Django packages static files`_ uses `getStaticFilesResolver`_ at `Deno`_
+  server side.
 
 deno_vendor
 ~~~~~~~~~~~
@@ -170,7 +174,9 @@ Updating `deno_vendor`_ should be performed with the following steps:
     DENO_RELOAD = False
     DENO_CHECK_LOCK_FILE = True
 
-* Run the project `deno_vendor`_ command to create local `deno vendor`_.
+* Run the project `deno_vendor`_ command to create local `deno vendor`_::
+
+    python3 manage.py deno_vendor
 
 * Run the project `collectrollup`_ command with the following ``settings.py``, to use the updated local `deno_vendor`_::
 
@@ -178,16 +184,16 @@ Updating `deno_vendor`_ should be performed with the following steps:
     DENO_RELOAD = False
     DENO_CHECK_LOCK_FILE = True
 
-* Optionally override the vendor dir in the repository and make the commit.
+* Optionally override the vendor dir in the repository and make the commit when necessary.
 
 Bundles
 -------
-Creation of `rollup.js`_ bundles has two steps, first one is defining of `Entry points`_, second is to define `Chunks`_.
-These are specified in Django project settings.
+Creation of `rollup.js`_ bundles has two steps, first one is the definition of `Entry points`_, second is the
+definition of `Chunks`_. Both are specified in Django project ``settings.py``.
 
 Entry points
 ~~~~~~~~~~~~
-At the first step, one has to specify Javascript entry points with `DENO_ROLLUP_ENTRY_POINTS`_ setting, for example in
+At the first step, one has to specify Javascript entry points with `DENO_ROLLUP_ENTRY_POINTS`_ setting, for example
 `djk-sample settings`_::
 
     DENO_ROLLUP_ENTRY_POINTS = [
@@ -198,13 +204,13 @@ At the first step, one has to specify Javascript entry points with `DENO_ROLLUP_
 
 These are the top scripts of es6 module loader hierarchy.
 
-Alternatively, the script may specify ``use rollup`` directive at the first line of code, this is used for the bundle
-entry points and discouraged for project chunks.
+Alternatively, the script may specify ``use rollup`` directive at the first line of Javascript code, which is used for
+Django packages entry points and is discouraged for project entry points.
 
 Chunks
 ~~~~~~
 
-To specify manual bundles / chunks, `DENO_ROLLUP_BUNDLES`_ setting is used. For example in `djk-sample settings`_::
+To specify manual bundles / chunks, `DENO_ROLLUP_BUNDLES`_ setting is used. For example `djk-sample settings`_::
 
     DENO_ROLLUP_BUNDLES = {
         'djk': {
@@ -220,13 +226,13 @@ To specify manual bundles / chunks, `DENO_ROLLUP_BUNDLES`_ setting is used. For 
         },
     }
 
-* The key ``djk`` specifies the chunk name that will result in generation of ``djk.js`` bundle.
-* The key ``writeEntryPoint`` specifies main entry point, which is used to generate ``djk.js`` bundle. ``djk.js`` bundle
-  usually is shared among the some / all of `Entry points`_, reducing code redundancy.
+* ``djk`` key specifies the chunk name which will result in generation of ``djk.js`` bundle.
+* ``writeEntryPoint`` key specifies main entry point, which is used to generate ``djk.js`` bundle. ``djk.js`` bundle is
+  shared among the some / all of `Entry points`_, reducing code redundancy.
 * ``matches`` key specifies the list of matching dirs which scripts that will be included into ``djk.js`` bundle.
-* ``excludes`` specifies the scripts which are excluded from the ``djk.js`` bundle.
-* ``virtualEntryPoints`` specifies the list of dirs / and or ``matches`` value to set `es6 modules`_ virtual entry points.
-  Such way module is bundled as a virtual one, included into ``djk.js`` bundle only, not being duplicated as separate
-  standalone one. See `isVirtualEntry`_ / `setVirtualEntryPoint`_ code for more info.
+* ``excludes`` specifies the list of scripts which are excluded from the ``djk.js`` bundle.
+* ``virtualEntryPoints`` specifies either the list of dirs or ``matches`` string value to set `es6 modules`_ virtual
+  entry points. Such modules are bundled as a virtual ones, included into ``djk.js`` bundle only, not being duplicated
+  as separate standalone module files. See `isVirtualEntry`_ / `setVirtualEntryPoint`_ code for more info.
 
 * To see the actual settings / usage, demo apps `djk-sample`_ and `drf-gallery`_ are available.
