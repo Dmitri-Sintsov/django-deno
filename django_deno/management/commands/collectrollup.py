@@ -4,12 +4,14 @@ import json
 import signal
 
 
+from django.core.cache import cache
 from django.contrib.staticfiles.management.commands import collectstatic
 
 from ...itero import IterO
 from ...commands import DenoProcess
 from ...importmap import ImportMapGenerator
 from ...sourcefile import SourceFile
+from ...utils import unfold
 
 from ...conf import settings as deno_settings
 from ...api.rollup import DenoRollup
@@ -26,10 +28,7 @@ class Command(collectstatic.Command, DenoProcess):
         self.deno_process = self.run_deno_process()
         self.rollup_files = []
 
-    def write_response(self, response, prefixed_path):
-        response_io = IterO(response.streaming_content)
-        # s = response_io.read()
-        objects = ijson.items(response_io, prefix='rollupFiles')
+    def write_rollup_response(self, objects, prefixed_path):
         for chunks in objects:
             for obj in chunks:
                 is_main_chunk = prefixed_path.endswith(obj['filename'])
@@ -47,7 +46,16 @@ class Command(collectstatic.Command, DenoProcess):
                     f.write(obj['map'])
                 self.stdout.write(f"Writing '{dest_map_filename}'")
 
-    def rollup_file(self, path, prefixed_path, source_file):
+    def cache_set(self, source_file, data):
+        cache.set(f'deno_rollup_response_{source_file.source_path}', data, timeout=None)
+
+    def cache_get(self, source_file):
+        return cache.get(f'deno_rollup_response_{source_file.source_path}')
+
+    def cache_delete(self, source_file):
+        cache.delete(f'deno_rollup_response_{source_file.source_path}')
+
+    def cache_rollup_file(self, source_file):
         if not self.is_local_storage():
             self.terminate("Only local storage is supported for rollup files")
         response = DenoRollup(content_type=source_file.content_type).post({
@@ -56,7 +64,11 @@ class Command(collectstatic.Command, DenoProcess):
             'options': deno_settings.DENO_ROLLUP_COLLECT_OPTIONS,
         })
         if response.status_code == 200 and hasattr(response, 'streaming_content'):
-            self.write_response(response, prefixed_path)
+            response_io = IterO(response.streaming_content)
+            # s = response_io.read()
+            objects = ijson.items(response_io, prefix='rollupFiles')
+            cached_objects = unfold(objects, max_level=2)
+            self.cache_set(source_file, cached_objects)
         else:
             self.terminate(f"Error: status={response.status_code} content={response.content}")
 
@@ -78,8 +90,13 @@ class Command(collectstatic.Command, DenoProcess):
         self.orig_sigint = signal.getsignal(signal.SIGINT)
         signal.signal(signal.SIGINT, self.sigint_handler)
         super().handle(**options)
-        for path, prefixed_path, destination_path in self.rollup_files:
+        for _path, _prefixed_path, destination_path in self.rollup_files:
             destination_file = SourceFile(destination_path)
-            self.rollup_file(path, prefixed_path, destination_file)
+            self.cache_rollup_file(destination_file)
+        for _path, prefixed_path, destination_path in self.rollup_files:
+            destination_file = SourceFile(destination_path)
+            cache_entry = self.cache_get(destination_file)
+            self.write_rollup_response(cache_entry, prefixed_path)
+            self.cache_delete(destination_file)
         if self.is_spawned_deno(deno_process=self.deno_process):
             self.deno_process.terminate()
