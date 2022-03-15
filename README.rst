@@ -60,6 +60,14 @@ In Windows run PowerShell then invoke::
 * In case currently installed `Deno`_ version is older than 1.19, please use ``deno upgrade`` command to install the
   latest `Deno`_ version.
 
+To install the development version of ``django_deno`` in python3 ``virtualenv``::
+
+    python -m pip install -U git+https://github.com/Dmitri-Sintsov/django-deno.git
+
+To install the stable version of ``django_deno`` in python3 ``virtualenv``::
+
+    python -m pip install -U git+https://github.com/Dmitri-Sintsov/django-deno.git@v0.1.0
+
 Description
 -----------
 
