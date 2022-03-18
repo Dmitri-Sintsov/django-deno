@@ -47,7 +47,7 @@ class PathMap {
 
     public unpackRelation(relPathItem: PathItem): PathItem {
         let packedPathItem: PathItem = {key: relPathItem.key, val: ''};
-        if (relPathItem.val == '') {
+        if (relPathItem.val === '') {
             packedPathItem.val = relPathItem.key;
         } else if (relPathItem.val.endsWith('.')) {
             let packedKeyNoRelDir = LocalPath.removeRelDir(relPathItem.key);

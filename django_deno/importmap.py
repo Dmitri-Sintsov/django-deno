@@ -162,13 +162,13 @@ class PathMap(MutableMapping):
             yield self.base_key.unpack(packed_k), self.base_val.unpack(packed_v)
 
     def pack(self):
-        map = {}
+        kv_map = {}
         for k, v in self.map.items():
             packed_k = self.base_key.pack(k)
             packed_v = self.base_val.pack(v)
             rel_k, rel_v = self.pack_relation(packed_k, packed_v)
-            map[rel_k] = rel_v
-        self.map = map
+            kv_map[rel_k] = rel_v
+        self.map = kv_map
 
     def serialize(self):
         return {

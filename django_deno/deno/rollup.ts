@@ -163,7 +163,7 @@ class RollupBundleSet {
             }
             return this.bundles[bundle.name];
         } else {
-            throw new Error('Bundle name has to be initialized')
+            throw new Error('Bundle name has to be initialized');
         }
     }
 
@@ -187,7 +187,7 @@ class RollupBundleSet {
                 if (result) {
                     throw new Error(
                         `One chunk "${chunkPathStr}" cannot belong to multiple bundles "${result.name}" "${bundleName}"`
-                    )
+                    );
                 }
                 result = bundle;
             }
@@ -434,7 +434,7 @@ class InlineRollup {
                             code: file.code,
                             filename: file.fileName,
                             map: file.map!.toString(),
-                        })
+                        });
                     }
                 }
             }

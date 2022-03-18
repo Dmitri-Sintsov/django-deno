@@ -42,4 +42,4 @@ class DenoRollup(DenoApi):
         return response
 
     def parse_http_error(self, ex):
-        return self.parse_not_responding_error()
+        return self.parse_not_responding_error(ex)

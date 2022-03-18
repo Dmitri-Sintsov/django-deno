@@ -44,7 +44,7 @@ class Site {
         this.entries[cachePath] = cache;
     }
 
-};
+}
 
 interface Sites {
     [index: string]: Site;

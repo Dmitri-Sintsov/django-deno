@@ -3,7 +3,7 @@ import os
 import re
 from urllib.parse import urlsplit, urlunsplit
 
-from .base import ExecDeno, DENO_SCRIPT_PATH
+from .base import ExecDeno
 
 from ..regex import finditer_with_separators, MatchGroup
 

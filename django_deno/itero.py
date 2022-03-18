@@ -80,7 +80,7 @@ class IterIO(object):
             raise ValueError('I/O operation on closed file')
         raise IOError(9, 'Bad file descriptor')
 
-    def writelines(self, list):
+    def writelines(self, _list):
         if self.closed:
             raise ValueError('I/O operation on closed file')
         raise IOError(9, 'Bad file descriptor')

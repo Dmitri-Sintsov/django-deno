@@ -9,7 +9,6 @@ from ...handlers import RollupFilesHandler
 
 lock = threading.Lock()
 
-global deno_process
 deno_process = None
 
 
