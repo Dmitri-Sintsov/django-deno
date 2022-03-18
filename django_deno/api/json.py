@@ -28,6 +28,7 @@ class JsonApi:
     }
 
     def __init__(self, **kwargs):
+        self.request_json = None
         if self.server is None:
             parts = urlparse(self.url)
             self.server = {

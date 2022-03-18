@@ -51,9 +51,9 @@ class SourceFile:
 
     @contextmanager
     def get_mmap(self):
+        fd = None
+        mfile = None
         try:
-            fd = None
-            mfile = None
             fd = os.open(f"{self.source_path_str}", os.O_RDONLY)
             if platform.system() == 'Windows':
                 mfile = mmap.mmap(fd, 0, access=mmap.ACCESS_READ)

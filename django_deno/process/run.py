@@ -16,8 +16,8 @@ class DenoRun(ExecDeno):
     deno_flags = ["-A", "--unstable", "--allow-net"]
 
     # https://regexr.com
-    module_version_split = re.compile(r'\/[^\/]+@.+?\/')
-    module_version_replace = re.compile(r'@.+?\/')
+    module_version_split = re.compile(r'/[^/]+@.+?/')
+    module_version_replace = re.compile(r'@.+?/')
 
     def generate_importmap(self):
         deno_import_map = {}

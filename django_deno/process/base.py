@@ -12,7 +12,7 @@ class ExecDeno:
 
     deno_command = None
     deno_flags = []
-    script_name = None
+    script_name = ''
     script_args = []
     # https://deno.land/manual/linking_to_external_code/integrity_checking
     # https://deno.land/manual/linking_to_external_code

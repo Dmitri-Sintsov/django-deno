@@ -13,6 +13,10 @@ from .importmap import ImportMapGenerator
 
 class DenoProcess:
 
+    def __init__(self, stdout=None, stderr=None):
+        self.stdout = stdout
+        self.stderr = stderr
+
     def terminate(self, error_message):
         self.stderr.write(error_message)
         # raising CommandError will not shut down test server as it's running in separate thread.
