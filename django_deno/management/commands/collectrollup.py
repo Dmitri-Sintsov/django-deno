@@ -75,7 +75,7 @@ class Command(collectstatic.Command, DenoProcess):
     def copy_file(self, path, prefixed_path, source_storage):
         source_path = source_storage.path(path)
         source_file = SourceFile(source_path)
-        if source_file.should_rollup():
+        if source_file.should_rollup(path):
             destination_path = self.storage.path(path)
             self.rollup_files.append([path, prefixed_path, destination_path])
         super().copy_file(path, prefixed_path, source_storage)

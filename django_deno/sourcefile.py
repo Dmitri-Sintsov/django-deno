@@ -66,7 +66,7 @@ class SourceFile:
             if fd is not None:
                 os.close(fd)
 
-    def should_rollup(self):
+    def should_rollup(self, short_path=None):
         if settings.DENO_ENABLE and self.stat.st_size > 0:
             with self.get_mmap() as mfile:
                 if self.is_rollup_module(mfile):
@@ -74,9 +74,6 @@ class SourceFile:
                         if mfile[:len(hint)] == hint:
                             return True
                 if settings.DENO_ROLLUP_MATCH_PATH:
-                    should_rollup = any([
-                        self.source_path_str.endswith(Path(entry_point).__str__())
-                        for entry_point in settings.DENO_ROLLUP_ENTRY_POINTS
-                    ])
-                    return should_rollup
+                    if short_path in settings.DENO_ROLLUP_ENTRY_POINTS:
+                        return True
         return False

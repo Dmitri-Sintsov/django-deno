@@ -19,7 +19,7 @@ from .api.rollup import DenoRollup
 
 
 # from django.views.static import serve
-def serve_rollup(request, path, document_root=None, show_indexes=False):
+def serve_rollup(request, path, normalized_path, document_root=None, show_indexes=False):
     """
     Serve static files below a given point in the directory structure.
 
@@ -46,7 +46,7 @@ def serve_rollup(request, path, document_root=None, show_indexes=False):
     statobj = fullpath.stat()
 
     source_file = SourceFile(fullpath)
-    if source_file.should_rollup():
+    if source_file.should_rollup(normalized_path):
         response = DenoRollup(content_type=source_file.content_type).post({
             'filename': str(fullpath.name),
             'basedir': str(fullpath.parent),
@@ -92,4 +92,4 @@ def serve(request, path, insecure=False, **kwargs):
             raise Http404("Directory indexes are not allowed here.")
         raise Http404("'%s' could not be found" % path)
     document_root, path = os.path.split(absolute_path)
-    return serve_rollup(request, path, document_root=document_root, **kwargs)
+    return serve_rollup(request, path, normalized_path, document_root=document_root, **kwargs)
