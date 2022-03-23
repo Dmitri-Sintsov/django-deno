@@ -66,14 +66,18 @@ class SourceFile:
             if fd is not None:
                 os.close(fd)
 
-    def should_rollup(self, short_path=None):
-        if settings.DENO_ENABLE and self.stat.st_size > 0:
-            with self.get_mmap() as mfile:
-                if self.is_rollup_module(mfile):
-                    for hint in self.rollup_hints:
-                        if mfile[:len(hint)] == hint:
-                            return True
-                if settings.DENO_ROLLUP_MATCH_PATH:
-                    if short_path in settings.DENO_ROLLUP_ENTRY_POINTS:
+    def has_rollup_hint(self):
+        with self.get_mmap() as mfile:
+            if self.is_rollup_module(mfile):
+                for hint in self.rollup_hints:
+                    if mfile[:len(hint)] == hint:
                         return True
+        return False
+
+    def should_rollup(self, short_path):
+        if settings.DENO_ENABLE:
+            if short_path in settings.DENO_ROLLUP_ENTRY_POINTS:
+                return True
+            if self.stat.st_size > 0:
+                return self.has_rollup_hint()
         return False
