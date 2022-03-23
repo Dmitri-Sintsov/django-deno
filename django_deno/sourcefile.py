@@ -75,6 +75,8 @@ class SourceFile:
         return False
 
     def should_rollup(self, short_path):
+        if '\\' in short_path:
+            short_path = short_path.replace('\\', '/')
         if settings.DENO_ENABLE:
             if short_path in settings.DENO_ROLLUP_ENTRY_POINTS:
                 return True
