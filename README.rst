@@ -60,10 +60,12 @@ In Windows run PowerShell then invoke::
 * In case currently installed `Deno`_ version is older than 1.19, please use ``deno upgrade`` command to install the
   newer `Deno`_ version. Older version has no ``deno vendor`` command.
 
-* Currently `drollup`_ Deno package does not support Deno version newer than 1.21. To overcome that limitation, please use
-  Deno version 1.21::
+* `drollup`_ Deno package was tested with Deno version 1.26::
   
-    deno upgrade --version 1.21.3
+    deno upgrade --version 1.26.2
+
+The package may work with newer versions of Deno, however it was not tested and some versions of Deno (eg. 1.21) are
+known to fail to run `drollup_, not providing required API.
 
 To install the development version of ``django_deno`` in python3 ``virtualenv``::
 
