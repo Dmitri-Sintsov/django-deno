@@ -65,7 +65,7 @@ In Windows run PowerShell then invoke::
     deno upgrade --version 1.26.2
 
 The package may work with newer versions of Deno, however it was not tested and some versions of Deno (eg. 1.21) are
-known to fail to run `drollup_, not providing required API.
+known to fail to run `drollup`_, not providing required API.
 
 To install the development version of ``django_deno`` in python3 ``virtualenv``::
 
