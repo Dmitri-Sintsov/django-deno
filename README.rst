@@ -39,7 +39,7 @@ Requirements
 ------------
 
 * Deno 1.19 or newer (which supports `deno vendor`_ command).
-* Django 2.2 / Django 3.2 / Django 4.0 is tested with continuous integration demo app `djk-sample`_.
+* Django 2.2 / Django 3.2 / Django 4.2 is tested with continuous integration demo app `djk-sample`_.
 
 Installation
 ------------
@@ -60,9 +60,9 @@ In Windows run PowerShell then invoke::
 * In case currently installed `Deno`_ version is older than 1.19, please use ``deno upgrade`` command to install the
   newer `Deno`_ version. Older version has no ``deno vendor`` command.
 
-* `drollup`_ Deno package was tested with Deno version 1.26::
+* `drollup`_ Deno package was tested with Deno version 1.32.4::
   
-    deno upgrade --version 1.26.2
+    deno upgrade --version 1.32.4
 
 The package may work with newer versions of Deno, however it was not tested and some versions of Deno (eg. 1.21) are
 known to fail to run `drollup`_, not providing required API.
