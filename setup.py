@@ -11,10 +11,7 @@ import sys
 
 import django_deno
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_namespace_packages
 
 version = django_deno.__version__
 
@@ -48,6 +45,11 @@ with open('requirements.txt', 'r') as f:
         ] if s != ''
     ]
 
+packages = find_namespace_packages(
+    where='.',
+    include=['django_deno', 'django_deno.*'],
+)
+
 setup(
     name='django-deno',
     version=version,
@@ -57,9 +59,7 @@ setup(
     author='Dmitriy Sintsov',
     author_email='questpc256@gmail.com',
     url='https://github.com/Dmitri-Sintsov/django-deno',
-    packages=[
-        'django_deno',
-    ],
+    packages=packages,
     include_package_data=True,
     install_requires=install_reqs,
     license="LGPL-3.0",
@@ -75,5 +75,5 @@ setup(
         'Programming Language :: Python :: 3',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
-    setup_requires=['wheel'],
+    setup_requires=['setuptools', 'wheel'],
 )
