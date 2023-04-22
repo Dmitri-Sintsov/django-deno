@@ -30,7 +30,7 @@ django-deno
 .. _SystemJS: https://github.com/systemjs/systemjs
 .. _terser: https://terser.org
 
-`Deno`_ front-end integration for `Django`_, version 0.1.3.
+`Deno`_ front-end integration for `Django`_, version 0.1.4.
 
 * Currently only `drollup`_ / `terser`_ are supported, the deno server may be extended to support any of deno api, if
   applicable.
@@ -73,7 +73,7 @@ To install the development version of ``django_deno`` in python3 ``virtualenv``:
 
 To install the stable version of ``django_deno`` in python3 ``virtualenv``::
 
-    python -m pip install -U git+https://github.com/Dmitri-Sintsov/django-deno.git@v0.1.3
+    python -m pip install -U git+https://github.com/Dmitri-Sintsov/django-deno.git@v0.1.4
 
 Description
 -----------
