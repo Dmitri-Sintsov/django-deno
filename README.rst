@@ -69,11 +69,11 @@ known to fail to run `drollup`_, not providing required API.
 
 To install the development version of ``django_deno`` in python3 ``virtualenv``::
 
-    python -m pip install -U git+https://github.com/Dmitri-Sintsov/django-deno.git
+    pip install -U git+https://github.com/Dmitri-Sintsov/django-deno.git
 
 To install the stable version of ``django_deno`` in python3 ``virtualenv``::
 
-    python -m pip install -U git+https://github.com/Dmitri-Sintsov/django-deno.git@v0.1.4
+    pip install -U git+https://github.com/Dmitri-Sintsov/django-deno.git@v0.1.4
 
 Description
 -----------
