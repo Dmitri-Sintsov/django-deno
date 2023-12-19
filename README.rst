@@ -39,7 +39,7 @@ Requirements
 ------------
 
 * Deno 1.19 or newer (which supports `deno vendor`_ command).
-* Django 2.2 / Django 3.2 / Django 4.2 is tested with continuous integration demo app `djk-sample`_.
+* Django 4.2 / Django 5.0 is tested with continuous integration demo app `djk-sample`_.
 
 Installation
 ------------
