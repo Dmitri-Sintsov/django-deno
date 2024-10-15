@@ -8,8 +8,8 @@ class DenoVendor(ExecDeno):
 
     deno_command = 'vendor'
     deno_flags = [
-        # "--unstable",
         "--force"
+        # "--unstable",
     ]
     script_name = "server.ts"
 

@@ -30,7 +30,7 @@ django-deno
 .. _SystemJS: https://github.com/systemjs/systemjs
 .. _terser: https://terser.org
 
-`Deno`_ front-end integration for `Django`_, version 0.1.4.
+`Deno`_ front-end integration for `Django`_, version 0.2.0.
 
 * Currently only `drollup`_ / `terser`_ are supported, the deno server may be extended to support any of deno api, if
   applicable.
@@ -60,9 +60,9 @@ In Windows run PowerShell then invoke::
 * In case currently installed `Deno`_ version is older than 1.19, please use ``deno upgrade`` command to install the
   newer `Deno`_ version. Older version has no ``deno vendor`` command.
 
-* `drollup`_ Deno package was tested with Deno version 1.46.3::
+* `drollup`_ Deno package was tested with Deno version 2.0.0::
   
-    deno upgrade --version 1.46.3
+    deno upgrade --version 2.0.0
 
 The package may work with newer versions of Deno, however it was not tested and some versions of Deno (eg. 1.21) are
 known to fail to run `drollup`_, not providing required API.
@@ -73,7 +73,7 @@ To install the development version of ``django_deno`` in python3 ``virtualenv``:
 
 To install the stable version of ``django_deno`` in python3 ``virtualenv``::
 
-    pip install -U git+https://github.com/Dmitri-Sintsov/django-deno.git@v0.1.4
+    pip install -U git+https://github.com/Dmitri-Sintsov/django-deno.git@v0.2.0
 
 Description
 -----------

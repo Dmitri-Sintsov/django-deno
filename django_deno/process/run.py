@@ -14,9 +14,9 @@ class DenoRun(ExecDeno):
 
     deno_command = 'run'
     deno_flags = [
-        "-A",
-        # "--unstable",
+        "--allow-read",
         "--allow-net"
+        # "--unstable",
     ]
 
     # https://regexr.com

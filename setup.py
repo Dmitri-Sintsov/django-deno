@@ -4,7 +4,7 @@
 # Setup ~/.pypirc at https://packaging.python.org/guides/migrating-to-pypi-org/
 # python setup.py bdist_wheel
 # pip3 install -U setuptools wheel twine
-# twine upload -r test dist/django_deno-0.1.4-py2.py3-none-any.whl
+# twine upload -r test dist/django_deno-0.2.0-py2.py3-none-any.whl
 
 import os
 import sys
