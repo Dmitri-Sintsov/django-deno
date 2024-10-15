@@ -7,7 +7,10 @@ from .base import ExecDeno
 class DenoVendor(ExecDeno):
 
     deno_command = 'vendor'
-    deno_flags = ["--unstable", "--force"]
+    deno_flags = [
+        # "--unstable",
+        "--force"
+    ]
     script_name = "server.ts"
 
     def get_deno_flags(self):

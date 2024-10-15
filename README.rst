@@ -60,9 +60,9 @@ In Windows run PowerShell then invoke::
 * In case currently installed `Deno`_ version is older than 1.19, please use ``deno upgrade`` command to install the
   newer `Deno`_ version. Older version has no ``deno vendor`` command.
 
-* `drollup`_ Deno package was tested with Deno version 1.39.0::
+* `drollup`_ Deno package was tested with Deno version 1.46.3::
   
-    deno upgrade --version 1.39.0
+    deno upgrade --version 1.46.3
 
 The package may work with newer versions of Deno, however it was not tested and some versions of Deno (eg. 1.21) are
 known to fail to run `drollup`_, not providing required API.
