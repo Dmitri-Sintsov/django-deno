@@ -13,7 +13,11 @@ from ..conf.settings import DENO_RELOAD, DENO_CHECK_LOCK_FILE, DENO_USE_VENDOR
 class DenoRun(ExecDeno):
 
     deno_command = 'run'
-    deno_flags = ["-A", "--unstable", "--allow-net"]
+    deno_flags = [
+        "-A",
+        # "--unstable",
+        "--allow-net"
+    ]
 
     # https://regexr.com
     module_version_split = re.compile(r'/[^/]+@.+?/')
