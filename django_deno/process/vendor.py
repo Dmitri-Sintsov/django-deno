@@ -6,9 +6,10 @@ from .base import ExecDeno
 
 class DenoVendor(ExecDeno):
 
-    deno_command = 'vendor'
+    deno_command = 'cache'
     deno_flags = [
-        "--force"
+        "--force",
+        "--vendor",
         # "--unstable",
     ]
     script_name = "server.ts"

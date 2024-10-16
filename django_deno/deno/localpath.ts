@@ -5,8 +5,9 @@
 
 // import {WINDOWS_SEPS} from "https://deno.land/x/path/mod.ts";
 
-import { existsSync } from "https://deno.land/std/fs/mod.ts";
-import { GlobOptions, globToRegExp } from "https://deno.land/std/path/glob.ts";
+import { isAbsolute } from "jsr:@std/path";
+import { existsSync } from "jsr:@std/fs/exists";
+import { GlobOptions, globToRegExp } from "jsr:@std/path/glob-to-regexp";
 
 
 class LocalPath {
@@ -27,11 +28,17 @@ class LocalPath {
 
     static getFullLocalPath(relPathStr: string): LocalPath {
         let instance = new this(Deno.cwd());
-        instance = instance.traverseStr(relPathStr);
+        if (!instance.isAbsolute()) {
+            instance = instance.traverseStr(relPathStr);
+        }
         if (!instance.exists()) {
             throw new Error(`Error in getFullLocalPath, relPathStr "${relPathStr}" path does not exists: "${instance.path}"`);
         }
         return instance;
+    }
+
+    public isAbsolute(): boolean {
+        return isAbsolute(this.path);
     }
 
     public toString() : string {
@@ -61,7 +68,8 @@ class LocalPath {
     }
 
     static join(parts: string[]) {
-        return parts.join(LocalPath.getSystemSeparator());
+        let result = parts.join(LocalPath.getSystemSeparator());
+        return result;
     }
 
     public getDirParts(): string[] {

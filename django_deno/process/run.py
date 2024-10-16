@@ -14,8 +14,10 @@ class DenoRun(ExecDeno):
 
     deno_command = 'run'
     deno_flags = [
+        "--allow-ffi",
         "--allow-read",
-        "--allow-net"
+        "--allow-net",
+        "--allow-sys",
         # "--unstable",
     ]
 
@@ -67,7 +69,11 @@ class DenoRun(ExecDeno):
             if DENO_RELOAD and DENO_CHECK_LOCK_FILE:
                 raise ValueError("DENO_RELOAD / DENO_CHECK_LOCK_FILE are mutually exclusive options")
             if DENO_RELOAD:
-                deno_flags.extend(["--reload", "--lock-write", f"--lock={self.deno_lock_path}"])
+                deno_flags.extend([
+                    "--reload",
+                    # "--lock-write",
+                    f"--lock={self.deno_lock_path}"]
+                )
             if DENO_CHECK_LOCK_FILE:
                 if not os.path.isfile(self.deno_lock_path):
                     raise ValueError(

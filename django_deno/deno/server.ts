@@ -1,7 +1,7 @@
-// import { serve } from 'https://deno.land/std/http/server.ts'
+// import { serve } from 'jsr:@std/http/server.ts'
 
-import { parse } from "https://deno.land/std/flags/mod.ts";
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { parseArgs } from "jsr:@std/cli/parse-args";
+import { Application, Router } from "jsr:@oak/oak";
 
 
 // @2.42.3%2B0.17.1
@@ -11,7 +11,7 @@ import { LocalPath } from './localpath.ts';
 import { ImportMapGenerator } from "./importmap.ts";
 import { RollupBundleSet, InlineRollupOptions, InlineRollup } from "./rollup.ts";
 
-let args = parse(Deno.args);
+let args = parseArgs(Deno.args);
 const httpHost = args['host'];
 const httpPort = args['port'];
 
@@ -55,12 +55,11 @@ let sites: Sites = {};
 const router = new Router();
 
 router
-.get("/status/", (context) => {
+.get("/status/", (context, next) => {
     context.response.body = apiStatus;
 })
-.post("/maps/", async (context) => {
-    const body = context.request.body({ type: 'json' });
-    const value = await body.value;
+.post("/maps/", async (context, next) => {
+    const value = await context.request.body.json();
     const siteId = value['site_id'];
     sites[siteId] = new Site(
         new ImportMapGenerator({
@@ -71,10 +70,9 @@ router
     context.response.body = apiStatus;
     context.response.status = 200;
 })
-.post("/rollup/", async (context) => {
+.post("/rollup/", async (context, next) => {
     // HTTP POST
-    const body = context.request.body({ type: 'json' });
-    const value = await body.value;
+    const value = await context.request.body.json();
     const site = sites[value['site_id']];
 
     let basedir: string;
