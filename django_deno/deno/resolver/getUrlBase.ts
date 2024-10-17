@@ -1,6 +1,5 @@
 import { join, toFileUrl } from "jsr:@std/path";
-
-let sep = (Deno.build.os === "windows") ? '\\' : '/';
+import { getSystemSeparator } from  "../localpath.ts";
 
 /**
  * getUrlBase
@@ -9,7 +8,7 @@ let sep = (Deno.build.os === "windows") ? '\\' : '/';
  * @private
  */
 function getUrlBase(): URL {
-  return toFileUrl(join(Deno.cwd(), sep));
+  return toFileUrl(join(Deno.cwd(), systemSeparator));
 }
 
-export { sep, getUrlBase };
+export { getUrlBase };

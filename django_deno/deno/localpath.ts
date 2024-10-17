@@ -10,6 +10,8 @@ import { existsSync } from "jsr:@std/fs/exists";
 import { GlobOptions, globToRegExp } from "jsr:@std/path/glob-to-regexp";
 
 
+let systemSeparator = (Deno.build.os === 'windows') ? '\\' : '/';
+
 class LocalPath {
     path: string;
 
@@ -45,10 +47,6 @@ class LocalPath {
         return this.path;
     }
 
-    static getSystemSeparator(): string {
-        return (Deno.build.os == 'windows') ? '\\': '/';
-    }
-
     static removeRelDir(path: string) {
         return path.replace(/^\.+/gm, '');
     }
@@ -68,7 +66,7 @@ class LocalPath {
     }
 
     static join(parts: string[]) {
-        let result = parts.join(LocalPath.getSystemSeparator());
+        let result = parts.join(systemSeparator);
         return result;
     }
 
@@ -112,7 +110,7 @@ class LocalPath {
         return this.matches(new LocalPath(matchPathStr));
     }
 
-    public traverse(relPath: LocalPath): LocalPath {
+    public traverseRelative(relPath: LocalPath): LocalPath {
         var thisParts = this.split();
         var relDirParts = relPath.getDirParts();
         var joinDirParts = relDirParts.slice();
@@ -132,8 +130,36 @@ class LocalPath {
         return LocalPath.fromPathParts(relParts);
     }
 
-    public traverseStr(relPathStr: string): LocalPath {
-        return this.traverse(new LocalPath(relPathStr));
+    public traverseAbsolute(absPath: LocalPath): LocalPath {
+        var thisParts = this.split();
+        var absPathParts = absPath.split();
+        if (thisParts.length > absPathParts.length) {
+            throw new Error(`Error in traverseAbsolute, ${this.path} is longer than ${absPath.path}`);
+        }
+        for (var i = 0; i < thisParts.length; i++) {
+            if (thisParts[i] !== absPathParts[i]) {
+                let parts = [...thisParts, ...absPathParts.slice(i)];
+                return LocalPath.fromPathParts(parts);
+            }
+        }
+        console.dir(thisParts);
+        console.dir(absPathParts);
+        throw new Error(`Error in traverseAbsolute, ${absPath.path} equal to ${this.path}`);
+    }
+
+    public traverseStr(pathStr: string): LocalPath {
+        if (isAbsolute(pathStr) && this.isAbsolute()) {
+            let absPath = new LocalPath(pathStr)
+            if (pathStr.startsWith(this.path)) {
+                return absPath;
+            } else {
+                return this.traverseAbsolute(absPath);
+            }
+        } else {
+            return this.traverseRelative(
+                new LocalPath(pathStr)
+            );
+        }
     }
 
     /**
@@ -177,4 +203,4 @@ class LocalPath {
     }
 }
 
-export { LocalPath };
+export { systemSeparator, LocalPath };

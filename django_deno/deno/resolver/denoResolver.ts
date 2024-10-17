@@ -1,4 +1,4 @@
-import type { Plugin } from "npm:rollup";
+import type { Plugin } from "npm:rollup@2.78.0";
 import { parse } from "./parse.ts";
 import { isTypescript } from "./isTypescript.ts";
 import { resolveId } from "./resolveId.ts";
