@@ -3,9 +3,7 @@ import os
 import subprocess
 from copy import copy
 
-from django.conf import settings
-
-from ..conf.settings import DENO_PATH
+from ..conf.settings import DENO_PATH, DENO_DEBUG
 
 
 class ExecDeno:
@@ -17,12 +15,13 @@ class ExecDeno:
     # https://deno.land/manual/linking_to_external_code/integrity_checking
     # https://deno.land/manual/linking_to_external_code
     # https://deno.land/manual/tools/vendor
+    deno_config_filename = 'deno.json'
     deno_lock_filename = 'lock.json'
     run_importmap_filename = 'import_map.json'
 
     def get_deno_flags(self):
         deno_flags = copy(self.deno_flags)
-        if getattr(settings, 'DENO_DEBUG', False):
+        if DENO_DEBUG:
             # chrome://inspect
             deno_flags.append("--inspect-brk")
         return deno_flags
@@ -48,7 +47,16 @@ class ExecDeno:
             'shell': False,
         }
 
-    def __init__(self, deno_lock_filename=None, run_importmap_filename=None, **kwargs):
+    def __init__(self, deno_config_filename=None, deno_lock_filename=None, run_importmap_filename=None, **kwargs):
+        module_dir = os.path.dirname(
+            os.path.dirname(
+                os.path.abspath(__file__)
+            )
+        )
+        if deno_config_filename is None:
+            deno_config_filename = self.deno_config_filename
+        self.deno_config_path = os.path.join(module_dir, 'deno', deno_config_filename)
+
         if deno_lock_filename is None:
             deno_lock_filename = self.deno_lock_filename
         self.deno_lock_path = os.path.join(DENO_SCRIPT_PATH, deno_lock_filename)

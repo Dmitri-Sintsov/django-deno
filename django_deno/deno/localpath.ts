@@ -142,8 +142,6 @@ class LocalPath {
                 return LocalPath.fromPathParts(parts);
             }
         }
-        console.dir(thisParts);
-        console.dir(absPathParts);
         throw new Error(`Error in traverseAbsolute, ${absPath.path} equal to ${this.path}`);
     }
 

@@ -81,8 +81,9 @@ class Command(collectstatic.Command, DenoProcess):
         super().copy_file(path, prefixed_path, source_storage)
 
     def sigint_handler(self, signum, frame):
-        self.stdout.write(f"Terminating deno server pid={self.deno_process.pid}")
-        self.deno_process.terminate()
+        if self.deno_process is not None:
+            self.stdout.write(f"Terminating deno server pid={self.deno_process.pid}")
+            self.deno_process.terminate()
         if callable(self.orig_sigint):
             self.orig_sigint(signum, frame)
 
@@ -98,5 +99,5 @@ class Command(collectstatic.Command, DenoProcess):
             cache_entry = self.cache_get(destination_file)
             self.write_rollup_response(cache_entry, prefixed_path)
             self.cache_delete(destination_file)
-        if self.is_spawned_deno(deno_process=self.deno_process):
+        if self.deno_process is not None and self.is_spawned_deno(deno_process=self.deno_process):
             self.deno_process.terminate()

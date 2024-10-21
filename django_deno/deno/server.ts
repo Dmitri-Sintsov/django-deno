@@ -5,7 +5,7 @@ import { Application, Router } from "jsr:@oak/oak";
 
 
 // @2.42.3%2B0.17.1
-import type { RollupCache } from "https://deno.land/x/drollup/deps.ts";
+import type { RollupCache } from "https://unpkg.com/rollup@2.79.2/dist/rollup.d.ts";
 
 import { LocalPath } from './localpath.ts';
 import { ImportMapGenerator } from "./importmap.ts";
@@ -72,8 +72,16 @@ router
 })
 .post("/rollup/", async (context, next) => {
     // HTTP POST
+    let responseFields;
     const value = await context.request.body.json();
-    const site = sites[value['site_id']];
+    if (typeof sites[value.site_id] === 'undefined' ) {
+        responseFields = InlineRollup.getErrorResponse(
+            new Error(`sites for site_id=${value.site_id} is undefined`)
+        );
+        responseFields.toOakContext(context);
+        return;
+    }
+    const site = sites[value.site_id];
 
     let basedir: string;
     let filename: string;
@@ -138,9 +146,8 @@ router
 
     let inlineRollup = new InlineRollup(site.importMapGenerator, inlineRollupOptions);
     let rollupOutput = await inlineRollup.generate(basedir, filename);
-    let responseFields;
     if (rollupOutput instanceof Error) {
-        responseFields = inlineRollup.getErrorResponse(rollupOutput);
+        responseFields = InlineRollup.getErrorResponse(rollupOutput);
     } else {
         responseFields = inlineRollup.getRollupResponse(baseDirLocalPath, entryPointLocalPath, rollupOutput, foundBundles);
     }

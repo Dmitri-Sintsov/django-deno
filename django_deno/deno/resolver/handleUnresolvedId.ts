@@ -19,6 +19,6 @@ export function handleUnresolvedId(
 
   error({
     code: "UNRESOLVED_ENTRY",
-    message: `Could not resolve entry module (${relativeId(id)}).`,
+    message: `Could not resolve entry module id=${id}\nrelativeId=(${relativeId(id)}).`,
   });
 }

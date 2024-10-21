@@ -15,8 +15,9 @@ class DenoRun(ExecDeno):
     deno_command = 'run'
     deno_flags = [
         "--allow-ffi",
-        "--allow-read",
+        "--allow-import",
         "--allow-net",
+        "--allow-read",
         "--allow-sys",
         # "--unstable",
     ]
@@ -60,6 +61,9 @@ class DenoRun(ExecDeno):
 
     def get_deno_flags(self):
         deno_flags = super().get_deno_flags()
+        deno_flags.append(
+            f"--config={self.deno_config_path}"
+        )
         if DENO_USE_VENDOR:
             deno_flags.extend([
                 "--no-remote",

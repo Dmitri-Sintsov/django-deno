@@ -3,6 +3,8 @@ import os
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 
+DENO_DEBUG = getattr(settings, 'DENO_DEBUG', False)
+DENO_DEBUG_EXTERNAL = getattr(settings, 'DENO_DEBUG_EXTERNAL', False)
 DENO_ENABLE = getattr(settings, 'DENO_ENABLE', True)
 DENO_RELOAD = getattr(settings, 'DENO_RELOAD', False)
 DENO_CHECK_LOCK_FILE = getattr(settings, 'DENO_CHECK_LOCK_FILE', False)
@@ -14,10 +16,7 @@ if DENO_INSTALL is None:
 
 DENO_PATH = os.path.join(DENO_INSTALL, 'bin', 'deno')
 
-if getattr(settings, 'DENO_DEBUG', False):
-    DENO_TIMEOUT = 60
-else:
-    DENO_TIMEOUT = 20
+DENO_TIMEOUT = 120 if DENO_DEBUG else 20
 
 DENO_SERVER = {
     'scheme': 'http',
@@ -50,7 +49,7 @@ DENO_OUTPUT_MODULE_TYPE = getattr(settings, 'DENO_OUTPUT_MODULE_TYPE', 'module')
 
 DENO_ROLLUP_COLLECT_OPTIONS = {
     # 'relativePaths': True,
-    # 'staticFilesResolver': True,
+    'staticFilesResolver': True,
     'terser': True,
     'bundles': getattr(settings, 'DENO_ROLLUP_BUNDLES', {}),
     'moduleFormat': DENO_OUTPUT_MODULE_FORMATS[DENO_OUTPUT_MODULE_TYPE],

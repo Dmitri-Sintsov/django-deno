@@ -5,6 +5,7 @@ import _thread
 
 from django_deno import __version__
 
+from .conf.settings import DENO_DEBUG_EXTERNAL
 from .utils import ex_to_str
 from .api.maps import DenoMaps
 from .process.server import DenoServer
@@ -35,6 +36,8 @@ class DenoProcess:
         serialized_map_generator = import_map_generator.serialize()
         deno_api_status = DenoMaps().set_timeout(0.1).post(serialized_map_generator)
         if deno_api_status is None:
+            if DENO_DEBUG_EXTERNAL:
+                return None
             deno_server = DenoServer()
             deno_process = deno_server()
             if deno_process.poll() is None:
