@@ -12,7 +12,8 @@ from .conf import settings
 class SourceFile:
 
     module_mime_types = [
-        "application/javascript"
+        "application/javascript",
+        "text/javascript",
     ]
     module_detect_bytes = [
         b'export ',
