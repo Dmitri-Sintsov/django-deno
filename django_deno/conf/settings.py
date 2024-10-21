@@ -49,7 +49,7 @@ DENO_OUTPUT_MODULE_TYPE = getattr(settings, 'DENO_OUTPUT_MODULE_TYPE', 'module')
 
 DENO_ROLLUP_COLLECT_OPTIONS = {
     # 'relativePaths': True,
-    'staticFilesResolver': True,
+    'staticFilesResolver': False,
     'terser': True,
     'bundles': getattr(settings, 'DENO_ROLLUP_BUNDLES', {}),
     'moduleFormat': DENO_OUTPUT_MODULE_FORMATS[DENO_OUTPUT_MODULE_TYPE],

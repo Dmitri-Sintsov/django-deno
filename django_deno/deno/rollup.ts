@@ -276,6 +276,34 @@ class InlineRollup {
         this.options = options;
     }
 
+    getCollectedFilesResolver() {
+        let resolverOptions: DenoResolverOptions = {};
+        return async (source: string, importer?: string) => {
+            let id = resolveId(source, importer);
+            let url = parse(id);
+            if (url) {
+                if (!(await exists(url, resolverOptions.fetchOpts))) {
+                    // We assume extensionless imports are from bundling commonjs
+                    // as in Deno extensions are compulsory. We assume that the
+                    // extensionless commonjs file is JavaScript and not TypeScript.
+                    id += ".js";
+                    url = new URL(`${url.href}.js`);
+                }
+                if (!(await exists(url, resolverOptions.fetchOpts))) {
+                    // id = id.substr(0, id.length - 3);
+                    // return handleUnresolvedId(id, importer);
+                    let sourcePath = LocalPath.getCwd().traverseStr(source);
+                    id = sourcePath.path;
+                }
+            } else {
+                // return handleUnresolvedId(id, importer);
+                let sourcePath = LocalPath.getCwd().traverseStr(source);
+                id = sourcePath.path;
+            }
+            return id;
+        };
+    }
+
     getStaticFilesResolver() {
         let resolverOptions: DenoResolverOptions = {};
         return async (source: string, importer?: string) => {
@@ -339,11 +367,13 @@ class InlineRollup {
 
         let rollupPlugins : any[] = [];
 
+        let resolver = denoResolver();
         if (this.options.staticFilesResolver) {
-            let resolver = denoResolver();
             resolver.resolveId = this.getStaticFilesResolver();
-            rollupPlugins.push(resolver);
+        } else {
+            resolver.resolveId = this.getCollectedFilesResolver();
         }
+        rollupPlugins.push(resolver);
 
         if (this.options.terser) {
             rollupPlugins.push(terser({

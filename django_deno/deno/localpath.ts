@@ -28,9 +28,15 @@ class LocalPath {
         return instance;
     }
 
+    static getCwd(): LocalPath {
+        return new this(Deno.cwd());
+    }
+
     static getFullLocalPath(relPathStr: string): LocalPath {
-        let instance = new this(Deno.cwd());
-        if (!instance.isAbsolute()) {
+        let instance = this.getCwd();
+        if (isAbsolute(relPathStr)) {
+            return new this(relPathStr);
+        } else {
             instance = instance.traverseStr(relPathStr);
         }
         if (!instance.exists()) {
