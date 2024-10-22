@@ -36,14 +36,13 @@ class DenoProcess:
         serialized_map_generator = import_map_generator.serialize()
         deno_api_status = DenoMaps().set_timeout(0.1).post(serialized_map_generator)
         if deno_api_status is None:
-            if DENO_DEBUG_EXTERNAL:
-                return None
-            deno_server = DenoServer()
-            deno_process = deno_server()
-            if deno_process.poll() is None:
-                self.stdout.write(f"Starting deno server {deno_server}\npid={deno_process.pid}")
-            else:
-                self.terminate("Error while starting deno server")
+            if not DENO_DEBUG_EXTERNAL:
+                deno_server = DenoServer()
+                deno_process = deno_server()
+                if deno_process.poll() is None:
+                    self.stdout.write(f"Starting deno server {deno_server}\npid={deno_process.pid}")
+                else:
+                    self.terminate("Error while starting deno server")
         elif isinstance(deno_api_status, Exception):
             self.stderr.write("The service running is not deno server or deno server is not running properly")
             self.terminate(ex_to_str(deno_api_status))
