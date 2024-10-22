@@ -9,7 +9,15 @@ from ..conf.settings import DENO_PATH, DENO_DEBUG
 class ExecDeno:
 
     deno_command = None
-    deno_flags = []
+    deno_flags = [
+        "--allow-env",
+        "--allow-ffi",
+        "--allow-import",
+        "--allow-net",
+        "--allow-read",
+        "--allow-sys",
+        # "--unstable",
+    ]
     script_name = ''
     script_args = []
     # https://deno.land/manual/linking_to_external_code/integrity_checking
@@ -36,11 +44,15 @@ class ExecDeno:
         return self.script_args
 
     def get_shell_args(self):
-        return [
+        args = [
             DENO_PATH, self.get_deno_command()
-        ] + self.get_deno_flags() + [
-            os.path.join(DENO_SCRIPT_PATH, self.get_script_name()),
-        ] + self.get_script_args()
+        ] + self.get_deno_flags()
+        script_name = self.get_script_name()
+        if script_name != '':
+            args += [
+                os.path.join(DENO_SCRIPT_PATH, self.get_script_name()),
+            ] + self.get_script_args()
+        return args
 
     def get_popen_kwargs(self):
         return {

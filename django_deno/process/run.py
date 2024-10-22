@@ -13,14 +13,6 @@ from ..conf.settings import DENO_RELOAD, DENO_CHECK_LOCK_FILE, DENO_USE_VENDOR
 class DenoRun(ExecDeno):
 
     deno_command = 'run'
-    deno_flags = [
-        "--allow-ffi",
-        "--allow-import",
-        "--allow-net",
-        "--allow-read",
-        "--allow-sys",
-        # "--unstable",
-    ]
 
     # https://regexr.com
     module_version_split = re.compile(r'/[^/]+@.+?/')
@@ -30,7 +22,7 @@ class DenoRun(ExecDeno):
         deno_import_map = {}
         with open(self.deno_lock_path, "r") as deno_lock_file:
             deno_lock = json.load(deno_lock_file)
-            for specific_url in deno_lock.keys():
+            for specific_url in deno_lock['remote'].keys():
                 url_parts = urlsplit(specific_url)._asdict()
                 version_parts = finditer_with_separators(self.module_version_split, url_parts['path'])
                 for i, version_part in enumerate(version_parts):

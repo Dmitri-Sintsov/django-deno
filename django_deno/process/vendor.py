@@ -1,3 +1,5 @@
+import os
+
 from .base import ExecDeno
 
 
@@ -6,18 +8,18 @@ from .base import ExecDeno
 
 class DenoVendor(ExecDeno):
 
-    deno_command = 'cache'
-    deno_flags = [
-        "--force",
-        "--vendor",
-        # "--unstable",
-    ]
-    script_name = "server.ts"
+    deno_command = 'install'
+
+    script_name = 'server.ts'
 
     def get_deno_flags(self):
         deno_flags = super().get_deno_flags()
         deno_flags.extend([
+            "--force",
+            "--vendor",
             f"--lock={self.deno_lock_path}",
-            f"--import-map={self.run_importmap_path}",
+            # f"--import-map={self.run_importmap_path}",
+            f"--entrypoint",
         ])
+
         return deno_flags
