@@ -219,7 +219,7 @@ class RollupBundleSet {
                 baseDirLocalPath.traverseStr(
                     chunkObj.facadeModuleId, {onlyRelative: true}
                 ) : false;
-        
+
         if (facadeModuleLocalPath) {
             return !this.isSkipChunk(facadeModuleLocalPath);
         } else {
