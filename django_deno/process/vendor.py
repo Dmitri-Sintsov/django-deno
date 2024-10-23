@@ -1,5 +1,3 @@
-import os
-
 from .base import ExecDeno
 
 
@@ -17,9 +15,9 @@ class DenoVendor(ExecDeno):
         deno_flags.extend([
             "--force",
             "--vendor",
-            f"--lock={self.deno_lock_path}",
+            # f"--lock={self.deno_lock_path}",
             # f"--import-map={self.run_importmap_path}",
-            f"--entrypoint",
+            "--entrypoint",
         ])
 
         return deno_flags

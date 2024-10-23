@@ -32,6 +32,7 @@ class DenoProcess:
         return isinstance(deno_process, psutil.Process)
 
     def run_deno_process(self):
+        deno_process = None
         import_map_generator = ImportMapGenerator(logger=self.stderr)
         serialized_map_generator = import_map_generator.serialize()
         deno_api_status = DenoMaps().set_timeout(0.1).post(serialized_map_generator)
@@ -51,6 +52,8 @@ class DenoProcess:
             self.stdout.write(
                 f"Already running deno server pid={deno_process.pid}, api version={deno_api_status['version']}"
             )
+        if deno_process is None:
+            self.terminate("Deno server is not started or is not running properly")
         if not isinstance(deno_api_status, dict):
             self.stdout.write(f"Sending import maps to deno server pid={deno_process.pid}")
             deno_api_status = DenoMaps().post(serialized_map_generator)

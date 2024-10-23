@@ -216,7 +216,10 @@ class RollupBundleSet {
 
     public isWritableChunk(baseDirLocalPath: LocalPath, writeBundle: RollupBundleItem | false, chunkObj: any): boolean {
         let facadeModuleLocalPath = (chunkObj.facadeModuleId) ?
-                baseDirLocalPath.traverseStr(chunkObj.facadeModuleId) : false;
+                baseDirLocalPath.traverseStr(
+                    chunkObj.facadeModuleId, {onlyRelative: true}
+                ) : false;
+        
         if (facadeModuleLocalPath) {
             return !this.isSkipChunk(facadeModuleLocalPath);
         } else {

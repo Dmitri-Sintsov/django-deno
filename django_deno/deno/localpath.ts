@@ -151,12 +151,16 @@ class LocalPath {
         throw new Error(`Error in traverseAbsolute, ${absPath.path} equal to ${this.path}`);
     }
 
-    public traverseStr(pathStr: string): LocalPath {
+    public traverseStr(pathStr: string, params?: { onlyRelative: boolean | null}): LocalPath {
+        if (typeof params === 'undefined') {
+            params = {onlyRelative: false};
+        }
         if (isAbsolute(pathStr) && this.isAbsolute()) {
             let absPath = new LocalPath(pathStr)
-            if (pathStr.startsWith(this.path)) {
+            if (params.onlyRelative || pathStr.startsWith(this.path)) {
                 return absPath;
             } else {
+                // warning: not all absolute pathes are compatible, use with care.
                 return this.traverseAbsolute(absPath);
             }
         } else {

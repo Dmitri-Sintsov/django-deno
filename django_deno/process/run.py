@@ -58,8 +58,8 @@ class DenoRun(ExecDeno):
         )
         if DENO_USE_VENDOR:
             deno_flags.extend([
-                "--no-remote",
-                f"--import-map={self.vendor_importmap_path}"
+                # "--no-remote",
+                # f"--import-map={self.vendor_importmap_path}"
             ])
         else:
             if DENO_RELOAD and DENO_CHECK_LOCK_FILE:
@@ -78,5 +78,6 @@ class DenoRun(ExecDeno):
                     )
                 deno_flags.append(f"--lock={self.deno_lock_path}")
                 if self.cache_importmap():
-                    deno_flags.append(f"--import-map={self.run_importmap_path}")
+                    # deno_flags.append(f"--import-map={self.run_importmap_path}")
+                    pass
         return deno_flags
