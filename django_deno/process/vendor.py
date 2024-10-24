@@ -14,6 +14,7 @@ class DenoVendor(ExecDeno):
         deno_flags = super().get_deno_flags()
         deno_flags.extend([
             "--force",
+            "--reload",
             "--vendor",
             # f"--lock={self.deno_lock_path}",
             # f"--import-map={self.run_importmap_path}",
