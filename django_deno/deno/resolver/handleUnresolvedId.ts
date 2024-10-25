@@ -1,3 +1,7 @@
+/**
+ * Derived from https://github.com/cmorten/deno-rollup
+ */
+
 import { relativeId } from "./relativeId.ts";
 import { error } from "./error.ts";
 

@@ -11,7 +11,7 @@ django-deno
 .. _DENO_ROLLUP_ENTRY_POINTS: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_ENTRY_POINTS&type=code
 .. _DENO_ROLLUP_COLLECT_OPTIONS: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_COLLECT_OPTIONS&type=code
 .. _DENO_ROLLUP_SERVE_OPTIONS: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_SERVE_OPTIONS&type=code
-.. _deno vendor: https://deno.land/manual/tools/vendor
+.. _deno install: https://docs.deno.com/runtime/reference/cli/install/
 .. _Django: https://www.djangoproject.com
 .. _DJANGO_DEBUG: https://github.com/Dmitri-Sintsov/djk-sample/search?q=DJANGO_DEBUG&type=code
 .. _django_deno settings: https://github.com/Dmitri-Sintsov/django-deno/blob/main/django_deno/conf/settings.py
@@ -32,14 +32,15 @@ django-deno
 
 `Deno`_ front-end integration for `Django`_, version 0.2.0.
 
-* Currently only `drollup`_ / `terser`_ are supported, the deno server may be extended to support any of deno api, if
-  applicable.
+* Uses parts of `drollup`_ code, refactored for Deno v2.
+* Currently `rollup.js`_ / `terser`_ are supported.
+* The deno server may be extended to support any of deno api, if applicable.
 
 Requirements
 ------------
 
-* Deno 1.19 or newer (which supports `deno vendor`_ command).
-* Django 4.2 / Django 5.0 was tested with continuous integration demo app `djk-sample`_.
+* Deno 2.0.2 or newer.
+* Django 4.2 / Django 5.1 was tested with continuous integration demo app `djk-sample`_.
 
 Installation
 ------------
@@ -57,15 +58,14 @@ In Windows run PowerShell then invoke::
 
 ``DENO_INSTALL`` environment variable specifies directory where `Deno`_ is installed.
 
-* In case currently installed `Deno`_ version is older than 1.19, please use ``deno upgrade`` command to install the
-  newer `Deno`_ version. Older version has no ``deno vendor`` command.
+* In case currently installed `Deno`_ version is older than 2.0.2, please use ``deno upgrade`` command to install the
+  newer `Deno`_ version. Deno 1.x is supported only with ``django-deno`` versions lower than 0.2.0.
 
-* `drollup`_ Deno package was tested with Deno version 2.0.0::
+* This package was tested with Deno version 2.0.2::
   
-    deno upgrade --version 2.0.0
+    deno upgrade --version 2.0.2
 
-The package may work with newer versions of Deno, however it was not tested and some versions of Deno (eg. 1.21) are
-known to fail to run `drollup`_, not providing required API.
+The package may work with newer versions of Deno, however it was not tested, thus may fail.
 
 To install the development version of ``django_deno`` in python3 ``virtualenv``::
 
@@ -78,9 +78,9 @@ To install the stable version of ``django_deno`` in python3 ``virtualenv``::
 Description
 -----------
 
-``django_deno`` installs deno web service which is used to communicate with `Django`_ projects.
+``django_deno`` installs Deno web service which is used to communicate with `Django`_ projects.
 
-Currently the web service supports deno version of `rollup.js`_ bundle (`drollup`_) generation to automatically provide
+Currently the web service supports Deno version of `rollup.js`_ bundle generation to automatically provide
 `es6 modules`_ bundles for `Django`_ projects, including scripts from `Django packages static files`_.
 
 That enables generation of minified `terser`_ bundles and / or `systemjs`_ bundles, the later ones are compatible to
@@ -94,7 +94,7 @@ At `Django`_ side it provides the following `Django management commands`_:
 collectrollup
 ~~~~~~~~~~~~~
 
-* ``collectrollup`` - similar to Django `collectstatic`_ command, but uses `drollup`_ to generate Javascript bundles.
+* ``collectrollup`` - similar to Django `collectstatic`_ command, but uses `rollup`_ to generate Javascript bundles.
 
 It's preferable to run the ``collectrollup`` command this way from the `Django`_ project ``virtualenv``::
 
@@ -128,7 +128,7 @@ to set the value of `DENO_OUTPUT_MODULE_TYPE`_ which determines the type of Java
     # Do not forget to re-run collectrollup management command after changing rollup.js bundles module type:
     DENO_OUTPUT_MODULE_TYPE = 'module' if DEBUG else 'systemjs-module'
 
-The additional settings for `drollup`_ running `collectrollup`_ management command are specified with
+The additional settings for `rollup`_ running `collectrollup`_ management command are specified with
 `DENO_ROLLUP_COLLECT_OPTIONS`_ setting, which allows to enable / disable `terser`_ compression::
 
     # Run $VIRTUAL_ENV/djk-sample/cherry_django.py to check the validity of collectrollup command output bundle.
@@ -140,7 +140,7 @@ while the default is::
 
     DENO_ROLLUP_COLLECT_OPTIONS = {
         # 'relativePaths': True,
-        # 'staticFilesResolver': True,
+        'staticFilesResolver': 'collect',
         'terser': True,
         'bundles': getattr(settings, 'DENO_ROLLUP_BUNDLES', {}),
         'moduleFormat': DENO_OUTPUT_MODULE_FORMATS[DENO_OUTPUT_MODULE_TYPE],
@@ -152,7 +152,7 @@ while the default is::
 runrollup
 ~~~~~~~~~
 
-* ``runrollup`` - starts the built-in http development server, similar to Django `runserver`_ command, using `drollup`_
+* ``runrollup`` - starts the built-in http development server, similar to Django `runserver`_ command, using `rollup`_
   to dynamically generate Javascript bundle in RAM, providing real-time `es6 modules`_ compatibility for IE11.
 
 `DENO_ROLLUP_SERVE_OPTIONS`_ set the options for `drollup`_ for `runrollup`_ command, the default is::
@@ -161,20 +161,20 @@ runrollup
         'inlineFileMap': True,
         'relativePaths': True,
         'preserveEntrySignatures': False,
-        'staticFilesResolver': True,
+        'staticFilesResolver': 'serve',
         'withCache': True,
     }
 
-* When ``staticFilesResolver`` is ``True``, `Django packages static files`_ uses `getStaticFilesResolver`_ at `Deno`_
-  server side.
+* When ``staticFilesResolver`` is set to ``serve``, `Django packages static files`_ uses `getStaticFilesResolver`_ at
+  `Deno`_ server side.
 
-deno_vendor
+deno_install
 ~~~~~~~~~~~
 
-* ``deno_vendor`` management command generates updated `deno vendor`_ bundle for the built-in deno server. This command
+* ``deno_install`` management command generates updated `deno install`_ bundle for the built-in deno server. This command
   should be used only for package updating / redistribution.
 
-Updating `deno_vendor`_ should be performed with the following steps:
+Updating `deno_install`_ should be performed with the following steps:
 
 * Run the project `collectrollup`_ command with the following ``settings.py`` to reload the dependencies::
 
@@ -189,11 +189,11 @@ Updating `deno_vendor`_ should be performed with the following steps:
     DENO_RELOAD = False
     DENO_CHECK_LOCK_FILE = True
 
-* Run the project `deno_vendor`_ command to create local `deno vendor`_::
+* Run the project `deno_install`_ command to create local `deno install`_::
 
-    python3 manage.py deno_vendor
+    python3 manage.py deno_install
 
-* Run the project `collectrollup`_ command with the following ``settings.py``, to use the updated local `deno_vendor`_::
+* Run the project `collectrollup`_ command with the following ``settings.py``, to use the updated local `deno_install`_::
 
     DENO_USE_VENDOR = True
     DENO_RELOAD = False

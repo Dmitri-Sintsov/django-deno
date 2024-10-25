@@ -1,3 +1,7 @@
+/**
+ * Derived from https://github.com/cmorten/deno-rollup
+ */
+
 const RE_URL = /^(https?|file):\/\//;
 const RE_PATH_MALFORMED_HTTP_URL = /^((https?):)(?:\\+|\/)/;
 const RE_PATH_MALFORMED_FILE_URL = /^((file):)(?:\\+|\/)([A-Za-z]:)?/;

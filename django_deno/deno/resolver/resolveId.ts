@@ -1,3 +1,7 @@
+/**
+ * Derived from https://github.com/cmorten/deno-rollup
+ */
+
 import {
   dirname,
   fromFileUrl,

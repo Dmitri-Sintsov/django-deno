@@ -1,3 +1,7 @@
+/**
+ * Derived from https://github.com/cmorten/deno-rollup
+ */
+
 import { notImplemented } from "./notImplemented.ts";
 
 // TODO: given we are now duplicating loadUrl,

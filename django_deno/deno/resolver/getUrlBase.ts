@@ -1,3 +1,7 @@
+/**
+ * Derived from https://github.com/cmorten/deno-rollup
+ */
+
 import { join, toFileUrl } from "jsr:@std/path";
 import { getSystemSeparator } from  "../localpath.ts";
 

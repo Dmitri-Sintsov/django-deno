@@ -1,3 +1,7 @@
+/**
+ * Derived from https://github.com/cmorten/deno-rollup
+ */
+
 import type { Plugin } from "https://unpkg.com/rollup@2.79.2/dist/rollup.d.ts";
 import { parse } from "./parse.ts";
 import { isTypescript } from "./isTypescript.ts";

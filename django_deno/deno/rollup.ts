@@ -243,7 +243,7 @@ class InlineRollupOptions {
     manualChunks?: ManualChunksOption;
     preserveEntrySignatures?: PreserveEntrySignaturesOption;
     relativePaths?: boolean;
-    staticFilesResolver?: boolean;
+    staticFilesResolver?: string;
     terser?: boolean;
     withCache?: boolean;
 
@@ -279,36 +279,24 @@ class InlineRollup {
         this.options = options;
     }
 
-    getCollectedFilesResolver() {
-        let resolverOptions: DenoResolverOptions = {};
-        return async (source: string, importer?: string) => {
-            let id = resolveId(source, importer);
-            let url = parse(id);
-            if (url) {
-                if (!(await exists(url, resolverOptions.fetchOpts))) {
-                    // We assume extensionless imports are from bundling commonjs
-                    // as in Deno extensions are compulsory. We assume that the
-                    // extensionless commonjs file is JavaScript and not TypeScript.
-                    id += ".js";
-                    url = new URL(`${url.href}.js`);
-                }
-                if (!(await exists(url, resolverOptions.fetchOpts))) {
-                    // id = id.substr(0, id.length - 3);
-                    // return handleUnresolvedId(id, importer);
-                    let sourcePath = LocalPath.getCwd().traverseStr(source);
-                    id = sourcePath.path;
-                }
-            } else {
-                // return handleUnresolvedId(id, importer);
-                let sourcePath = LocalPath.getCwd().traverseStr(source);
-                id = sourcePath.path;
-            }
-            return id;
-        };
+    resolve(source: string, importer?: string): string {
+        let id;
+        if (this.options.staticFilesResolver === 'collect') {
+            let sourcePath = LocalPath.getCwd().traverseStr(source);
+            id = sourcePath.path;
+        } else if (this.options.staticFilesResolver === 'serve') {
+            id = this.importMapGenerator.resolve(
+                Deno.cwd(), source, importer, this.options.relativePaths
+            );
+        } else {
+            return handleUnresolvedId(id, importer);
+        }
+        return id;
     }
 
     getStaticFilesResolver() {
         let resolverOptions: DenoResolverOptions = {};
+        let self = this;
         return async (source: string, importer?: string) => {
             let id = resolveId(source, importer);
             let url = parse(id);
@@ -319,19 +307,14 @@ class InlineRollup {
                     // extensionless commonjs file is JavaScript and not TypeScript.
                     id += ".js";
                     url = new URL(`${url.href}.js`);
-                }
-                if (!(await exists(url, resolverOptions.fetchOpts))) {
                     // id = id.substr(0, id.length - 3);
                     // return handleUnresolvedId(id, importer);
-                    id = this.importMapGenerator.resolve(
-                        Deno.cwd(), source, importer, this.options.relativePaths
-                    );
+                }
+                if (!(await exists(url, resolverOptions.fetchOpts))) {
+                    return self.resolve(source, importer);
                 }
             } else {
-                // return handleUnresolvedId(id, importer);
-                id = this.importMapGenerator.resolve(
-                    Deno.cwd(), source, importer, this.options.relativePaths
-                );
+                return self.resolve(source, importer);
             }
             return id;
         };
@@ -373,8 +356,6 @@ class InlineRollup {
         let resolver = denoResolver();
         if (this.options.staticFilesResolver) {
             resolver.resolveId = this.getStaticFilesResolver();
-        } else {
-            resolver.resolveId = this.getCollectedFilesResolver();
         }
         rollupPlugins.push(resolver);
 
