@@ -1,6 +1,7 @@
 import signal
 import threading
 
+import psutil
 from django.conf import settings
 from django.contrib.staticfiles.management.commands import runserver
 
@@ -36,7 +37,10 @@ class Command(runserver.Command, DenoProcess):
         with lock:
             if deno_process is not None:
                 self.stdout.write(f"Terminating deno server pid={deno_process.pid}")
-                deno_process.terminate()
+                try:
+                    deno_process.terminate()
+                except psutil.NoSuchProcess:
+                    self.stdout.write(f"NoSuchProcess: process no longer exists (pid={deno_process.pid})")
                 deno_process = None
 
     def sigint_handler(self, signum, frame):

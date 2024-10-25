@@ -89,7 +89,7 @@ class PathMap {
     public resolveSource(source: LocalPath): string | null {
         source.cutAbsolutePath(this.baseVal.commonBaseStr);
         let sourceParts = source.split();
-        while (sourceParts.length > 0) {
+        while (sourceParts.length > 1) {
             sourceParts.shift();
             let sourceStr = LocalPath.join(sourceParts);
             let resolvedSource = this.findSource(sourceStr);

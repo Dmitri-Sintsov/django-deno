@@ -58,7 +58,7 @@ def serve_rollup(request, path, normalized_path, document_root=None, show_indexe
     else:
         # Respect the If-Modified-Since header.
         if not was_modified_since(request.META.get('HTTP_IF_MODIFIED_SINCE'),
-                                  statobj.st_mtime, statobj.st_size):
+                                  statobj.st_mtime):
             return HttpResponseNotModified()
         response = FileResponse(fullpath.open('rb'), content_type=source_file.content_type)
     response["Last-Modified"] = http_date(statobj.st_mtime)
