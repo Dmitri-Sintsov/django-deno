@@ -2,7 +2,7 @@
  * Derived from <https://github.com/rollup/rollup/blob/v2.42.3/cli/logging.ts>
  */
 
-import type { RollupError } from "https://unpkg.com/rollup@2.79.2/dist/rollup.d.ts";
+import type { RollupError } from "npm:rollup@2.79.2";
 import { bold, cyan, dim, red } from "jsr:@std/fmt/colors";
 import { relativeId } from "./relativeId.ts";
 
