@@ -8,7 +8,7 @@ DENO_DEBUG_EXTERNAL = getattr(settings, 'DENO_DEBUG_EXTERNAL', False)
 DENO_ENABLE = getattr(settings, 'DENO_ENABLE', True)
 DENO_RELOAD = getattr(settings, 'DENO_RELOAD', False)
 DENO_CHECK_LOCK_FILE = getattr(settings, 'DENO_CHECK_LOCK_FILE', False)
-DENO_USE_VENDOR = getattr(settings, 'DENO_USE_VENDOR', True)
+DENO_NO_REMOTE = getattr(settings, 'DENO_NO_REMOTE', True)
 
 DENO_INSTALL = getattr(settings, 'DENO_INSTALL', os.getenv('DENO_INSTALL'))
 if DENO_INSTALL is None:

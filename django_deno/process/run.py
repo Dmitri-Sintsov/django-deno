@@ -7,7 +7,7 @@ from .base import ExecDeno
 
 from ..regex import finditer_with_separators, MatchGroup
 
-from ..conf.settings import DENO_RELOAD, DENO_CHECK_LOCK_FILE, DENO_USE_VENDOR
+from ..conf.settings import DENO_RELOAD, DENO_CHECK_LOCK_FILE, DENO_NO_REMOTE
 
 
 class DenoRun(ExecDeno):
@@ -56,7 +56,7 @@ class DenoRun(ExecDeno):
         deno_flags.append(
             f"--config={self.deno_config_path}"
         )
-        if DENO_USE_VENDOR:
+        if DENO_NO_REMOTE:
             deno_flags.extend([
                 "--vendor",
                 "--no-remote",
