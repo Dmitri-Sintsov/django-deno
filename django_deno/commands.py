@@ -21,7 +21,10 @@ class DenoProcess:
     def terminate(self, error_message):
         self.stderr.write(error_message)
         # raising CommandError will not shut down test server as it's running in separate thread.
-        _thread.interrupt_main()
+        try:
+            _thread.interrupt_main()
+        except KeyboardInterrupt:
+            pass
         # Need to use an OS exit because sys.exit doesn't work in a thread
         os._exit(1)
 
@@ -37,8 +40,10 @@ class DenoProcess:
         serialized_map_generator = import_map_generator.serialize()
         deno_api_status = DenoMaps().set_timeout(0.1).post(serialized_map_generator)
         if deno_api_status is None:
-            if not DENO_DEBUG_EXTERNAL:
-                deno_server = DenoServer()
+            deno_server = DenoServer()
+            if DENO_DEBUG_EXTERNAL:
+                self.stdout.write(f"Expected external deno server command line: {deno_server}")
+            else:
                 deno_process = deno_server()
                 if deno_process.poll() is None:
                     self.stdout.write(f"Starting deno server {deno_server}\npid={deno_process.pid}")
