@@ -3,7 +3,7 @@
  */
 
 import { join, toFileUrl } from "jsr:@std/path";
-import { getSystemSeparator } from  "../localpath.ts";
+import { systemSeparator } from  "../localpath.ts";
 
 /**
  * getUrlBase
