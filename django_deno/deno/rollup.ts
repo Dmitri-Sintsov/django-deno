@@ -175,9 +175,9 @@ class RollupBundleSet {
     }
 
     public getWriteBundle(entryPointLocalPath: LocalPath): RollupBundleItem | false {
-        let bundleName: string;
+        let _bundleName: string;
         let bundle: RollupBundleItem;
-        for ([bundleName, bundle] of Object.entries(this.bundles)) {
+        for ([_bundleName, bundle] of Object.entries(this.bundles)) {
             if (bundle.isWriteEntryPoint(entryPointLocalPath)) {
                 return bundle;
             }
@@ -203,9 +203,9 @@ class RollupBundleSet {
     }
 
     public isSkipChunk(facadeModuleLocalPath: LocalPath): boolean {
-        let bundleName: string;
+        let _bundleName: string;
         let bundle: RollupBundleItem;
-        for ([bundleName, bundle] of Object.entries(this.bundles)) {
+        for ([_bundleName, bundle] of Object.entries(this.bundles)) {
             if (bundle.isSkipChunk(facadeModuleLocalPath)) {
                 return true;
             }
