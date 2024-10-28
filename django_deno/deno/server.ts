@@ -1,3 +1,4 @@
+// deno-lint-ignore-file prefer-const
 // import { serve } from 'jsr:@std/http/server.ts'
 
 import { parseArgs } from "jsr:@std/cli/parse-args";

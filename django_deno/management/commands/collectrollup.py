@@ -42,8 +42,9 @@ class Command(collectstatic.Command, DenoProcess):
                     f.write(obj['code'])
                     f.write(f"//# sourceMappingURL={obj['filename']}.map")
                 self.stdout.write(f"Writing '{dest_js_filename}'")
-                with open(dest_map_filename, "w", encoding='utf-8') as f:
-                    f.write(obj['map'])
+                if 'map' in obj:
+                    with open(dest_map_filename, "w", encoding='utf-8') as f:
+                        f.write(obj['map'])
                 self.stdout.write(f"Writing '{dest_map_filename}'")
 
     def cache_set(self, source_file, data):
