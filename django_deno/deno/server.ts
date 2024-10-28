@@ -5,7 +5,7 @@ import { Application, Router } from "jsr:@oak/oak";
 
 
 // @2.42.3%2B0.17.1
-import type { RollupCache } from "npm:rollup@2.79.2";
+import type { RollupCache } from "rollup";
 
 import { LocalPath } from './localpath.ts';
 import { ImportMapGenerator } from "./importmap.ts";

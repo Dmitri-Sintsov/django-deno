@@ -1,4 +1,8 @@
 {
   "nodeModulesDir": "auto",
-  "vendor": true
+  "vendor": true,
+  "imports": {
+    "rollup": "npm:rollup@2.79.2",
+    "plugin-terser": "npm:@wwa/rollup-plugin-terser"
+  }
 }
