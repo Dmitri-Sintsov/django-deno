@@ -1,7 +1,7 @@
 // deno-lint-ignore-file prefer-const
 // import { serve } from 'jsr:@std/http/server.ts'
 
-import { parseArgs } from "jsr:@std/cli/parse-args";
+import { parseArgs } from "jsr:@std/cli";
 import { Application, Router } from "jsr:@oak/oak";
 
 
@@ -13,7 +13,12 @@ import { ImportMapGenerator } from "./importmap.ts";
 import { RollupBundleSet, InlineRollupOptions, InlineRollup } from "./rollup.ts";
 
 let args = parseArgs(Deno.args);
-const httpHost = args['host'];
+
+const httpHost = args.hasOwnProperty('host') ? args['host'] : '127.0.0.1';
+if (!args.hasOwnProperty('port')) {
+    console.log("Missing 'port' arg");
+    Deno.exit(1);
+}
 const httpPort = args['port'];
 
 const apiStatus = {
