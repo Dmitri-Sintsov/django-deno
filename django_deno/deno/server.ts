@@ -1,11 +1,9 @@
 // deno-lint-ignore-file prefer-const
-// import { serve } from 'jsr:@std/http/server.ts'
+// import { serve } from 'jsr:@std/http'
 
 import { parseArgs } from "jsr:@std/cli";
 import { Application, Router } from "jsr:@oak/oak";
 
-
-// @2.42.3%2B0.17.1
 import type { RollupCache } from "rollup";
 
 import { LocalPath } from './localpath.ts';

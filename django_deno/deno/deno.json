@@ -3,6 +3,8 @@
   "vendor": true,
   "imports": {
     "rollup": "npm:rollup@2.79.2",
-    "plugin-terser": "npm:@wwa/rollup-plugin-terser"
+    "plugin-terser": "npm:@wwa/rollup-plugin-terser@1.1.2",
+    "plugin-babel": "npm:@rollup/plugin-babel@6.0.4",
+    "babel-preset-env": "npm:@babel/preset-env@7.26.0",
   }
 }

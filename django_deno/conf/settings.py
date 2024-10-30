@@ -48,6 +48,7 @@ DENO_ROLLUP_SERVE_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_SERVE_OPTIONS', 
 DENO_OUTPUT_MODULE_TYPE = getattr(settings, 'DENO_OUTPUT_MODULE_TYPE', 'module')
 
 DENO_ROLLUP_COLLECT_OPTIONS = {
+    'babel': False,
     # 'relativePaths': True,
     'staticFilesResolver': 'collect',
     'terser': True,

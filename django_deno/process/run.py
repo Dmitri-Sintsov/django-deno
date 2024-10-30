@@ -22,16 +22,17 @@ class DenoRun(ExecDeno):
         deno_import_map = {}
         with open(self.deno_lock_path, "r") as deno_lock_file:
             deno_lock = json.load(deno_lock_file)
-            for specific_url in deno_lock['remote'].keys():
-                url_parts = urlsplit(specific_url)._asdict()
-                version_parts = finditer_with_separators(self.module_version_split, url_parts['path'])
-                for i, version_part in enumerate(version_parts):
-                    if isinstance(version_part, MatchGroup):
-                        version_parts[i] = self.module_version_replace.sub('/', version_part)
-                        url_parts['path'] = ''.join(version_parts)
-                        unspecific_url = urlunsplit(url_parts.values())
-                        deno_import_map[unspecific_url] = specific_url
-                        break
+            if 'remote' in deno_lock:
+                for specific_url in deno_lock['remote'].keys():
+                    url_parts = urlsplit(specific_url)._asdict()
+                    version_parts = finditer_with_separators(self.module_version_split, url_parts['path'])
+                    for i, version_part in enumerate(version_parts):
+                        if isinstance(version_part, MatchGroup):
+                            version_parts[i] = self.module_version_replace.sub('/', version_part)
+                            url_parts['path'] = ''.join(version_parts)
+                            unspecific_url = urlunsplit(url_parts.values())
+                            deno_import_map[unspecific_url] = specific_url
+                            break
             if len(deno_import_map) > 0:
                 with open(self.run_importmap_path, "w+") as deno_import_map_file:
                     json.dump({'imports': deno_import_map}, deno_import_map_file, indent=2, ensure_ascii=False)

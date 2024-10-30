@@ -6,8 +6,8 @@
 // import {WINDOWS_SEPS} from "https://deno.land/x/path/mod.ts";
 
 import { isAbsolute } from "jsr:@std/path";
-import { existsSync } from "jsr:@std/fs/exists";
-import { GlobOptions, globToRegExp } from "jsr:@std/path/glob-to-regexp";
+import { existsSync } from "jsr:@std/fs";
+import { GlobOptions, globToRegExp } from "jsr:@std/path";
 
 
 let systemSeparator = (Deno.build.os === 'windows') ? '\\' : '/';
