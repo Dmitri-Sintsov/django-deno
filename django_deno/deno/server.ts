@@ -30,7 +30,7 @@ if (!args.port) {
     console.log("Missing 'port' arg");
     Deno.exit(1);
 }
-const httpPort = args.port;
+const httpPort = Number(args.port);
 
 const apiStatus = {
     "server": "Django deno server",
