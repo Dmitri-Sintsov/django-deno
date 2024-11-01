@@ -43,15 +43,21 @@ class ExecDeno:
     def get_script_args(self):
         return self.script_args
 
+    def get_binary_path(self):
+        return DENO_PATH
+
     def get_shell_args(self):
-        args = [
-            DENO_PATH, self.get_deno_command()
-        ] + self.get_deno_flags()
+        args = [self.get_binary_path()]
+        deno_command = self.get_deno_command()
+        if deno_command is not None:
+            args.append(deno_command)
+        args += self.get_deno_flags()
         script_name = self.get_script_name()
         if script_name != '':
             args += [
                 os.path.join(DENO_SCRIPT_PATH, self.get_script_name()),
-            ] + self.get_script_args()
+            ]
+        args += self.get_script_args()
         return args
 
     def get_popen_kwargs(self):

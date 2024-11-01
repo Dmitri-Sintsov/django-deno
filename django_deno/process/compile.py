@@ -20,5 +20,4 @@ class DenoCompile(ExecDeno):
             f"--lock={self.deno_lock_path}",
             # f"--import-map={self.run_importmap_path}",
         ])
-
         return deno_flags
