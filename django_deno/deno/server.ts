@@ -10,14 +10,27 @@ import { LocalPath } from './localpath.ts';
 import { ImportMapGenerator } from "./importmap.ts";
 import { RollupBundleSet, InlineRollupOptions, InlineRollup } from "./rollup.ts";
 
-let args = parseArgs(Deno.args);
+let args = parseArgs(Deno.args, {
+    boolean: ['help'],
+    string: ['host', 'port'],
+    default: {
+        'host': '127.0.0.1',
+        'port': false,
+    },
+});
 
-const httpHost = args.hasOwnProperty('host') ? args['host'] : '127.0.0.1';
-if (!args.hasOwnProperty('port')) {
+if (args.help) {
+    console.log(`django-deno rollup server. Usage: ${import.meta.filename} --host=hostname --port=port`)
+    Deno.exit(1);
+}
+
+const httpHost = args.host;
+
+if (!args.port) {
     console.log("Missing 'port' arg");
     Deno.exit(1);
 }
-const httpPort = args['port'];
+const httpPort = args.port;
 
 const apiStatus = {
     "server": "Django deno server",

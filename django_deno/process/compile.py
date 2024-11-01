@@ -1,6 +1,6 @@
 from .base import ExecDeno
 
-# deno compile --allow-env --allow-ffi --allow-import --allow-net --allow-read --allow-sys --cached-only --frozen=false --vendor --output=django_deno --lock=/home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/lock.json /home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/server.ts
+# deno compile --allow-env --allow-ffi --allow-import --allow-net --allow-read --allow-sys --frozen=false --vendor --output=django_deno --lock=/home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/lock.json /home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/server.ts
 
 class DenoCompile(ExecDeno):
 
@@ -11,7 +11,7 @@ class DenoCompile(ExecDeno):
     def get_deno_flags(self):
         deno_flags = super().get_deno_flags()
         deno_flags.extend([
-            "--cached-only",
+            # "--cached-only",
             "--frozen=false",
             # "--no-remote",
             # "--reload",
