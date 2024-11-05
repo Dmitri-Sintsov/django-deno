@@ -40,6 +40,7 @@ DENO_OUTPUT_MODULE_FORMATS.update(getattr(settings, 'DENO_OUTPUT_MODULE_FORMATS'
 DENO_ROLLUP_SERVE_OPTIONS = {
     'inlineFileMap': True,
     # 'relativePaths': True,
+    'sucrase': True,
     'preserveEntrySignatures': False,
     'staticFilesResolver': 'serve',
     'withCache': True,
@@ -49,9 +50,9 @@ DENO_ROLLUP_SERVE_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_SERVE_OPTIONS', 
 DENO_OUTPUT_MODULE_TYPE = getattr(settings, 'DENO_OUTPUT_MODULE_TYPE', 'module')
 
 DENO_ROLLUP_COLLECT_OPTIONS = {
-    'babel': False,
     # 'relativePaths': True,
     'staticFilesResolver': 'collect',
+    'sucrase': True,
     'terser': True,
     'bundles': getattr(settings, 'DENO_ROLLUP_BUNDLES', {}),
     'moduleFormat': DENO_OUTPUT_MODULE_FORMATS[DENO_OUTPUT_MODULE_TYPE],

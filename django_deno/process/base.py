@@ -29,9 +29,6 @@ class ExecDeno:
 
     def get_deno_flags(self):
         deno_flags = copy(self.deno_flags)
-        if DENO_DEBUG:
-            # chrome://inspect
-            deno_flags.append("--inspect-brk")
         return deno_flags
 
     def get_script_name(self):

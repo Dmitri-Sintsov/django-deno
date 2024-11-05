@@ -54,6 +54,9 @@ class DenoRun(ExecDeno):
 
     def get_deno_flags(self):
         deno_flags = super().get_deno_flags()
+        if DENO_DEBUG:
+            # chrome://inspect
+            deno_flags.append("--inspect-brk")
         deno_flags.append(
             f"--config={self.deno_config_path}"
         )
