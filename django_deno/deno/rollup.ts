@@ -170,7 +170,7 @@ class RollupBundleSet {
 
     /**
      * Do not override existing singleton with new instance created by InlineRollupOptions.getBundleChunk,
-     * otherwise RollupBUndleItem.skipChunks value will be reset.
+     * otherwise RollupBundleItem.skipChunks value will be reset.
      */
     public add(bundle: RollupBundleItem): RollupBundleItem {
         if (bundle.name) {
@@ -449,6 +449,7 @@ class InlineRollup {
                 this.options.cache = bundle.cache;
             }
             rollupOutput = await bundle.generate(options.output as OutputOptions);
+            bundle.close();
             return rollupOutput;
 
         } catch(e) {

@@ -7,7 +7,7 @@ from .base import ExecDeno
 
 from ..regex import finditer_with_separators, MatchGroup
 
-from ..conf.settings import DENO_RELOAD, DENO_CHECK_LOCK_FILE, DENO_NO_REMOTE
+from ..conf.settings import DENO_DEBUG, DENO_RELOAD, DENO_CHECK_LOCK_FILE, DENO_NO_REMOTE
 
 
 class DenoRun(ExecDeno):
