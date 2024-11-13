@@ -1,3 +1,5 @@
+import subprocess
+
 from .base import ExecDeno
 
 # deno compile --allow-env --allow-ffi --allow-import --allow-net --allow-read --allow-sys --frozen=false --vendor --output=django_deno --lock=/home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/lock.json /home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/server.ts
@@ -7,6 +9,14 @@ class DenoCompile(ExecDeno):
     deno_command = 'compile'
 
     script_name = 'server.ts'
+
+    def get_popen_kwargs(self):
+        popen_kwargs = super().get_popen_kwargs()
+        popen_kwargs.update({
+            'stdout': subprocess.PIPE,
+            'stderr': subprocess.STDOUT,
+        })
+        return popen_kwargs
 
     def get_deno_flags(self):
         deno_flags = super().get_deno_flags()

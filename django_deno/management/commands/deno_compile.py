@@ -1,4 +1,7 @@
+import codecs
 import os
+import sys
+import subprocess
 
 from django.core.management.base import BaseCommand
 
@@ -25,8 +28,26 @@ class Command(BaseCommand):
         os.chdir(DENO_SCRIPT_PATH)
         deno_process = deno_compile()
         self.stdout.write(f"Starting {deno_compile}\npid={deno_process.pid}")
+        output = []
+        while True:
+            while True:
+                line = deno_process.stdout.readline()
+                if line:
+                    sys.stdout.write(line.decode('utf-8'))
+                    output.append(line)
+                else:
+                    break
+            # returns None while subprocess is running
+            return_code = deno_process.poll()
+            if return_code is not None:
+                break
         return_code = deno_process.wait()
         self.stdout.write(f"Finished with return code = {return_code}")
+        if return_code == 0:
+            with open(os.path.join(DENO_SCRIPT_PATH, 'django_deno.log'), 'wb') as log_file:
+                log_file.write(codecs.BOM_UTF8)
+                for line in output:
+                    log_file.write(line)
         if not options['keep_vendor']:
             node_modules_dir = os.path.join(DENO_SCRIPT_PATH, 'node_modules')
             deno_vendor_dir = os.path.join(DENO_SCRIPT_PATH, 'vendor')
