@@ -1,4 +1,6 @@
-import os, shutil
+import os
+import shutil
+
 
 def del_dir(target_dir):
     with os.scandir(target_dir) as entries:

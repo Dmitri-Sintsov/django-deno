@@ -1,11 +1,11 @@
 import codecs
 import os
 import sys
-import subprocess
 
 from django.core.management.base import BaseCommand
 
 from ...dir import del_dir
+from ...utils import ansi_escape_8bit
 
 from ...process.base import DENO_SCRIPT_PATH
 from ...process.compile import DenoCompile
@@ -43,11 +43,11 @@ class Command(BaseCommand):
                 break
         return_code = deno_process.wait()
         self.stdout.write(f"Finished with return code = {return_code}")
-        if return_code == 0:
-            with open(os.path.join(DENO_SCRIPT_PATH, 'django_deno.log'), 'wb') as log_file:
-                log_file.write(codecs.BOM_UTF8)
-                for line in output:
-                    log_file.write(line)
+        log_file_name = 'django_deno.log' if return_code == 0 else 'django_deno.err'
+        with open(os.path.join(DENO_SCRIPT_PATH, log_file_name), 'wb') as log_file:
+            log_file.write(codecs.BOM_UTF8)
+            for line in output:
+                log_file.write(ansi_escape_8bit.sub(b'', line))
         if not options['keep_vendor']:
             node_modules_dir = os.path.join(DENO_SCRIPT_PATH, 'node_modules')
             deno_vendor_dir = os.path.join(DENO_SCRIPT_PATH, 'vendor')

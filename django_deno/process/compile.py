@@ -2,8 +2,8 @@ import subprocess
 
 from .base import ExecDeno
 
-# deno compile --allow-env --allow-ffi --allow-import --allow-net --allow-read --allow-sys --frozen=false --vendor --output=django_deno --lock=/home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/lock.json /home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/server.ts
 
+# deno compile --allow-env --allow-ffi --allow-import --allow-net --allow-read --allow-sys --frozen=false --vendor --output=django_deno --lock=/home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/lock.json /home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/server.ts
 class DenoCompile(ExecDeno):
 
     deno_command = 'compile'

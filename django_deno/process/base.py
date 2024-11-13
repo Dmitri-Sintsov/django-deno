@@ -3,7 +3,7 @@ import os
 import subprocess
 from copy import copy
 
-from ..conf.settings import DENO_PATH, DENO_DEBUG
+from ..conf.settings import DENO_PATH
 
 
 class ExecDeno:
