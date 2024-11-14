@@ -3,7 +3,7 @@ import subprocess
 from .base import ExecDeno
 
 
-# deno compile --allow-env --allow-ffi --allow-import --allow-net --allow-read --allow-sys --frozen=false --vendor --output=django_deno --lock=/home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/lock.json /home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/server.ts
+# deno compile --allow-env --allow-ffi --allow-import --allow-net --allow-read --allow-sys --frozen=false --vendor --output=django_deno --lock=deno.lock server.ts
 class DenoCompile(ExecDeno):
 
     deno_command = 'compile'
@@ -28,6 +28,5 @@ class DenoCompile(ExecDeno):
             "--vendor",
             "--output=django_deno",
             f"--lock={self.deno_lock_path}",
-            # f"--import-map={self.run_importmap_path}",
         ])
         return deno_flags

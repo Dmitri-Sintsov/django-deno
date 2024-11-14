@@ -24,8 +24,7 @@ class ExecDeno:
     # https://deno.land/manual/linking_to_external_code
     # https://deno.land/manual/tools/vendor
     deno_config_filename = 'deno.json'
-    deno_lock_filename = 'lock.json'
-    run_importmap_filename = 'import_map.json'
+    deno_lock_filename = 'deno.lock'
 
     def get_deno_flags(self):
         deno_flags = copy(self.deno_flags)
@@ -62,7 +61,7 @@ class ExecDeno:
             'shell': False,
         }
 
-    def __init__(self, deno_config_filename=None, deno_lock_filename=None, run_importmap_filename=None, **kwargs):
+    def __init__(self, deno_config_filename=None, deno_lock_filename=None, **kwargs):
         module_dir = os.path.dirname(
             os.path.dirname(
                 os.path.abspath(__file__)
@@ -75,12 +74,6 @@ class ExecDeno:
         if deno_lock_filename is None:
             deno_lock_filename = self.deno_lock_filename
         self.deno_lock_path = os.path.join(DENO_SCRIPT_PATH, deno_lock_filename)
-
-        if run_importmap_filename is None:
-            run_importmap_filename = self.run_importmap_filename
-        self.run_importmap_path = os.path.join(DENO_SCRIPT_PATH, run_importmap_filename)
-
-        self.vendor_importmap_path = os.path.join(DENO_SCRIPT_PATH, 'vendor', 'import_map.json')
 
         self.shell_args = self.get_shell_args()
 

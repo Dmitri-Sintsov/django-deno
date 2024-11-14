@@ -408,6 +408,11 @@ class InlineRollup {
 
         let inputOptions = filename;
 
+        if (this.options.inlineFileMap) {
+            // Do not create separate bundles for dynamic imports for the solid bundle serve.
+            outputOptions.inlineDynamicImports = true;
+        }
+
         outputOptions.plugins = outputPlugins;
 
         const options: RollupOptions = {

@@ -46,6 +46,7 @@ class Command(BaseCommand):
         log_file_name = 'django_deno.log' if return_code == 0 else 'django_deno.err'
         with open(os.path.join(DENO_SCRIPT_PATH, log_file_name), 'wb') as log_file:
             log_file.write(codecs.BOM_UTF8)
+            log_file.write(f"{deno_compile}{os.linesep}".encode('utf-8'))
             for line in output:
                 log_file.write(ansi_escape_8bit.sub(b'', line))
         if not options['keep_vendor']:
