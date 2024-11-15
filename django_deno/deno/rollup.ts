@@ -251,6 +251,7 @@ class InlineRollupOptions {
     manualChunks?: ManualChunksOption;
     preserveEntrySignatures?: PreserveEntrySignaturesOption;
     relativePaths?: boolean;
+    syntheticNamedExports?: string[];
     staticFilesResolver?: string;
     sucrase?: boolean;
     terser?: boolean;
@@ -441,11 +442,14 @@ class InlineRollup {
 
         try {
             const bundle = await rollup(options);
-            if (!this.options.inlineFileMap && bundle.cache) {
+            if (!this.options.inlineFileMap && bundle.cache && this.options.syntheticNamedExports) {
                 // Add synthetic exports, when needed
                 for (let mdl of bundle.cache.modules) {
-                    if (mdl.id.endsWith('document.js')) {
-                        // mdl.syntheticNamedExports = 'ActionTemplateDialog, Actions, Dialog, Grid, GridActions, GridRow, globalIoc, inherit, ui, TabPane';
+                    let mdlPath = new LocalPath(mdl.id);
+                    for (let [matchStr, namedExportsStr] of Object.entries(this.options.syntheticNamedExports)) {
+                        if (mdlPath.matchesStr(matchStr)) {
+                            mdl.syntheticNamedExports = namedExportsStr;
+                        }
                     }
                 }
             }

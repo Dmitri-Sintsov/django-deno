@@ -9,7 +9,7 @@ DENO_ENABLE = getattr(settings, 'DENO_ENABLE', True)
 DENO_RELOAD = getattr(settings, 'DENO_RELOAD', False)
 DENO_CHECK_LOCK_FILE = getattr(settings, 'DENO_CHECK_LOCK_FILE', False)
 DENO_NO_REMOTE = getattr(settings, 'DENO_NO_REMOTE', True)
-DENO_USE_COMPILED_BINARY = getattr(settings, 'DENO_USE_COMPILED_BINARY', False)
+DENO_USE_COMPILED_BINARY = getattr(settings, 'DENO_USE_COMPILED_BINARY', True)
 
 DENO_INSTALL = getattr(settings, 'DENO_INSTALL', os.getenv('DENO_INSTALL'))
 if DENO_INSTALL is None:
@@ -56,6 +56,7 @@ DENO_ROLLUP_COLLECT_OPTIONS = {
     'terser': True,
     'bundles': getattr(settings, 'DENO_ROLLUP_BUNDLES', {}),
     'moduleFormat': DENO_OUTPUT_MODULE_FORMATS[DENO_OUTPUT_MODULE_TYPE],
+    'syntheticNamedExports': getattr(settings, 'DENO_SYNTHETIC_NAMED_EXPORTS', {}),
 }
 DENO_ROLLUP_COLLECT_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_COLLECT_OPTIONS', {}))
 
