@@ -22,6 +22,13 @@ class Command(BaseCommand):
             default=False,
             help='Do not remove node_modules / vendor dirs (deletes them by default).'
         )
+        parser.add_argument(
+            '--compress',
+            action='store_true',
+            dest='compress',
+            default=False,
+            help='Compress compiled binary (do not compress by default).'
+        )
 
     def handle(self, *args, **options):
         deno_compile = DenoCompile()
@@ -56,3 +63,7 @@ class Command(BaseCommand):
             del_dir(node_modules_dir)
             print(f'Deleting deno_vendor_dir: {deno_vendor_dir}')
             del_dir(deno_vendor_dir)
+        if options['compress']:
+            self.stdout.write(f'Compressing {deno_compile.django_deno_binary_path}')
+            deno_compile.compress()
+            self.stdout.write(f'Written compressed {deno_compile.django_deno_lzma_path}')

@@ -40,7 +40,7 @@ class DenoProcess:
         serialized_map_generator = import_map_generator.serialize()
         deno_api_status = DenoMaps().set_timeout(0.1).post(serialized_map_generator)
         if deno_api_status is None:
-            deno_server = DenoServer()
+            deno_server = DenoServer(logger=self.stdout)
             if DENO_DEBUG_EXTERNAL:
                 self.stdout.write(f"Expected external deno server command line: {deno_server}")
             else:

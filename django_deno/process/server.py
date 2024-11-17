@@ -1,20 +1,28 @@
 import os
 
-from .base import DENO_SCRIPT_PATH
+from .compressor import DenoCompressor
 from .run import DenoRun
 
 from ..conf.settings import DENO_SERVER, DENO_USE_COMPILED_BINARY
 
 
-class DenoServer(DenoRun):
+class DenoServer(DenoCompressor, DenoRun):
 
     script_args = [
         f"--host={DENO_SERVER['hostname']}",
         f"--port={DENO_SERVER['port']}"
     ]
 
+    def __init__(self, logger=None, **kwargs):
+        self.logger = logger
+        super().__init__(**kwargs)
+
+    def log(self, s):
+        if self.logger:
+            self.logger.write(s)
+
     def get_binary_path(self):
-        return os.path.join(DENO_SCRIPT_PATH, 'django_deno') if DENO_USE_COMPILED_BINARY else super().get_binary_path()
+        return self.django_deno_binary_path if DENO_USE_COMPILED_BINARY else super().get_binary_path()
 
     def get_deno_command(self):
         return None if DENO_USE_COMPILED_BINARY else super().get_deno_command()
@@ -27,3 +35,9 @@ class DenoServer(DenoRun):
 
     def get_script_name(self):
         return '' if DENO_USE_COMPILED_BINARY else 'server.ts'
+
+    def __call__(self, *args, **kwargs):
+        if not os.path.isfile(self.django_deno_binary_path):
+            self.log(f'Decompressing {self.django_deno_binary_path}')
+            self.decompress()
+        return super().__call__(*args, **kwargs)

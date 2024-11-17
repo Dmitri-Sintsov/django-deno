@@ -1,10 +1,11 @@
 import subprocess
 
 from .base import ExecDeno
+from .compressor import DenoCompressor
 
 
 # deno compile --allow-env --allow-ffi --allow-import --allow-net --allow-read --allow-sys --frozen=false --vendor --output=django_deno --lock=deno.lock server.ts
-class DenoCompile(ExecDeno):
+class DenoCompile(DenoCompressor, ExecDeno):
 
     deno_command = 'compile'
 
@@ -26,7 +27,7 @@ class DenoCompile(ExecDeno):
             # "--no-remote",
             # "--reload",
             "--vendor",
-            "--output=django_deno",
+            f"--output={self.django_deno_binary_path}",
             f"--lock={self.deno_lock_path}",
         ])
         return deno_flags
