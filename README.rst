@@ -30,6 +30,7 @@ django-deno
 .. _rollup.js: https://rollupjs.org/
 .. _runserver: https://docs.djangoproject.com/en/dev/ref/django-admin/#runserver
 .. _server.ts: https://github.com/Dmitri-Sintsov/django-deno/blob/main/django_deno/deno/server.ts
+.. _synthetic named exports: https://rollupjs.org/plugin-development/#synthetic-named-exports
 .. _SystemJS: https://github.com/systemjs/systemjs
 .. _sucrase: https://github.com/alangpierce/sucrase
 .. _terser: https://terser.org
@@ -73,8 +74,8 @@ In Windows run PowerShell then invoke::
 
 The package may work with newer versions of Deno, however it was not tested, thus may fail.
 
-However, since v0.2.0 there is precompiled binary for Linux may be downloaded, which allows to have stable running
-enviromnent, see `deno_compile`_ management command.
+However, since v0.2.0 there is precompiled binary for Linux available, which allows to have stable running
+environment, see `deno_compile`_ management command.
 
 To install the development version of ``django_deno`` in python3 ``virtualenv``::
 
@@ -89,7 +90,7 @@ Description
 
 ``django_deno`` installs Deno web service which is used to communicate with `Django`_ projects.
 
-Currently the web service `server.ts`_ supports Deno version of `rollup.js`_ bundle generation to automatically provide
+Currently the web service `server.ts`_ supports Deno version of `rollup.js`_ bundler to automatically generate
 `es6 modules`_ bundles for `Django`_ projects, including scripts from `Django packages static files`_.
 
 It's possible to generate `es6 modules`_ bundles and / or `systemjs`_ bundles with optional minification with
@@ -159,16 +160,22 @@ while the default is::
         'syntheticNamedExports': getattr(settings, 'DENO_SYNTHETIC_NAMED_EXPORTS', {}),
     }
 
+* ``syntheticNamedExports`` allows to specify the list of `synthetic named exports`_ for `es6 modules`_ manually, e,g::
+
+    DENO_SYNTHETIC_NAMED_EXPORTS = {
+        'document.js': 'ActionTemplateDialog, Actions, Dialog, Grid, GridActions, GridRow, globalIoc, inherit, ui, TabPane',
+    }
+
 * See the complete default settings: `django_deno settings`_
 
 runrollup
 ~~~~~~~~~
 
 * ``runrollup`` - starts the built-in http development server, similar to Django `runserver`_ command, using `rollup.js`_
-  to dynamically generate Javascript bundle in RAM, providing real-time `es6 modules`_ / `TypeScript`_ compatibility for
-  older browsers (e.g. IE11).
+  to dynamically generate Javascript bundle in RAM, providing real-time `es6 modules`_ compatibility for older browsers
+  and `TypeScript`_ compatibility for newer browsers.
 
-`DENO_ROLLUP_SERVE_OPTIONS`_ set the `rollup.js`_ options for `runrollup`_ command. The default is::
+Set `DENO_ROLLUP_SERVE_OPTIONS`_ for the `rollup.js`_ options of the `runrollup`_ command. The default is::
 
     DENO_ROLLUP_SERVE_OPTIONS = {
         'inlineFileMap': True,
