@@ -25,7 +25,10 @@ class DenoCompressor:
         return os.path.join(DENO_SCRIPT_PATH, self.lzma_base_file_name)
 
     def get_django_deno_lzma_url(self):
-        return f'https://github.com/Dmitri-Sintsov/django-deno/raw/refs/tags/v{__version__}/django_deno/deno/{self.lzma_base_file_name}'
+        # https://stackoverflow.com/questions/8779197/how-to-link-files-directly-from-github-raw-github-com
+        # to see the actual location:
+        # curl -v https://github.com/Dmitri-Sintsov/django-deno/raw/refs/tags/v0.2.0/django_deno/deno/django_deno.lzma
+        return f'https://raw.githubusercontent.com/Dmitri-Sintsov/django-deno/refs/tags/v{__version__}/django_deno/deno/{self.lzma_base_file_name}'
 
     def download_compressed(self):
         response = requests.get(self.django_deno_lzma_url, stream=True)
