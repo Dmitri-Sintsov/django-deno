@@ -3,7 +3,7 @@ import psutil
 import subprocess
 import _thread
 
-from django_deno import __version__
+from . import __version__
 
 from .conf.settings import DENO_DEBUG_EXTERNAL
 from .utils import ex_to_str

@@ -38,6 +38,9 @@ class DenoServer(DenoCompressor, DenoRun):
 
     def __call__(self, *args, **kwargs):
         if not os.path.isfile(self.django_deno_binary_path):
-            self.log(f'Decompressing {self.django_deno_binary_path}')
+            if not os.path.isfile(self.django_deno_lzma_path):
+                self.log(f'Downloading {self.django_deno_lzma_url}')
+                self.download_compressed()
+            self.log(f'Decompressing {self.django_deno_lzma_path}')
             self.decompress()
         return super().__call__(*args, **kwargs)
