@@ -322,14 +322,16 @@ class InlineRollup {
             let id = resolveId(source, importer);
             let url = parse(id);
             if (url) {
-                if (!(await exists(url, fetchOpts))) {
-                    // We assume extensionless imports are from bundling commonjs
-                    // as in Deno extensions are compulsory. We assume that the
-                    // extensionless commonjs file is JavaScript and not TypeScript.
-                    id += ".js";
-                    url = new URL(`${url.href}.js`);
-                    // id = id.substr(0, id.length - 3);
-                    // return handleUnresolvedId(id, importer);
+                if (!id.endsWith('.js')) {
+                    if (!(await exists(url, fetchOpts))) {
+                        // We assume extensionless imports are from bundling commonjs
+                        // as in Deno extensions are compulsory. We assume that the
+                        // extensionless commonjs file is JavaScript and not TypeScript.
+                        id += ".js";
+                        url = new URL(`${url.href}.js`);
+                        // id = id.substr(0, id.length - 3);
+                        // return handleUnresolvedId(id, importer);
+                    }
                 }
                 if (!(await exists(url, fetchOpts))) {
                     return await self.resolve(source, importer);
