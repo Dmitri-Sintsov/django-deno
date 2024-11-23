@@ -36,6 +36,7 @@ dc.compress()
 dc.decompress()
 """
 
+
 class DenoCompressor:
 
     lzma_base_file_name = 'django_deno.lzma'
@@ -69,7 +70,6 @@ class DenoCompressor:
         with open(self.django_deno_lzma_path, 'wb') as dest_file:
             for chunk in response.iter_content(65536):
                 dest_file.write(chunk)
-
 
     def compress(self):
         with lzma.open(self.django_deno_lzma_path, mode="wb", format=lzma.FORMAT_ALONE, preset=9) as dest_file:
