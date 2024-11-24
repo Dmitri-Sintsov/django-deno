@@ -26,6 +26,8 @@ class MMapContextManager:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.mmap.close()
         self.file.close()
+        if exc_type:
+            return False
 
 
 """
@@ -86,7 +88,8 @@ class DenoCompressor:
                     dest_file.write(source_file.read())
                 with MMapContextManager(self.django_deno_binary_path) as (dest_mmap, sha256):
                     if sha256.hexdigest() != hash_file_hexdigest:
-                        raise Exception(f'sha256 hexdigest for {self.django_deno_binary_path} does not match, {sha256.hexdigest()} / {hash_file_hexdigest}')
+                        os.unlink(self.django_deno_binary_path)
+                        raise Exception(f'sha256 hexdigest for {self.django_deno_binary_path} does not match, found: \n{sha256.hexdigest()} \nneed: \n{hash_file_hexdigest}')
 
         st_mode = os.stat(self.django_deno_binary_path).st_mode
         os.chmod(self.django_deno_binary_path, st_mode | stat.S_IEXEC)
