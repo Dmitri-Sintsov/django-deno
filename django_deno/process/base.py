@@ -15,6 +15,8 @@ class ExecDeno:
         "--allow-import",
         "--allow-net",
         "--allow-read",
+        # required by swc/core
+        "--allow-scripts",
         "--allow-sys",
         # "--unstable",
     ]
