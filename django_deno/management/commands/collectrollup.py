@@ -25,7 +25,12 @@ class Command(collectstatic.Command, DenoProcess):
         super().__init__(*args, **kwargs)
         import_map_generator = ImportMapGenerator(logger=self.stderr)
         self.serialized_map_generator = json.dumps(import_map_generator.serialize(), separators=(',', ':')).encode('utf-8')
-        self.deno_process = self.run_deno_process()
+        deno_flags = []
+        if deno_settings.DENO_ROLLUP_COLLECT_OPTIONS['swc']:
+            if deno_settings.DENO_ROLLUP_COLLECT_OPTIONS['sucrase']:
+                self.terminate('swc and sucrase are mutually exclusive options')
+            deno_flags.append("--allow-scripts")
+        self.deno_process = self.run_deno_process(deno_flags=deno_flags)
         self.rollup_files = []
 
     def write_rollup_response(self, objects, prefixed_path):

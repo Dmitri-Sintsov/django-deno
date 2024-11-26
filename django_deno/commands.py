@@ -25,7 +25,7 @@ class DenoProcess:
             _thread.interrupt_main()
         except KeyboardInterrupt:
             pass
-        # Need to use an OS exit because sys.exit doesn't work in a thread
+        # Need to use an OS exit because sys.exit doesn't work in a thread.
         os._exit(1)
 
     def is_spawned_deno(self, deno_process):
@@ -34,13 +34,13 @@ class DenoProcess:
     def is_separate_deno(self, deno_process):
         return isinstance(deno_process, psutil.Process)
 
-    def run_deno_process(self):
+    def run_deno_process(self, deno_flags=None):
         deno_process = None
         import_map_generator = ImportMapGenerator(logger=self.stderr)
         serialized_map_generator = import_map_generator.serialize()
         deno_api_status = DenoMaps().set_timeout(0.1).post(serialized_map_generator)
         if deno_api_status is None:
-            deno_server = DenoServer(logger=self.stdout)
+            deno_server = DenoServer(logger=self.stdout, deno_flags=deno_flags)
             if DENO_DEBUG_EXTERNAL:
                 self.stdout.write(f"Expected external deno server command line: {deno_server}")
             else:

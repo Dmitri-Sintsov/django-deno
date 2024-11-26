@@ -15,8 +15,6 @@ class ExecDeno:
         "--allow-import",
         "--allow-net",
         "--allow-read",
-        # required by swc/core
-        "--allow-scripts",
         "--allow-sys",
         # "--unstable",
     ]
@@ -63,7 +61,9 @@ class ExecDeno:
             'shell': False,
         }
 
-    def __init__(self, deno_config_filename=None, deno_lock_filename=None, **kwargs):
+    def __init__(self, deno_flags=None, deno_config_filename=None, deno_lock_filename=None, **kwargs):
+        if deno_flags is not None:
+            self.deno_flags += deno_flags
         module_dir = os.path.dirname(
             os.path.dirname(
                 os.path.abspath(__file__)
