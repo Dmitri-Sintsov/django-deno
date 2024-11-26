@@ -10,6 +10,9 @@ class DenoCompile(DenoCompressor, ExecDeno):
     deno_command = 'compile'
 
     script_name = 'server.ts'
+    # swc native modules are not supported by deno yet
+    # https://github.com/denoland/deno/issues/27082
+    deno_config_filename = 'deno_sucrase.json'
 
     def get_popen_kwargs(self):
         popen_kwargs = super().get_popen_kwargs()

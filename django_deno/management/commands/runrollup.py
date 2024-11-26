@@ -5,6 +5,7 @@ import psutil
 from django.conf import settings
 from django.contrib.staticfiles.management.commands import runserver
 
+from ...conf import settings as deno_settings
 from ...commands import DenoProcess
 from ...handlers import RollupFilesHandler
 
@@ -20,7 +21,7 @@ class Command(runserver.Command, DenoProcess):
     def get_handler(self, *args, **options):
         global deno_process
         self.orig_sigint = None
-        deno_process = self.run_deno_process()
+        deno_process = self.run_deno_process(rollup_options=deno_settings.DENO_ROLLUP_SERVE_OPTIONS)
         """
         Return the static files serving handler wrapping the default handler,
         if static files should be served. Otherwise return the default handler.

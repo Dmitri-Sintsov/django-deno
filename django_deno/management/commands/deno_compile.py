@@ -49,13 +49,13 @@ class Command(BaseCommand):
             if return_code is not None:
                 break
         return_code = deno_process.wait()
-        self.stdout.write(f"Finished with return code = {return_code}")
         log_file_name = 'django_deno.log' if return_code == 0 else 'django_deno.err'
         with open(os.path.join(DENO_SCRIPT_PATH, log_file_name), 'wb') as log_file:
             log_file.write(codecs.BOM_UTF8)
             log_file.write(f"{deno_compile}{os.linesep}".encode('utf-8'))
             for line in output:
                 log_file.write(ansi_escape_8bit.sub(b'', line))
+        self.stdout.write(f"Finished with return code = {return_code}")
         if not options['keep_vendor']:
             node_modules_dir = os.path.join(DENO_SCRIPT_PATH, 'node_modules')
             deno_vendor_dir = os.path.join(DENO_SCRIPT_PATH, 'vendor')
@@ -63,7 +63,7 @@ class Command(BaseCommand):
             del_dir(node_modules_dir)
             print(f'Deleting deno_vendor_dir: {deno_vendor_dir}')
             del_dir(deno_vendor_dir)
-        if options['compress']:
+        if return_code == 0 and options['compress']:
             self.stdout.write(f'Compressing {deno_compile.django_deno_binary_path}')
             deno_compile.compress()
             self.stdout.write(f'Written compressed {deno_compile.django_deno_lzma_path}')

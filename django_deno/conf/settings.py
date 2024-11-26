@@ -17,7 +17,7 @@ if DENO_INSTALL is None:
 
 DENO_PATH = os.path.join(DENO_INSTALL, 'bin', 'deno')
 
-DENO_TIMEOUT = 120 if DENO_DEBUG else 20
+DENO_TIMEOUT = 120 if DENO_DEBUG else 60
 
 DENO_SERVER = {
     'scheme': 'http',
@@ -37,11 +37,15 @@ DENO_OUTPUT_MODULE_FORMATS = {
 }
 DENO_OUTPUT_MODULE_FORMATS.update(getattr(settings, 'DENO_OUTPUT_MODULE_FORMATS', {}))
 
+# Set both 'swc' and 'sucrase' to False to enable both (not recommended).
 DENO_ROLLUP_SERVE_OPTIONS = {
     'inlineFileMap': True,
     'relativePaths': True,
-    'swc': True,
+    'swc': {
+        'minify': True,
+    },
     'sucrase': False,
+    'terser': False,
     'preserveEntrySignatures': False,
     'staticFilesResolver': 'serve',
     'withCache': True,
@@ -50,6 +54,7 @@ DENO_ROLLUP_SERVE_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_SERVE_OPTIONS', 
 
 DENO_OUTPUT_MODULE_TYPE = getattr(settings, 'DENO_OUTPUT_MODULE_TYPE', 'module')
 
+# Set both 'swc' and 'sucrase' to False to enable both (not recommended).
 DENO_ROLLUP_COLLECT_OPTIONS = {
     # 'relativePaths': True,
     'staticFilesResolver': 'collect',

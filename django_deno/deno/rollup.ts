@@ -13,6 +13,7 @@ import { RollupOutput } from "rollup";
 import { terser } from "plugin-terser";
 
 import swcImport from "plugin-swc";
+import type { Options as SWCOptions } from "plugin-swc-options";
 import sucraseImport from 'plugin-sucrase';
 import resolveImport from 'plugin-node-resolve';
 
@@ -257,7 +258,7 @@ class InlineRollupOptions {
     syntheticNamedExports?: string[];
     staticFilesResolver?: string;
     sucrase?: boolean;
-    swc?: boolean;
+    swc?: boolean | SWCOptions;
     terser?: boolean;
     withCache?: boolean;
     writeAssets?: boolean;
@@ -386,13 +387,21 @@ class InlineRollup {
             resolveId: this.getStaticFilesResolver(),
         });
 
-        if (this.options.swc) {
+        if (swcImport && this.options.swc) {
             // https://docs.deno.com/runtime/reference/ts_config_migration/
             // make sure swc is supported for specified module format
-            inputPlugins.push(swc());
+            if (typeof this.options.swc === 'boolean') {
+                this.options.swc = {} as SWCOptions;
+                if (!this.options.terser) {
+                    // https://github.com/swc-project/swc/issues/8288
+                    this.options.swc.minify = true;
+                }
+            }
+            let swcInstance = swc({'swc': this.options.swc});
+            inputPlugins.push(swcInstance);
         }
 
-        if (this.options.sucrase) {
+        if (resolveImport) {
             inputPlugins.push(
                 resolve({
                     extensions: ['.js', '.ts']
@@ -400,7 +409,7 @@ class InlineRollup {
             );
         }
 
-        if (this.options.sucrase) {
+        if (sucraseImport && this.options.sucrase) {
             // https://docs.deno.com/runtime/reference/ts_config_migration/
             // make sure sucrase is supported for specified module format
             inputPlugins.push(
@@ -411,7 +420,7 @@ class InlineRollup {
             );
         }
 
-        if (this.options.terser) {
+        if (terser && this.options.terser) {
             inputPlugins.push(terser({
                 mangle: true,
                 toplevel: false,

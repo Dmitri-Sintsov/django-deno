@@ -5,7 +5,7 @@ import _thread
 
 from . import __version__
 
-from .conf.settings import DENO_DEBUG_EXTERNAL
+from .conf import settings as deno_settings
 from .utils import ex_to_str
 from .api.maps import DenoMaps
 from .process.server import DenoServer
@@ -34,14 +34,37 @@ class DenoProcess:
     def is_separate_deno(self, deno_process):
         return isinstance(deno_process, psutil.Process)
 
-    def run_deno_process(self, deno_flags=None):
+    def get_deno_server_kwargs(self, rollup_options):
+        deno_server_kwargs = {
+            'logger': self.stdout,
+        }
+        # Set both 'swc' and 'sucrase' to False to enable both (not recommended).
+        if rollup_options['swc']:
+            if deno_settings.DENO_USE_COMPILED_BINARY:
+                self.terminate('Compiled binary does not support swc native module (DENO_USE_COMPILED_BINARY)')
+            if rollup_options['sucrase']:
+                self.terminate('swc and sucrase are mutually exclusive options')
+            deno_server_kwargs.update({
+                'deno_config_filename': 'deno_swc.json',
+                'deno_lock_filename': 'deno_swc.lock',
+                'deno_flags': ["--allow-scripts"],
+            })
+        elif rollup_options['sucrase']:
+            deno_server_kwargs.update({
+                'deno_config_filename': 'deno_sucrase.json',
+                'deno_lock_filename': 'deno_sucrase.lock',
+            })
+        return deno_server_kwargs
+
+    def run_deno_process(self, rollup_options):
         deno_process = None
         import_map_generator = ImportMapGenerator(logger=self.stderr)
         serialized_map_generator = import_map_generator.serialize()
         deno_api_status = DenoMaps().set_timeout(0.1).post(serialized_map_generator)
         if deno_api_status is None:
-            deno_server = DenoServer(logger=self.stdout, deno_flags=deno_flags)
-            if DENO_DEBUG_EXTERNAL:
+            deno_server_kwargs = self.get_deno_server_kwargs(rollup_options)
+            deno_server = DenoServer(**deno_server_kwargs)
+            if deno_settings.DENO_DEBUG_EXTERNAL:
                 self.stdout.write(f"Expected external deno server command line: {deno_server}")
             else:
                 deno_process = deno_server()
