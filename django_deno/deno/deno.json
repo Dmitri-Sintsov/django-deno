@@ -4,7 +4,6 @@
   "imports": {
     "rollup": "npm:rollup@2.79.2",
     "plugin-terser": "npm:@wwa/rollup-plugin-terser@1.1.2",
-    "plugin-sucrase": "npm:@rollup/plugin-sucrase@5.0.2",
-    "plugin-node-resolve": "npm:@rollup/plugin-node-resolve@15.3.0"
+    "plugin-swc": "npm:@rollup/plugin-swc@0.4.0"
   }
 }

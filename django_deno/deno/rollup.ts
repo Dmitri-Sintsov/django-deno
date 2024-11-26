@@ -11,12 +11,10 @@ import { rollup } from "rollup";
 // import { SOURCEMAPPING_URL } from "rollup/sourceMappingURL.ts";
 import { RollupOutput } from "rollup";
 import { terser } from "plugin-terser";
-import sucraseImport from 'plugin-sucrase';
-import resolveImport from 'plugin-node-resolve';
+import swcImport from "plugin-swc";
 
 // https://github.com/denoland/deno/issues/17058#issuecomment-1353585286
-const sucrase = (sucraseImport as any as typeof sucraseImport.default);
-const resolve = (resolveImport as any as typeof resolveImport.default);
+const swc = (swcImport as any as typeof swcImport.default);
 
 import { isTypescript } from "./resolver/isTypescript.ts";
 import { parse } from "./resolver/parse.ts";
@@ -253,7 +251,7 @@ class InlineRollupOptions {
     relativePaths?: boolean;
     syntheticNamedExports?: string[];
     staticFilesResolver?: string;
-    sucrase?: boolean;
+    swc?: boolean;
     terser?: boolean;
     withCache?: boolean;
     writeAssets?: boolean;
@@ -382,21 +380,10 @@ class InlineRollup {
             resolveId: this.getStaticFilesResolver(),
         });
 
-        inputPlugins.push(
-            resolve({
-                extensions: ['.js', '.ts']
-            })
-        );
-
-        if (this.options.sucrase) {
+        if (this.options.swc) {
             // https://docs.deno.com/runtime/reference/ts_config_migration/
-            // make sure sucrase is supported for specified module format
-            inputPlugins.push(
-                sucrase({
-                    exclude: ['node_modules/**'],
-                    transforms: ['typescript']
-                })
-            );
+            // make sure swc is supported for specified module format
+            inputPlugins.push(swc());
         }
 
         if (this.options.terser) {
