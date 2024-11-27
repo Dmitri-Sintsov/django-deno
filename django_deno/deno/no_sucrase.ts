@@ -1,3 +1,3 @@
-const sucraseImport = false;
+const sucraseImport = {default: false};
 
 export default sucraseImport;

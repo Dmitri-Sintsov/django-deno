@@ -8,7 +8,7 @@ from django.core.cache import cache
 from django.contrib.staticfiles.management.commands import collectstatic
 
 from ...itero import IterO
-from ...commands import DenoProcess
+from ...commands import DenoCommand
 from ...importmap import ImportMapGenerator
 from ...sourcefile import SourceFile
 from ...utils import unfold
@@ -17,7 +17,7 @@ from ...conf import settings as deno_settings
 from ...api.rollup import DenoRollup
 
 
-class Command(collectstatic.Command, DenoProcess):
+class Command(collectstatic.Command, DenoCommand):
 
     help = f"{collectstatic.Command.help} Uses deno rollup to collect bundles from static files in a single location."
 

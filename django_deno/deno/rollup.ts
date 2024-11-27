@@ -387,21 +387,23 @@ class InlineRollup {
             resolveId: this.getStaticFilesResolver(),
         });
 
-        if (swcImport && this.options.swc) {
+        if (typeof swc === 'function' && this.options.swc) {
             // https://docs.deno.com/runtime/reference/ts_config_migration/
             // make sure swc is supported for specified module format
             if (typeof this.options.swc === 'boolean') {
                 this.options.swc = {} as SWCOptions;
+                // https://github.com/swc-project/swc/issues/8288
                 if (!this.options.terser) {
-                    // https://github.com/swc-project/swc/issues/8288
                     this.options.swc.minify = true;
                 }
             }
+            // TS2349 [ERROR]: This expression is not callable. Type 'never' has no call signatures.
+            // @ts-ignore
             let swcInstance = swc({'swc': this.options.swc});
             inputPlugins.push(swcInstance);
         }
 
-        if (resolveImport) {
+        if (typeof resolve === 'function') {
             inputPlugins.push(
                 resolve({
                     extensions: ['.js', '.ts']
@@ -409,7 +411,7 @@ class InlineRollup {
             );
         }
 
-        if (sucraseImport && this.options.sucrase) {
+        if (typeof sucrase === 'function' && this.options.sucrase) {
             // https://docs.deno.com/runtime/reference/ts_config_migration/
             // make sure sucrase is supported for specified module format
             inputPlugins.push(

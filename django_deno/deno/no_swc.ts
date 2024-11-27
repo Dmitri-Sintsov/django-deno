@@ -1,5 +1,7 @@
-const swcImport = false;
+const swcImport = {default: false};
 
-export type Options = {};
+export type Options = {
+    minify: boolean
+};
 
 export default swcImport;

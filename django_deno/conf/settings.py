@@ -30,6 +30,21 @@ DENO_URL = f'{DENO_SERVER["scheme"]}://{DENO_SERVER["hostname"]}:{DENO_SERVER["p
 
 DENO_PROXY_CHUNK_SIZE = getattr(settings, 'DENO_PROXY_CHUNK_SIZE', 256 * 1024)
 
+# deno compile does not support swc native modules, thus is disabled by default.
+# https://github.com/denoland/deno/issues/17058#issuecomment-1353585286
+DENO_ROLLUP_COMPILE_OPTIONS = {
+    'swc': False,
+    'sucrase': True,
+}
+DENO_ROLLUP_COMPILE_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_COMPILE_OPTIONS', {}))
+
+# Install everything by default.
+DENO_ROLLUP_INSTALL_OPTIONS = {
+    'swc': False,
+    'sucrase': False,
+}
+DENO_ROLLUP_INSTALL_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_INSTALL_OPTIONS', {}))
+
 # Map of rollup.js output module type to html script tag module type:
 DENO_OUTPUT_MODULE_FORMATS = {
     'module': 'es',
@@ -37,7 +52,6 @@ DENO_OUTPUT_MODULE_FORMATS = {
 }
 DENO_OUTPUT_MODULE_FORMATS.update(getattr(settings, 'DENO_OUTPUT_MODULE_FORMATS', {}))
 
-# Set both 'swc' and 'sucrase' to False to enable both (not recommended).
 DENO_ROLLUP_SERVE_OPTIONS = {
     'inlineFileMap': True,
     'relativePaths': True,
@@ -54,12 +68,12 @@ DENO_ROLLUP_SERVE_OPTIONS.update(getattr(settings, 'DENO_ROLLUP_SERVE_OPTIONS', 
 
 DENO_OUTPUT_MODULE_TYPE = getattr(settings, 'DENO_OUTPUT_MODULE_TYPE', 'module')
 
-# Set both 'swc' and 'sucrase' to False to enable both (not recommended).
 DENO_ROLLUP_COLLECT_OPTIONS = {
     # 'relativePaths': True,
     'staticFilesResolver': 'collect',
     'swc': True,
     'sucrase': False,
+    # terser compresses better than swc usually:
     'terser': True,
     'bundles': getattr(settings, 'DENO_ROLLUP_BUNDLES', {}),
     'moduleFormat': DENO_OUTPUT_MODULE_FORMATS[DENO_OUTPUT_MODULE_TYPE],

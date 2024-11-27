@@ -25,13 +25,13 @@ class DenoCompile(DenoCompressor, ExecDeno):
     def get_deno_flags(self):
         deno_flags = super().get_deno_flags()
         deno_flags.extend([
-            "--allow-scripts=npm:@swc/core",
             # "--cached-only",
             "--frozen=false",
             # "--no-remote",
             # "--reload",
             "--vendor",
-            f"--output={self.django_deno_binary_path}",
+            f"--config={self.deno_config_path}",
             f"--lock={self.deno_lock_path}",
+            f"--output={self.django_deno_binary_path}",
         ])
         return deno_flags

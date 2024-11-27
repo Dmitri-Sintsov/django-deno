@@ -4,14 +4,17 @@ import sys
 
 from django.core.management.base import BaseCommand
 
+from ...conf import settings as deno_settings
+
 from ...dir import del_dir
 from ...utils import ansi_escape_8bit
 
+from ...commands import DenoCommand
 from ...process.base import DENO_SCRIPT_PATH
 from ...process.compile import DenoCompile
 
 
-class Command(BaseCommand):
+class Command(BaseCommand, DenoCommand):
     help = 'Compile django_deno server'
 
     def add_arguments(self, parser):
@@ -31,7 +34,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        deno_compile = DenoCompile()
+        rollup_options = self.get_deno_server_kwargs(deno_settings.DENO_ROLLUP_COMPILE_OPTIONS)
+        deno_compile = DenoCompile(**rollup_options)
         os.chdir(DENO_SCRIPT_PATH)
         deno_process = deno_compile()
         self.stdout.write(f"Starting {deno_compile}\npid={deno_process.pid}")

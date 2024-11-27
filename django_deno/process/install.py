@@ -15,6 +15,7 @@ class DenoInstall(ExecDeno):
             "--force",
             "--reload",
             "--vendor",
+            f"--config={self.deno_config_path}",
             f"--lock={self.deno_lock_path}",
             "--entrypoint",
         ])

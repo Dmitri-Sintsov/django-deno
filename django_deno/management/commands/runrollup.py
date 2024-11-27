@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.staticfiles.management.commands import runserver
 
 from ...conf import settings as deno_settings
-from ...commands import DenoProcess
+from ...commands import DenoCommand
 from ...handlers import RollupFilesHandler
 
 lock = threading.Lock()
@@ -14,7 +14,7 @@ lock = threading.Lock()
 deno_process = None
 
 
-class Command(runserver.Command, DenoProcess):
+class Command(runserver.Command, DenoCommand):
 
     help = f"{runserver.Command.help} Starts Deno Web server to serve rollup bundles from static files."
 

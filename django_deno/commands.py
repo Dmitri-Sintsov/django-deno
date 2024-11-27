@@ -12,11 +12,12 @@ from .process.server import DenoServer
 from .importmap import ImportMapGenerator
 
 
-class DenoProcess:
+class DenoCommand:
 
-    def __init__(self, stdout=None, stderr=None):
+    def __init__(self, stdout=None, stderr=None, **kwargs):
         self.stdout = stdout
         self.stderr = stderr
+        super().__init__(**kwargs)
 
     def terminate(self, error_message):
         self.stderr.write(error_message)
@@ -35,9 +36,7 @@ class DenoProcess:
         return isinstance(deno_process, psutil.Process)
 
     def get_deno_server_kwargs(self, rollup_options):
-        deno_server_kwargs = {
-            'logger': self.stdout,
-        }
+        deno_server_kwargs = {}
         # Set both 'swc' and 'sucrase' to False to enable both (not recommended).
         if rollup_options['swc']:
             if deno_settings.DENO_USE_COMPILED_BINARY:
@@ -47,7 +46,9 @@ class DenoProcess:
             deno_server_kwargs.update({
                 'deno_config_filename': 'deno_swc.json',
                 'deno_lock_filename': 'deno_swc.lock',
-                'deno_flags': ["--allow-scripts"],
+                'deno_flags': [
+                    "--allow-scripts=npm:@swc/core",
+                ],
             })
         elif rollup_options['sucrase']:
             deno_server_kwargs.update({
@@ -63,7 +64,7 @@ class DenoProcess:
         deno_api_status = DenoMaps().set_timeout(0.1).post(serialized_map_generator)
         if deno_api_status is None:
             deno_server_kwargs = self.get_deno_server_kwargs(rollup_options)
-            deno_server = DenoServer(**deno_server_kwargs)
+            deno_server = DenoServer(logger=self.stdout, **deno_server_kwargs)
             if deno_settings.DENO_DEBUG_EXTERNAL:
                 self.stdout.write(f"Expected external deno server command line: {deno_server}")
             else:
