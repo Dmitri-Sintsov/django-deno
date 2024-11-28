@@ -9,7 +9,9 @@ django-deno
 .. _DENO_OUTPUT_MODULE_TYPE: https://github.com/Dmitri-Sintsov/django-deno/search?l=Python&q=DENO_OUTPUT_MODULE_TYPE&type=code
 .. _DENO_ROLLUP_BUNDLES: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_BUNDLES&type=code
 .. _DENO_ROLLUP_ENTRY_POINTS: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_ENTRY_POINTS&type=code
+.. _DENO_ROLLUP_INSTALL_OPTIONS: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_INSTALL_OPTIONS&type=code
 .. _DENO_ROLLUP_COLLECT_OPTIONS: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_COLLECT_OPTIONS&type=code
+.. _DENO_ROLLUP_COMPILE_OPTIONS: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_COMPILE_OPTIONS&type=code
 .. _DENO_ROLLUP_SERVE_OPTIONS: https://github.com/Dmitri-Sintsov/django-deno/search?q=DENO_ROLLUP_SERVE_OPTIONS&type=code
 .. _deno compile: https://docs.deno.com/runtime/reference/cli/compiler/
 .. _deno install: https://docs.deno.com/runtime/reference/cli/install/
@@ -26,6 +28,7 @@ django-deno
 .. _es6 modules: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules
 .. _getStaticFilesResolver: https://github.com/Dmitri-Sintsov/django-deno/search?l=TypeScript&q=getStaticFilesResolver&type=code
 .. _isVirtualEntry: https://github.com/Dmitri-Sintsov/django-deno/search?l=TypeScript&q=isVirtualEntry&type=code
+.. _node binary module: https://www.npmjs.com/package/@swc/core-linux-x64-gnu
 .. _setVirtualEntryPoint: https://github.com/Dmitri-Sintsov/django-deno/search?l=TypeScript&q=setVirtualEntryPoint&type=code
 .. _rollup.js: https://rollupjs.org/
 .. _runserver: https://docs.djangoproject.com/en/dev/ref/django-admin/#runserver
@@ -33,13 +36,14 @@ django-deno
 .. _synthetic named exports: https://rollupjs.org/plugin-development/#synthetic-named-exports
 .. _SystemJS: https://github.com/systemjs/systemjs
 .. _sucrase: https://github.com/alangpierce/sucrase
+.. _swc: https://swc.rs/
 .. _terser: https://terser.org
 .. _TypeScript: https://www.typescriptlang.org/
 
 `Deno`_ front-end integration for `Django`_, version 0.2.0.
 
 * `rollup.js`_ - bundling for `Django packages static files`_ with importmap resolver.
-* `sucrase`_ - optional `TypeScript`_ support.
+* `sucrase`_ / `swc`_ - optional `TypeScript`_ support.
 * `terser`_ - optional compression of bundles.
 * The deno server may be extended to support any of deno api, when applicable.
 * Uses parts of `drollup`_ code, refactored for Deno v2.
@@ -47,7 +51,7 @@ django-deno
 Requirements
 ------------
 
-* `Deno`_ 2.0.6 or newer.
+* `Deno`_ 2.1.1 or newer.
 * `Django`_ 4.2 / Django 5.1 was tested with continuous integration demo app `djk-sample`_.
 
 Installation
@@ -65,12 +69,12 @@ In Windows run PowerShell then invoke::
 
 ``DENO_INSTALL`` environment variable specifies directory where `Deno`_ is installed.
 
-* In case currently installed `Deno`_ version is older than 2.0.6, please use ``deno upgrade`` command to install the
+* In case currently installed `Deno`_ version is older than 2.1.1, please use ``deno upgrade`` command to install the
   newer `Deno`_ version. Deno 1.x is supported only with ``django-deno`` versions lower than 0.2.0.
 
-* This package was tested with Deno version 2.0.6::
+* This package was tested with Deno version 2.1.1::
   
-    deno upgrade --version 2.0.6
+    deno upgrade --version 2.1.1
 
 The package may work with newer versions of Deno, however it was not tested, thus may fail.
 
@@ -96,8 +100,23 @@ Currently the web service `server.ts`_ supports Deno version of `rollup.js`_ bun
 It's possible to generate `es6 modules`_ bundles and / or `systemjs`_ bundles with optional minification with
 `terser`_.
 
-Transpiling of `TypeScript`_ is supported with `sucrase`_. When `sucrase`_ is not enabled, it's expected that the
-developing code has es6 imports / exports but the rest of code is written with es5 syntax.
+Transpiling of `TypeScript`_ is supported with `sucrase`_ or with `swc`_.
+
+* `swc`_ is faster and is updated more frequently, but it uses `node binary module`_, which are not supported by
+  `deno compile`_
+* `sucrase`_ is used by default and is always used with bundled vendored ``django_deno`` binary (see `deno_compile`_
+  management command for more info)
+
+To use `swc`_, one need to set first::
+
+    DENO_USE_COMPILED_BINARY = False
+
+which should turn on `swc`_ usage.
+
+See `deno_compile`_ management command for more info.
+
+When transpiling is not enabled, it's expected that the developing code has es6 imports / exports while the rest of code
+is written with es5 syntax.
 
 At `Django`_ side ``django_deno`` provides the following `Django management commands`_:
 
@@ -140,10 +159,11 @@ to set the value of `DENO_OUTPUT_MODULE_TYPE`_ which determines the type of Java
 
 The additional settings for `rollup.js`_ running `collectrollup`_ management command are specified with
 `DENO_ROLLUP_COLLECT_OPTIONS`_ setting, which allows to enable / disable `terser`_ compression and to enable / disable
-`sucrase`_ transpiling of `TypeScript`_::
+`sucrase`_ / `swc`_ transpiling of `TypeScript`_::
 
     # Run $VIRTUAL_ENV/djk-sample/cherry_django.py to check the validity of collectrollup command output bundle.
     DENO_ROLLUP_COLLECT_OPTIONS = {
+        'swc': False,
         'sucrase': True,
         'terser': True,
     }
@@ -153,7 +173,9 @@ while the default is::
     DENO_ROLLUP_COLLECT_OPTIONS = {
         # 'relativePaths': True,
         'staticFilesResolver': 'collect',
-        'sucrase': True,
+        'swc': not DENO_USE_COMPILED_BINARY,
+        'sucrase': DENO_USE_COMPILED_BINARY,
+        # terser compresses better than swc usually:
         'terser': True,
         'bundles': getattr(settings, 'DENO_ROLLUP_BUNDLES', {}),
         'moduleFormat': DENO_OUTPUT_MODULE_FORMATS[DENO_OUTPUT_MODULE_TYPE],
@@ -179,8 +201,10 @@ Set `DENO_ROLLUP_SERVE_OPTIONS`_ for the `rollup.js`_ options of the `runrollup`
 
     DENO_ROLLUP_SERVE_OPTIONS = {
         'inlineFileMap': True,
-        # 'relativePaths': True,
-        'sucrase': True,
+        'relativePaths': True,
+        'swc': not DENO_USE_COMPILED_BINARY,
+        'sucrase': DENO_USE_COMPILED_BINARY,
+        'terser': False,
         'preserveEntrySignatures': False,
         'staticFilesResolver': 'serve',
         'withCache': True,
@@ -200,22 +224,33 @@ deno_compile
 
     DENO_USE_COMPILED_BINARY = True
 
+* `DENO_ROLLUP_COMPILE_OPTIONS`_ are used to select either `sucrase`_ or `swc`_ for the compilation, but `swc`_ is not
+  currently supported::
+
+    DENO_ROLLUP_COMPILE_OPTIONS = {
+        'swc': False,
+        'sucrase': True,
+    }
+
+Setting both ``swc`` and ``sucrase`` keys to ``False`` will enable the inclusion of both transpilers, which is not recommended.
+Such setting is intended for `deno_compile`_ testing purposes  only.
+
+* See https://github.com/denoland/deno/issues/23266 for more info.
+
 deno_install
 ~~~~~~~~~~~~
 
 * ``deno_install`` management command generates updated `deno install`_ bundle for the built-in deno server. This command
   should be used only for the package updating / redistribution.
-* Since Deno v2, it seems to impossible to create the source bundle without remote dependencies
-  (see https://github.com/denoland/deno/issues/26488). Thus `deno_compile`_ currently is the preferred way to perform
-  vendoring / bundling of the package.
 
 Updating `deno_install`_ should be performed with the following steps:
 
 * Run the project `collectrollup`_ command with the following ``settings.py`` to reload the dependencies::
 
-    DENO_USE_VENDOR = False
+    DENO_NO_REMOTE = False
     DENO_RELOAD = True
     DENO_CHECK_LOCK_FILE = False
+    DENO_USE_COMPILED_BINARY = False
 
 * Run the project `deno_install`_ command to create local `deno install`_::
 
@@ -223,9 +258,16 @@ Updating `deno_install`_ should be performed with the following steps:
 
 * Run the project `collectrollup`_ command with the following ``settings.py``, to use the updated local `deno_install`_::
 
-    DENO_USE_VENDOR = True
+    DENO_NO_REMOTE = True
     DENO_RELOAD = False
     DENO_CHECK_LOCK_FILE = True
+    DENO_USE_COMPILED_BINARY = False
+
+* `DENO_ROLLUP_INSTALL_OPTIONS`_ are used to select either `sucrase`_ or `swc`_ for installation.
+* Since Deno v2, it seems impossible to create the source bundle without remote dependencies, thus setting
+  ``DENO_NO_REMOTE`` to ``True`` may fail.
+* See https://github.com/denoland/deno/issues/26488).
+* Because of that, `deno_compile`_ currently is the preferred way to perform vendoring / bundling of the package.
 
 Bundles
 -------
