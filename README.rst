@@ -44,7 +44,7 @@ django-deno
 
 * `rollup.js`_ - bundling for `Django packages static files`_ with importmap resolver.
 * `sucrase`_ / `swc`_ - optional `TypeScript`_ support.
-* `terser`_ - optional compression of bundles.
+* `terser`/ `swc`_ - optional compression of bundles.
 * The deno server may be extended to support any of deno api, when applicable.
 * Uses parts of `drollup`_ code, refactored for Deno v2.
 
@@ -166,6 +166,17 @@ The additional settings for `rollup.js`_ running `collectrollup`_ management com
         'swc': False,
         'sucrase': True,
         'terser': True,
+    }
+
+`swc`_ key also supports options, which can be passed as Python dict, for example to use faster `swc`_ minifier, use the
+following setting::
+
+    DENO_ROLLUP_COLLECT_OPTIONS = {
+        'swc': {
+            'minify': True,
+        },
+        'sucrase': True,
+        'terser': False,
     }
 
 while the default is::
