@@ -11,6 +11,7 @@ class DenoInstall(ExecDeno):
     def get_deno_flags(self):
         deno_flags = super().get_deno_flags()
         deno_flags.extend([
+            "--allow-scripts=npm:@swc/core",
             "--frozen=false",
             "--force",
             "--reload",

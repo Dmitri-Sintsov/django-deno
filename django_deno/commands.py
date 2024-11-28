@@ -40,6 +40,7 @@ class DenoCommand:
         # Set both 'swc' and 'sucrase' to False to enable both (not recommended).
         if rollup_options['swc']:
             if deno_settings.DENO_USE_COMPILED_BINARY:
+                # https://github.com/denoland/deno/issues/23266
                 self.terminate('Compiled binary does not support swc native module (DENO_USE_COMPILED_BINARY)')
             if rollup_options['sucrase']:
                 self.terminate('swc and sucrase are mutually exclusive options')
@@ -47,7 +48,9 @@ class DenoCommand:
                 'deno_config_filename': 'deno_swc.json',
                 'deno_lock_filename': 'deno_swc.lock',
                 'deno_flags': [
-                    "--allow-scripts=npm:@swc/core",
+                    # the following flag works with deno install, however causes
+                    # deno run deadlock / hangup with deno 2.1.1 / swc/core 1.9.3 in Ubuntu Linux, thus is commented out:
+                    # "--allow-scripts=npm:@swc/core",
                 ],
             })
         elif rollup_options['sucrase']:

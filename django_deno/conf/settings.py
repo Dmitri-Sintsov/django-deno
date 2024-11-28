@@ -31,7 +31,7 @@ DENO_URL = f'{DENO_SERVER["scheme"]}://{DENO_SERVER["hostname"]}:{DENO_SERVER["p
 DENO_PROXY_CHUNK_SIZE = getattr(settings, 'DENO_PROXY_CHUNK_SIZE', 256 * 1024)
 
 # deno compile does not support swc native modules, thus is disabled by default.
-# https://github.com/denoland/deno/issues/17058#issuecomment-1353585286
+# https://github.com/denoland/deno/issues/23266
 DENO_ROLLUP_COMPILE_OPTIONS = {
     'swc': False,
     'sucrase': True,
@@ -55,10 +55,8 @@ DENO_OUTPUT_MODULE_FORMATS.update(getattr(settings, 'DENO_OUTPUT_MODULE_FORMATS'
 DENO_ROLLUP_SERVE_OPTIONS = {
     'inlineFileMap': True,
     'relativePaths': True,
-    'swc': {
-        'minify': True,
-    },
-    'sucrase': False,
+    'swc': not DENO_USE_COMPILED_BINARY,
+    'sucrase': DENO_USE_COMPILED_BINARY,
     'terser': False,
     'preserveEntrySignatures': False,
     'staticFilesResolver': 'serve',
@@ -71,8 +69,8 @@ DENO_OUTPUT_MODULE_TYPE = getattr(settings, 'DENO_OUTPUT_MODULE_TYPE', 'module')
 DENO_ROLLUP_COLLECT_OPTIONS = {
     # 'relativePaths': True,
     'staticFilesResolver': 'collect',
-    'swc': True,
-    'sucrase': False,
+    'swc': not DENO_USE_COMPILED_BINARY,
+    'sucrase': DENO_USE_COMPILED_BINARY,
     # terser compresses better than swc usually:
     'terser': True,
     'bundles': getattr(settings, 'DENO_ROLLUP_BUNDLES', {}),
