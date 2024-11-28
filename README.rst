@@ -168,8 +168,8 @@ The additional settings for `rollup.js`_ running `collectrollup`_ management com
         'terser': True,
     }
 
-`swc`_ key also supports options, which can be passed as Python dict, for example to use faster `swc`_ minifier, use the
-following setting::
+``swc`` key also supports options, which can be passed as Python dict, for example to enable faster `swc`_ minifier, use
+the following setting::
 
     DENO_ROLLUP_COLLECT_OPTIONS = {
         'swc': {
