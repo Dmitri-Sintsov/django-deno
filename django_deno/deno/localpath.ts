@@ -94,9 +94,9 @@ class LocalPath {
         return this.path == anotherLocalPath.path;
     }
 
-    public matches(matchPath: LocalPath): boolean {
-        var thisParts = this.split().reverse();
-        var matchParts = matchPath.split().reverse();
+    public matchesLocal(matchPath: LocalPath): boolean {
+        let thisParts = this.split().reverse();
+        let matchParts = matchPath.split().reverse();
         if (thisParts.length < matchParts.length) {
             return false;
         }
@@ -112,8 +112,30 @@ class LocalPath {
         return true;
     }
 
-    public matchesStr(matchPathStr: string): boolean {
-        return this.matches(new LocalPath(matchPathStr));
+    public matchesGlob(matchPath: LocalPath): boolean {
+        let matchGlobPath = LocalPath.fromPathParts(['**', ...matchPath.split()])
+        let matchRegExp = globToRegExp(matchGlobPath.path, {
+            extended: true,
+            globstar: true,
+        } as GlobOptions);
+        return this.path.match(matchRegExp) ? true : false
+    }
+
+    public matches(matchPath: LocalPath, useGlobStar: boolean = true): boolean {
+        /*
+        let matchesGlob = this.matchesGlob(matchPath);
+        let matchesLocal = this.matchesLocal(matchPath);
+        if (matchesGlob !== matchesLocal) {
+            console.warn('LocalPath::matches() globl / local did not match.')
+            console.warn(matchPath);
+            console.warn(this);
+        }
+        */
+        return (useGlobStar) ? this.matchesGlob(matchPath) : this.matchesLocal(matchPath);
+    }
+
+    public matchesStr(matchPathStr: string, useGlobStar: boolean = true): boolean {
+        return this.matches(new LocalPath(matchPathStr), useGlobStar);
     }
 
     public traverseRelative(relPath: LocalPath): LocalPath {

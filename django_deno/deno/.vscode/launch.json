@@ -26,7 +26,7 @@
                 "--allow-read",
                 "--allow-sys",
                 "--config=/home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/deno.json",
-                "--lock=/home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/lock.json"
+                "--lock=/home/user/work/djk-sample310/lib/python3.10/site-packages/django_deno/deno/deno.lock"
             ],
             "attachSimplePort": 9229
         }

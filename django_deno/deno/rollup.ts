@@ -59,6 +59,7 @@ class RollupBundleItem {
      * Warning: make sure bundle name does not match any of bundled module file names,
      * otherwise namespace clash could occur.
      */
+    useGlobStar?: boolean;
     name?: string;
     nameLocalPath?: LocalPath;
     writeEntryPoint?: string;
@@ -94,7 +95,7 @@ class RollupBundleItem {
     }
 
     public isBundleChunk(chunkName: string) : boolean {
-        return this.nameLocalPath!.matchesStr(chunkName);
+        return this.nameLocalPath!.matchesStr(chunkName, this.useGlobStar);
     }
 
     public addSkipChunk(chunkPath: LocalPath) {
@@ -112,7 +113,7 @@ class RollupBundleItem {
 
     public isWriteEntryPoint(entryPointLocalPath: LocalPath): boolean {
         if (this.writeEntryPointLocalPath) {
-            return entryPointLocalPath.matches(this.writeEntryPointLocalPath);
+            return entryPointLocalPath.matches(this.writeEntryPointLocalPath, this.useGlobStar);
         } else {
             return true;
         }
@@ -131,7 +132,7 @@ class RollupBundleItem {
         }
         for (let bundleItemMatch of matches) {
             let bundleItemMatchLocalPath = new LocalPath(bundleItemMatch);
-            if (fullLocalPath.matches(bundleItemMatchLocalPath)) {
+            if (fullLocalPath.matches(bundleItemMatchLocalPath, this.useGlobStar)) {
                 return true;
             }
         }
