@@ -74,6 +74,9 @@ class RollupBundleItem {
         this.matches = [];
         this.skipChunks = [];
         Object.assign(this, options);
+        if (this.useGlobStar === undefined) {
+            this.useGlobStar = true;
+        }
         if (this.writeEntryPoint) {
             this.writeEntryPointLocalPath = new LocalPath(this.writeEntryPoint);
         }
