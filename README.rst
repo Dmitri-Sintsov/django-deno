@@ -27,6 +27,7 @@ django-deno
 .. _drollup: https://deno.land/x/drollup
 .. _es6 modules: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules
 .. _getStaticFilesResolver: https://github.com/Dmitri-Sintsov/django-deno/search?l=TypeScript&q=getStaticFilesResolver&type=code
+.. _globstar: https://www.linuxjournal.com/content/globstar-new-bash-globbing-option
 .. _isVirtualEntry: https://github.com/Dmitri-Sintsov/django-deno/search?l=TypeScript&q=isVirtualEntry&type=code
 .. _node binary module: https://www.npmjs.com/package/@swc/core-linux-x64-gnu
 .. _setVirtualEntryPoint: https://github.com/Dmitri-Sintsov/django-deno/search?l=TypeScript&q=setVirtualEntryPoint&type=code
@@ -308,11 +309,10 @@ To specify manual bundles / chunks, `DENO_ROLLUP_BUNDLES`_ setting is used. For 
 
     DENO_ROLLUP_BUNDLES = {
         'djk': {
+            # 'useGlobStar': False,
             'writeEntryPoint': 'sample/js/app.js',
             'matches': [
-                'djk/js/*',
-                'djk/js/lib/*',
-                'djk/js/grid/*',
+                'djk/js/**',
             ],
             'excludes': [],
             'virtualEntryPoints': 'matches',
@@ -328,5 +328,6 @@ To specify manual bundles / chunks, `DENO_ROLLUP_BUNDLES`_ setting is used. For 
 * ``virtualEntryPoints`` specifies either the list of dirs or ``matches`` string value to set `es6 modules`_ virtual
   entry points. Such modules are bundled as a virtual ones, included into ``djk.js`` bundle only, not being duplicated
   as separate standalone module files. See `isVirtualEntry`_ / `setVirtualEntryPoint`_ code for more info.
+* ``useGlobStar``, when set to ``False``, disables `globstar`_ ``**`` matching. ``True`` by default.
 
 * To see the actual settings / usage, demo apps `djk-sample`_ and `drf-gallery`_ are available.
