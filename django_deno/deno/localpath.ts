@@ -103,7 +103,7 @@ class LocalPath {
         for (let [idx, matchPart] of Object.entries(matchParts) as any) {
             let matchRegExp = globToRegExp(matchPart, {
                 extended: true,
-                globstar: true,
+                globstar: false,
             } as GlobOptions);
             if (!thisParts[idx].match(matchRegExp)) {
                 return false;
@@ -112,7 +112,7 @@ class LocalPath {
         return true;
     }
 
-    public matchesGlob(matchPath: LocalPath): boolean {
+    public matchesGlobStar(matchPath: LocalPath): boolean {
         let matchGlobPath = LocalPath.fromPathParts(['**', ...matchPath.split()])
         let matchRegExp = globToRegExp(matchGlobPath.path, {
             extended: true,
@@ -122,16 +122,7 @@ class LocalPath {
     }
 
     public matches(matchPath: LocalPath, useGlobStar: boolean = true): boolean {
-        /*
-        let matchesGlob = this.matchesGlob(matchPath);
-        let matchesLocal = this.matchesLocal(matchPath);
-        if (matchesGlob !== matchesLocal) {
-            console.warn('LocalPath::matches() globl / local did not match.')
-            console.warn(matchPath);
-            console.warn(this);
-        }
-        */
-        return (useGlobStar) ? this.matchesGlob(matchPath) : this.matchesLocal(matchPath);
+        return (useGlobStar) ? this.matchesGlobStar(matchPath) : this.matchesLocal(matchPath);
     }
 
     public matchesStr(matchPathStr: string, useGlobStar: boolean = true): boolean {
