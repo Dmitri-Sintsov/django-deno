@@ -77,10 +77,10 @@ In Windows run PowerShell then invoke::
   
     deno upgrade --version 2.1.1
 
-The package may work with newer versions of Deno, however it was not tested, thus may fail.
+The package was not tested with newer versions of Deno, thus may fail.
 
-However, since v0.2.0 there is precompiled binary for Linux available, which allows to have stable running
-environment, see `deno_compile`_ management command.
+To have stable running environment there is precompiled binary for Linux available. See `deno_compile`_ management
+command for more info.
 
 To install the development version of ``django_deno`` in python3 ``virtualenv``::
 
@@ -98,7 +98,7 @@ Description
 Currently the web service `server.ts`_ supports Deno version of `rollup.js`_ bundler to automatically generate
 `es6 modules`_ bundles for `Django`_ projects, including scripts from `Django packages static files`_.
 
-It's possible to generate `es6 modules`_ bundles and / or `systemjs`_ bundles with optional minification with
+It's possible to generate `es6 modules`_ bundles and / or `systemjs`_ bundles with optional minification via
 `terser`_.
 
 Transpiling of `TypeScript`_ is supported with `sucrase`_ or with `swc`_.
@@ -176,7 +176,7 @@ the following setting::
         'swc': {
             'minify': True,
         },
-        'sucrase': True,
+        'sucrase': False,
         'terser': False,
     }
 
@@ -231,7 +231,7 @@ deno_compile
   distribution. This management command allows to have stable production running environment. Since v0.2.0 it's a
   preferred way to perform vendoring / bundling of the package.
 
-* Binary compression is supported via ``--compress`` option. github hosted compressed `django_deno.lzma`_ binary
+* Binary compression is supported via ``--compress`` option. github hosted compressed `django_deno.lzma`_ Linux binary
   can be downloaded and extracted automatically, with the following ``settings.py`` value::
 
     DENO_USE_COMPILED_BINARY = True
@@ -245,7 +245,7 @@ deno_compile
     }
 
 Setting both ``swc`` and ``sucrase`` keys to ``False`` will enable the inclusion of both transpilers, which is not recommended.
-Such setting is intended for `deno_compile`_ testing purposes  only.
+Such setting is intended for testing purposes  only.
 
 * See https://github.com/denoland/deno/issues/23266 for more info.
 
@@ -278,7 +278,7 @@ Updating `deno_install`_ should be performed with the following steps:
 * `DENO_ROLLUP_INSTALL_OPTIONS`_ are used to select either `sucrase`_ or `swc`_ for installation.
 * Since Deno v2, it seems impossible to create the source bundle without remote dependencies, thus setting
   ``DENO_NO_REMOTE`` to ``True`` may fail.
-* See https://github.com/denoland/deno/issues/26488).
+* See https://github.com/denoland/deno/issues/26488
 * Because of that, `deno_compile`_ currently is the preferred way to perform vendoring / bundling of the package.
 
 Bundles
