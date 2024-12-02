@@ -16,6 +16,9 @@ if DENO_INSTALL is None:
     raise ImproperlyConfigured('Please set DENO_INSTALL environment variable or project settings.DENO_INSTALL path')
 
 DENO_PATH = os.path.join(DENO_INSTALL, 'bin', 'deno')
+if not os.path.isfile(DENO_PATH):
+    # Some Windows installations do not use bin directory.
+    DENO_PATH = os.path.join(DENO_INSTALL, 'deno')
 
 DENO_TIMEOUT = 120 if DENO_DEBUG else 60
 

@@ -37,7 +37,7 @@ class DenoServer(DenoCompressor, DenoRun):
         return '' if DENO_USE_COMPILED_BINARY else 'server.ts'
 
     def __call__(self, *args, **kwargs):
-        if not os.path.isfile(self.django_deno_binary_path):
+        if DENO_USE_COMPILED_BINARY and not os.path.isfile(self.django_deno_binary_path):
             if not os.path.isfile(self.django_deno_lzma_path):
                 self.log(f'Downloading {self.django_deno_lzma_url}')
                 self.download_compressed()

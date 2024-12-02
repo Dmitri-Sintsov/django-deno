@@ -1,6 +1,7 @@
 import hashlib
 import os
 import mmap
+import platform
 import stat
 import lzma
 
@@ -41,9 +42,10 @@ dc.decompress()
 
 class DenoCompressor:
 
-    lzma_base_file_name = 'django_deno.lzma'
-
     def __init__(self, **kwargs):
+        self.platform = platform.system()
+        self.platform_architecture = f'{self.platform}.{platform.machine()}'
+        self.lzma_base_file_name = f'django_deno.{self.platform_architecture}.lzma'
         self.django_deno_binary_path = self.get_django_deno_binary_path()
         self.django_deno_hash_path = self.get_django_deno_hash_path()
         self.django_deno_lzma_path = self.get_django_deno_lzma_path()
@@ -51,10 +53,11 @@ class DenoCompressor:
         super().__init__(**kwargs)
 
     def get_django_deno_binary_path(self):
-        return os.path.join(DENO_SCRIPT_PATH, 'django_deno')
+        django_deno_binary = 'django_deno.exe' if self.platform == 'Windows' else 'django_deno'
+        return os.path.join(DENO_SCRIPT_PATH, django_deno_binary)
 
     def get_django_deno_hash_path(self):
-        return os.path.join(DENO_SCRIPT_PATH, 'django_deno.hash')
+        return os.path.join(DENO_SCRIPT_PATH, f'django_deno.{self.platform_architecture}.hash')
 
     def get_django_deno_lzma_path(self):
         return os.path.join(DENO_SCRIPT_PATH, self.lzma_base_file_name)
