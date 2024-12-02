@@ -64,9 +64,16 @@ class DenoCompressor:
 
     def get_django_deno_lzma_url(self):
         # https://stackoverflow.com/questions/8779197/how-to-link-files-directly-from-github-raw-github-com
+        # https://stackoverflow.com/questions/47199828/how-to-convert-a-file-tracked-by-git-to-git-lfs
+        # https://docs.github.com/en/repositories/working-with-files/managing-large-files/moving-a-file-in-your-repository-to-git-large-file-storage
         # to see the actual location:
-        # curl -v https://github.com/Dmitri-Sintsov/django-deno/raw/refs/tags/v0.2.0/django_deno/deno/django_deno.lzma
-        return f'https://raw.githubusercontent.com/Dmitri-Sintsov/django-deno/refs/tags/v{__version__}/django_deno/deno/{self.lzma_base_file_name}'
+        # curl -v https://github.com/Dmitri-Sintsov/django-deno/raw/refs/tags/v0.2.0/django_deno/deno/django_deno.Linux.x86_64.lzma
+        # raw content
+        # return f'https://raw.githubusercontent.com/Dmitri-Sintsov/django-deno/refs/tags/v{__version__}/django_deno/deno/{self.lzma_base_file_name}'
+        # lfs content
+        # return f'https://media.githubusercontent.com/media/Dmitri-Sintsov/django-deno/refs/tags/v{__version__}/django_deno/deno/django_deno.Linux.x86_64.lzma'
+        # generic redirect (a bit slower but works for both raw and lfs content)
+        return f'https://github.com/Dmitri-Sintsov/django-deno/raw/refs/tags/v{__version__}/django_deno/deno/{self.lzma_base_file_name}'
 
     def download_compressed(self):
         response = requests.get(self.django_deno_lzma_url, stream=True)
