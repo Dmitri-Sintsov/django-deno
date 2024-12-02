@@ -18,7 +18,7 @@ django-deno
 .. _Django: https://www.djangoproject.com
 .. _DJANGO_DEBUG: https://github.com/Dmitri-Sintsov/djk-sample/search?q=DJANGO_DEBUG&type=code
 .. _django_deno settings: https://github.com/Dmitri-Sintsov/django-deno/blob/main/django_deno/conf/settings.py
-.. _django_deno.lzma: https://github.com/Dmitri-Sintsov/django-deno/blob/main/django_deno/deno/django_deno.lzma
+.. _django_deno.lzma: https://github.com/Dmitri-Sintsov/django-deno/blob/main/django_deno/deno/django_deno.Linux.x86_64.lzma
 .. _Django management commands: https://docs.djangoproject.com/en/dev/ref/django-admin/
 .. _Django packages static files: https://docs.djangoproject.com/en/dev/howto/static-files/
 .. _djk-sample: https://github.com/Dmitri-Sintsov/djk-sample
@@ -235,6 +235,8 @@ deno_compile
   can be downloaded and extracted automatically, with the following ``settings.py`` value::
 
     DENO_USE_COMPILED_BINARY = True
+
+* Windows / OSX binaries are not provided by default and can be built separately.
 
 * `DENO_ROLLUP_COMPILE_OPTIONS`_ are used to select either `sucrase`_ or `swc`_ for the compilation, but `swc`_ is not
   currently supported::
