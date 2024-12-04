@@ -333,3 +333,12 @@ To specify manual bundles / chunks, `DENO_ROLLUP_BUNDLES`_ setting is used. For 
 * ``useGlobStar``, when set to ``False``, disables `globstar`_ ``**`` matching. ``True`` by default.
 
 * To see the actual settings / usage, demo apps `djk-sample`_ and `drf-gallery`_ are available.
+
+In memoriam
+~~~~~~~~~~~
+
+In the memory of the best friend, Pegasik tomcat:
+
+.. image:: Pegasik-2023-03-11.jpeg
+
+Rest in peace, dear friend! Friendship transcends death. A true friend is never truly gone.
