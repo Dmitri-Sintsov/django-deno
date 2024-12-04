@@ -3,8 +3,7 @@ import os
 import mmap
 import platform
 import stat
-import zipfile
-from zipfile import ZipFile, ZIP_LZMA, ZIP_DEFLATED
+from zipfile import ZipFile, ZIP_LZMA
 
 import requests
 
