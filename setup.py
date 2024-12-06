@@ -63,9 +63,9 @@ setup(
     install_requires=install_reqs,
     license="LGPL-3.0",
     zip_safe=False,
-    keywords='django deno rollup runserver collectstatic'.split(),
+    keywords='django deno rollup swc sucrase typescript runserver collectstatic'.split(),
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Framework :: Django',
         'Intended Audience :: Developers',
